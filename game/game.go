@@ -1,6 +1,7 @@
 package game
 
 import (
+	"fmt"
 	"game_ebiten/game/data"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -26,18 +27,25 @@ type Game struct {
 }
 
 func NewGame() *Game {
+	playerSize := float64(25)
+	playerOrigin := playerSize / 2
+	playerPosX := float64(ScreenWidth)/2 - playerOrigin
+	playerPosY := float64(ScreenHeight)/2 - playerOrigin
+
+	foodSize := float64(10)
 	foodX, foodY := GenerateRandomLocation(Bounds[MinX], Bounds[MaxX], Bounds[MinY], Bounds[MaxY])
 
 	return &Game{
 		Player: data.Player{
-			Size:   25,
+			Size:   playerSize,
+			Origin: playerOrigin,
 			Speed:  1,
 			Breaks: 1,
-			PosX:   float64(ScreenWidth)/2 - 17.5,
-			PosY:   float64(ScreenHeight)/2 - 17.5,
+			PosX:   playerPosX,
+			PosY:   playerPosY,
 		},
 		Food: data.Food{
-			Size:        10,
+			Size:        foodSize,
 			PosX:        foodX,
 			PosY:        foodY,
 			IsDisplayed: true,
@@ -46,6 +54,9 @@ func NewGame() *Game {
 }
 
 func (g *Game) Update() error {
+	g.Player.HitBox = g.Player.GetHitBox()
+	g.Food.HitBox = g.Food.GetHitBox()
+
 	if ebiten.IsKeyPressed(ebiten.KeySpace) {
 		g.Speed = 5
 	} else if !ebiten.IsKeyPressed(ebiten.KeySpace) {
@@ -59,6 +70,13 @@ func (g *Game) Update() error {
 	}
 
 	g.HandleMovement(Bounds[MinX], Bounds[MaxX], Bounds[MinY], Bounds[MaxY])
+
+	// verify if player and food hitboxes overlap
+	// TODO: not currently working
+	if (g.Player.HitBox[MinX] >= g.Food.HitBox[MinX] && g.Player.HitBox[MaxX] <= g.Food.HitBox[MaxX]) ||
+		(g.Player.HitBox[MinY] >= g.Food.HitBox[MinY] && g.Player.HitBox[MaxY] <= g.Food.HitBox[MaxY]) {
+		fmt.Println("test")
+	}
 	return nil
 }
 
