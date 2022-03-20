@@ -5,10 +5,9 @@ import (
 )
 
 type Player struct {
-	PosX, PosY     float64 // the centre of the image
+	LocX, LocY     float64 // the centre of the image
 	DeltaX, DeltaY float64
 	Size           float64 // the image's size
-	Origin         float64 // the centre of the image
 	Speed          float64
 	Breaks         float64
 	HitBox         map[string]float64 // X Y min and max values
@@ -63,34 +62,24 @@ func (p *Player) HandleMovement(minX, maxX, minY, maxY float64) {
 	}
 
 	// update the position of the player
-	p.PosX += p.DeltaX
-	p.PosY += p.DeltaY
+	p.LocX += p.DeltaX
+	p.LocY += p.DeltaY
 
 	// prevent player to go over the screen boundaries
-	if p.PosX <= minX {
-		p.PosX = minX
+	if p.LocX <= minX {
+		p.LocX = minX
 		p.DeltaX = 0
 	}
-	if p.PosX >= maxX-p.Size {
-		p.PosX = maxX - p.Size
+	if p.LocX >= maxX-p.Size {
+		p.LocX = maxX - p.Size
 		p.DeltaX = 0
 	}
-	if p.PosY <= minY {
-		p.PosY = minY
+	if p.LocY <= minY {
+		p.LocY = minY
 		p.DeltaY = 0
 	}
-	if p.PosY >= maxY-p.Size {
-		p.PosY = maxY - p.Size
+	if p.LocY >= maxY-p.Size {
+		p.LocY = maxY - p.Size
 		p.DeltaY = 0
-	}
-}
-
-// GetHitBox - generate the player's boundaries for minX, maxX and minY, maxY
-func (p *Player) GetHitBox() map[string]float64 {
-	return map[string]float64{
-		"minX": p.PosX + p.Origin,
-		"maxX": p.PosX + p.Origin + p.Size,
-		"minY": p.PosY + p.Origin,
-		"maxY": p.PosY + p.Origin + p.Size,
 	}
 }
