@@ -5,9 +5,9 @@ import (
 )
 
 type Player struct {
-	LocX, LocY     float64 // the centre of the image
+	LocX, LocY     float64
 	DeltaX, DeltaY float64
-	Size           float64 // the image's size
+	Size           float64
 	Speed          float64
 	Breaks         float64
 	HitBox         map[string]float64 // X Y min and max values
