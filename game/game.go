@@ -1,26 +1,16 @@
 package game
 
 import (
-	"bytes"
 	"game_ebiten/game/data"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-	"image"
 	"image/color"
 	_ "image/png"
-	"io/ioutil"
 	"math/rand"
 	"time"
 )
 
 const (
-	ImgSize = float64(30)
-
-	FoodFrameOX     = 0
-	FoodFrameOY     = 0
-	FoodFrameWidth  = 72
-	FoodFrameHeight = 75
-
 	ScreenWidth  = 1280
 	ScreenHeight = 960
 	MinX         = "minX"
@@ -29,6 +19,7 @@ const (
 	MaxY         = "maxY"
 )
 
+// Bounds - represents the main screen edges
 var Bounds = map[string]float64{MinX: 0, MaxX: ScreenWidth, MinY: 0, MaxY: ScreenHeight}
 
 type Game struct {
@@ -37,22 +28,27 @@ type Game struct {
 }
 
 func NewGame() *Game {
-	playerLocX := float64(ScreenWidth)/2 - ImgSize/2
-	playerLocY := float64(ScreenHeight)/2 - ImgSize/2
+	playerLocX := float64(ScreenWidth)/2 - data.PlayerFrameWidth/2
+	playerLocY := float64(ScreenHeight)/2 - data.PlayerFrameHeight/2
 
-	foodLocX, foodLocY := GenerateRandomLocation(Bounds[MinX], Bounds[MaxX], Bounds[MinY], Bounds[MaxY])
-	foodImg := loadFoodSpriteImg()
+	foodLocX, foodLocY := GenerateRandomLocation(Bounds[MinX], Bounds[MaxX]-data.FoodFrameWidth, Bounds[MinY], Bounds[MaxY]-data.FoodFrameHeight)
+	foodImg := LoadSpriteImage("spritesheets/food-drink.png")
+	playerImg := LoadSpriteImage("spritesheets/character.png")
 
 	return &Game{
 		Player: data.Player{
-			Size:   ImgSize,
-			Speed:  1,
-			Breaks: 1,
-			LocX:   playerLocX,
-			LocY:   playerLocY,
+			Img:       ebiten.NewImageFromImage(playerImg),
+			W:         float64(data.PlayerFrameWidth * data.PlayerScale),
+			H:         float64(data.PlayerFrameHeight * data.PlayerScale),
+			Speed:     3,
+			Direction: 0,
+			LocX:      playerLocX,
+			LocY:      playerLocY,
 		},
 		Food: data.Food{
 			Img:  ebiten.NewImageFromImage(foodImg),
+			W:    data.FoodFrameWidth * data.FoodScale,
+			H:    data.FoodFrameWidth * data.FoodScale,
 			LocX: foodLocX,
 			LocY: foodLocY,
 		},
@@ -60,61 +56,42 @@ func NewGame() *Game {
 }
 
 func (g *Game) Update() error {
-
 	if !g.Food.IsDisplayed {
-		g.Food.LocX, g.Food.LocY = GenerateRandomLocation(Bounds[MinX], Bounds[MaxX]-FoodFrameWidth, Bounds[MinY], Bounds[MaxY]-FoodFrameHeight)
+		g.Food.LocX, g.Food.LocY = GenerateRandomLocation(Bounds[MinX], Bounds[MaxX]-data.FoodFrameWidth, Bounds[MinY], Bounds[MaxY]-data.FoodFrameHeight)
 		g.Food.IsDisplayed = true
 	}
 
-	g.Player.HitBox = HitBox(g.Player.LocX, g.Player.LocY, g.Player.Size, g.Player.Size)
-	g.Food.HitBox = HitBox(g.Food.LocX, g.Food.LocY, FoodFrameWidth, FoodFrameHeight)
-
-	if ebiten.IsKeyPressed(ebiten.KeySpace) {
-		g.Speed = 5
-	} else if !ebiten.IsKeyPressed(ebiten.KeySpace) {
-		g.Speed = 1
-	}
+	g.Player.HitBox = HitBox(g.Player.LocX, g.Player.LocY, g.Player.W, g.Player.H)
+	g.Food.HitBox = HitBox(g.Food.LocX, g.Food.LocY, g.Food.W, g.Food.H)
 
 	if ebiten.IsKeyPressed(ebiten.KeyShiftLeft) {
-		g.Breaks = 5
+		g.Speed = 5
 	} else if !ebiten.IsKeyPressed(ebiten.KeyShiftLeft) {
-		g.Breaks = 1
+		g.Speed = 3
 	}
 
 	g.HandleMovement(Bounds[MinX], Bounds[MaxX], Bounds[MinY], Bounds[MaxY])
 
 	// verify if player and food shape areas overlap
-	if isCollision(g.Player.HitBox[MinX], g.Player.HitBox[MinY], g.Player.Size, g.Player.Size, g.Food.HitBox[MinX], g.Food.HitBox[MinY], FoodFrameWidth, FoodFrameHeight) {
+	if isCollision(g.Player.HitBox[MinX], g.Player.HitBox[MinY], g.Player.W, g.Player.H, g.Food.HitBox[MinX], g.Food.HitBox[MinY], g.Food.W, g.Food.H) {
 		g.Food.IsDisplayed = false
-		g.Player.Size++
 		g.Food.ImgNo++
 	}
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	screen.Fill(color.Black)
+	screen.Fill(color.White)
 
-	// draw player
-	playerRect := ebiten.NewImage(int(g.Player.Size), int(g.Player.Size))
-	playerRect.Fill(color.NRGBA{R: 255, G: 255, B: 255, A: 175})
-	opPlayer := &ebiten.DrawImageOptions{}
-	opPlayer.GeoM.Translate(g.Player.LocX, g.Player.LocY)
-	screen.DrawImage(playerRect, opPlayer)
+	g.Player.DrawImage(screen)
 
 	// draw food
 	if g.Food.IsDisplayed {
-		opFood := &ebiten.DrawImageOptions{}
-		opFood.GeoM.Translate(g.Food.LocX, g.Food.LocY)
-
-		// load every sub image from left to right from the first row
-		sx, sy := FoodFrameOX+g.Food.ImgNo*FoodFrameWidth, FoodFrameOY
-		screen.DrawImage(g.Food.Img.SubImage(image.Rect(sx, sy, sx+FoodFrameWidth, sy+FoodFrameHeight)).(*ebiten.Image), opFood)
+		g.Food.DrawImage(screen)
 	}
 
 	ebitenutil.DebugPrintAt(screen, "W A S D to move", 0, 0)
-	ebitenutil.DebugPrintAt(screen, "SPACE BAR to speed up", 0, 25)
-	ebitenutil.DebugPrintAt(screen, "LEFT SHIFT to hit the breaks", 0, 50)
+	ebitenutil.DebugPrintAt(screen, "LEFT SHIFT to speed up", 0, 25)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -141,11 +118,4 @@ func HitBox(x, y, w, h float64) map[string]float64 {
 		"minY": y,
 		"maxY": y + h,
 	}
-}
-
-// load the entire png file, and decode it
-func loadFoodSpriteImg() image.Image {
-	file, _ := ioutil.ReadFile("sprites/food-drink.png")
-	foodImg, _, _ := image.Decode(bytes.NewReader(file))
-	return foodImg
 }
