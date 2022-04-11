@@ -42,9 +42,7 @@ func (p *Player) HandleMovement(minX, maxX, minY, maxY float64) {
 		}
 
 		p.DeltaY = 3 * p.Speed
-	}
-
-	if ebiten.IsKeyPressed(ebiten.KeyW) {
+	} else if ebiten.IsKeyPressed(ebiten.KeyW) {
 		p.Direction = 1
 		if ebiten.IsKeyPressed(ebiten.KeyA) || ebiten.IsKeyPressed(ebiten.KeyD) {
 			p.DeltaX = 0
@@ -56,9 +54,8 @@ func (p *Player) HandleMovement(minX, maxX, minY, maxY float64) {
 		}
 
 		p.DeltaY = -3 * p.Speed
-	}
-
-	if ebiten.IsKeyPressed(ebiten.KeyA) {
+	} else if ebiten.IsKeyPressed(ebiten.KeyA) {
+		p.Direction = 2
 		if ebiten.IsKeyPressed(ebiten.KeyW) || ebiten.IsKeyPressed(ebiten.KeyS) {
 			p.DeltaY = 0
 		}
@@ -70,9 +67,7 @@ func (p *Player) HandleMovement(minX, maxX, minY, maxY float64) {
 
 		p.Direction = 2
 		p.DeltaX = -3 * p.Speed
-	}
-
-	if ebiten.IsKeyPressed(ebiten.KeyD) {
+	} else if ebiten.IsKeyPressed(ebiten.KeyD) {
 		p.Direction = 3
 		if ebiten.IsKeyPressed(ebiten.KeyW) || ebiten.IsKeyPressed(ebiten.KeyS) {
 			p.DeltaY = 0
@@ -94,6 +89,7 @@ func (p *Player) HandleMovement(minX, maxX, minY, maxY float64) {
 		p.DeltaY = 0
 	}
 
+	// when the player is not moving
 	if p.DeltaX == 0 && p.DeltaY == 0 {
 		p.FrameNum = 0
 	}
@@ -129,8 +125,4 @@ func (p *Player) DrawImage(screen *ebiten.Image) {
 	// load every sub image based on the received key input
 	px, py := PlayerFrameOX+p.FrameNum*PlayerFrameWidth, PlayerFrameOY+p.Direction*PlayerFrameHeight
 	screen.DrawImage(p.Img.SubImage(image.Rect(px, py, px+PlayerFrameWidth, py+PlayerFrameHeight)).(*ebiten.Image), opPlayer)
-}
-
-func (p *Player) GenerateHitBox() {
-
 }

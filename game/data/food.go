@@ -31,7 +31,3 @@ func (f *Food) DrawImage(screen *ebiten.Image) {
 	fx, fy := FoodFrameOX+f.ImgNo*FoodFrameWidth, FoodFrameOY
 	screen.DrawImage(f.Img.SubImage(image.Rect(fx, fy, fx+FoodFrameWidth, fy+FoodFrameHeight)).(*ebiten.Image), opFood)
 }
-
-func (f *Food) GenerateHitBox() {
-
-}
