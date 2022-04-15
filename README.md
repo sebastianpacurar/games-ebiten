@@ -1,2 +1,2 @@
-# game-ebiten
-A game concept using https://ebiten.org/
+## games-ebiten
+### My Collection of games built using the [Ebiten Library](https://ebiten.org/)

@@ -1,4 +1,4 @@
-package data
+package game
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
@@ -123,6 +123,6 @@ func (p *Player) DrawImage(screen *ebiten.Image) {
 	opPlayer.GeoM.Translate(p.LocX, p.LocY)
 
 	// load every sub image based on the received key input
-	px, py := PlayerFrameOX+p.FrameNum*PlayerFrameWidth, PlayerFrameOY+p.Direction*PlayerFrameHeight
-	screen.DrawImage(p.Img.SubImage(image.Rect(px, py, px+PlayerFrameWidth, py+PlayerFrameHeight)).(*ebiten.Image), opPlayer)
+	x, y := PlayerFrameOX+p.FrameNum*PlayerFrameWidth, PlayerFrameOY+p.Direction*PlayerFrameHeight
+	screen.DrawImage(p.Img.SubImage(image.Rect(x, y, x+PlayerFrameWidth, y+PlayerFrameHeight)).(*ebiten.Image), opPlayer)
 }
