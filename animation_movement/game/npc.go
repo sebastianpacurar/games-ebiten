@@ -1,6 +1,7 @@
 package game
 
 import (
+	u "games-ebiten/resources/utils"
 	"github.com/hajimehoshi/ebiten/v2"
 	"image"
 	"math/rand"
@@ -12,7 +13,8 @@ const (
 	NPCFrameOY     = 0
 	NPCFrameWidth  = 64
 	NPCFrameHeight = 64
-	NPCScale       = 1.8
+	NPCScaleX      = 1.8
+	NPCScaleY      = 1.8
 
 	NPC1 = "npc1"
 	NPC2 = "npc2"
@@ -21,20 +23,99 @@ const (
 	NPC5 = "npc5"
 )
 
+// NPC - game character which implements InteractiveSprite interface
 type NPC struct {
-	Img            *ebiten.Image
-	Name           string
-	FrameNum       int
-	Direction      int
-	LocX, LocY     float64
-	DeltaX, DeltaY float64
-	W, H           float64
-	Speed          float64
-	HitBox         map[string]float64
-	IsMoving       bool
-	IsNearMargin   bool
-	FrameCount     int // used to time an action (movement or idle)
-	FrameLimit     int // used as limit to count frames for an action (the time for an action to complete)
+	Img          *ebiten.Image
+	Name         string
+	FrameNum     int
+	Direction    int
+	LX, LY       float64
+	DX, DY       float64
+	W, H         float64
+	Speed        float64
+	HitBox       map[string]float64
+	IsMoving     bool
+	IsNearMargin bool
+	FrameCount   int // used to time an action (movement or idle)
+	FrameLimit   int // used as limit to count frames for an action (the time for an action to complete)
+}
+
+func (npc *NPC) GetLocations() (float64, float64) {
+	return npc.LX, npc.LY
+}
+
+func (npc *NPC) GetSize() (float64, float64) {
+	return npc.W, npc.H
+}
+
+func (npc *NPC) GetFramePosition() (int, int, int, int) {
+	return NPCFrameOX, NPCFrameWidth, NPCFrameOY, NPCFrameHeight
+}
+
+func (npc *NPC) GetScaleVal() (float64, float64) {
+	return NPCScaleX, NPCScaleY
+}
+
+func (npc *NPC) GetFrameNum() int {
+	return npc.FrameNum
+}
+
+func (npc *NPC) GetDirection() int {
+	return npc.Direction
+}
+
+func (npc *NPC) GetImg() *ebiten.Image {
+	return npc.Img
+}
+
+func (npc *NPC) SetLocation(axis string, val float64) {
+	if axis == u.X {
+		npc.LX = val
+	} else if axis == u.Y {
+		npc.LY = val
+	}
+}
+
+func (npc *NPC) SetDelta(axis string, val float64) {
+	if axis == u.X {
+		npc.DX = val
+	} else if axis == u.Y {
+		npc.DY = val
+	}
+}
+
+func (npc *NPC) DrawImg(screen *ebiten.Image) {
+	opNPC := &ebiten.DrawImageOptions{}
+	opNPC.GeoM.Scale(NPCScaleX, NPCScaleY)
+	opNPC.GeoM.Translate(npc.LX, npc.LY)
+
+	x, y := NPCFrameOX+npc.FrameNum*NPCFrameWidth, NPCFrameOY+npc.Direction*NPCFrameHeight
+	screen.DrawImage(npc.Img.SubImage(image.Rect(x, y, x+NPCFrameWidth, y+NPCFrameHeight)).(*ebiten.Image), opNPC)
+}
+
+func (npc *NPC) ValidateBoundaries(minX, maxX, minY, maxY float64) {
+	if npc.LX <= minX || npc.LX >= maxX-npc.W || npc.LY <= minY || npc.LY >= maxY-npc.H {
+		npc.IsNearMargin = true
+		npc.IsMoving = false
+		if npc.LX <= minX {
+			npc.LX = minX
+			npc.DX = 0
+		}
+		if npc.LX >= maxX-npc.W {
+			npc.LX = maxX - npc.W
+			npc.DX = 0
+		}
+		if npc.LY <= minY {
+			npc.LY = minY
+			npc.DY = 0
+		}
+		if npc.LY >= maxY-npc.H {
+			npc.LY = maxY - npc.H
+			npc.DY = 0
+		}
+	} else {
+		npc.IsNearMargin = false
+	}
 }
 
 func (npc *NPC) Move(minX, maxX, minY, maxY float64) {
@@ -63,7 +144,7 @@ func (npc *NPC) Move(minX, maxX, minY, maxY float64) {
 		}
 	}
 
-	// update LocX and LocY based on Delta
+	// update LX and LY based on Delta
 	if npc.IsMoving {
 		switch npc.Direction {
 
@@ -73,7 +154,7 @@ func (npc *NPC) Move(minX, maxX, minY, maxY float64) {
 			if npc.FrameNum == 8 {
 				npc.FrameNum = 0
 			}
-			npc.DeltaY = -3 * npc.Speed
+			npc.DY = -3 * npc.Speed
 
 		// west
 		case 1:
@@ -81,7 +162,7 @@ func (npc *NPC) Move(minX, maxX, minY, maxY float64) {
 			if npc.FrameNum == 7 {
 				npc.FrameNum = 0
 			}
-			npc.DeltaX = -3 * npc.Speed
+			npc.DX = -3 * npc.Speed
 
 		// south
 		case 2:
@@ -90,7 +171,7 @@ func (npc *NPC) Move(minX, maxX, minY, maxY float64) {
 				npc.FrameNum = 0
 			}
 
-			npc.DeltaY = 3 * npc.Speed
+			npc.DY = 3 * npc.Speed
 
 		// east
 		case 3:
@@ -99,51 +180,24 @@ func (npc *NPC) Move(minX, maxX, minY, maxY float64) {
 				npc.FrameNum = 0
 			}
 
-			npc.DeltaX = 3 * npc.Speed
+			npc.DX = 3 * npc.Speed
 		}
 
-		npc.LocX += npc.DeltaX
-		npc.LocY += npc.DeltaY
+		npc.LX += npc.DX
+		npc.LY += npc.DY
 
-		// prevent npcs to go over the screen boundaries
-		if npc.LocX <= minX || npc.LocX >= maxX-npc.W || npc.LocY <= minY || npc.LocY >= maxY-npc.H {
+		if npc.LX <= minX || npc.LX >= maxX-npc.W || npc.LY <= minY || npc.LY >= maxY-npc.H {
 			npc.IsNearMargin = true
 			npc.IsMoving = false
 
-			if npc.LocX <= minX {
-				npc.LocX = minX
-				npc.DeltaX = 0
-			}
-			if npc.LocX >= maxX-npc.W {
-				npc.LocX = maxX - npc.W
-				npc.DeltaX = 0
-			}
-			if npc.LocY <= minY {
-				npc.LocY = minY
-				npc.DeltaY = 0
-			}
-			if npc.LocY >= maxY-npc.H {
-				npc.LocY = maxY - npc.H
-				npc.DeltaY = 0
-			}
+			u.BoundaryValidation(npc, minX, maxX, minY, maxY)
 		} else {
 			npc.IsNearMargin = false
 		}
-
 	} else {
 		npc.FrameNum = 0
-		npc.DeltaX = 0
-		npc.DeltaY = 0
+		npc.DX = 0
+		npc.DY = 0
 	}
 	npc.FrameCount++
-}
-
-func (npc *NPC) DrawImage(screen *ebiten.Image) {
-	opNPC := &ebiten.DrawImageOptions{}
-	opNPC.GeoM.Scale(NPCScale, NPCScale)
-	opNPC.GeoM.Translate(npc.LocX, npc.LocY)
-
-	// load every sub image based on the received key input
-	x, y := NPCFrameOX+npc.FrameNum*NPCFrameWidth, NPCFrameOY+npc.Direction*NPCFrameHeight
-	screen.DrawImage(npc.Img.SubImage(image.Rect(x, y, x+NPCFrameWidth, y+NPCFrameHeight)).(*ebiten.Image), opNPC)
 }

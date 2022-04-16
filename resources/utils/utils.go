@@ -12,6 +12,8 @@ import (
 const (
 	ScreenWidth  = 1280
 	ScreenHeight = 860
+	X            = "x"
+	Y            = "y"
 	MinX         = "minX"
 	MinY         = "minY"
 	MaxX         = "maxX"
@@ -31,7 +33,7 @@ func LoadSpriteImage(path string) image.Image {
 }
 
 // GenerateRandomLocation - generate a random location for X and y
-// (x is between 0 and u.ScreenWidth) and (y is between 0 and u.ScreenHeight)
+// (x is between 0 and ScreenWidth) and (y is between 0 and ScreenHeight)
 func GenerateRandomLocation(minX, maxX, minY, maxY float64) (float64, float64) {
 	rand.Seed(time.Now().UnixNano())
 	return (rand.Float64() * (maxX - minX)) + minX, (rand.Float64() * (maxY - minY)) + minY
@@ -49,5 +51,33 @@ func HitBox(x, y, w, h float64) map[string]float64 {
 		"maxX": x + w,
 		"minY": y,
 		"maxY": y + h,
+	}
+}
+
+// BoundaryValidation - prevents characters to move out of the view, in any of the 4 directions
+func BoundaryValidation(i interface{}, minX, maxX, minY, maxY float64) {
+	switch i.(type) {
+	case InteractiveSprite:
+		img := i.(InteractiveSprite)
+
+		locX, locY := img.GetLocations()
+		w, h := img.GetSize()
+
+		if locX <= minX {
+			img.SetLocation(X, minX)
+			img.SetDelta(X, 0)
+		}
+		if locX >= maxX-w {
+			img.SetLocation(X, maxX-w)
+			img.SetDelta(X, 0)
+		}
+		if locY <= minY {
+			img.SetLocation(Y, minY)
+			img.SetDelta(Y, 0)
+		}
+		if locY >= maxY-h {
+			img.SetLocation(Y, maxY-h)
+			img.SetDelta(Y, 0)
+		}
 	}
 }

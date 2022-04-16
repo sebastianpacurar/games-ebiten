@@ -1,6 +1,7 @@
 package game
 
 import (
+	u "games-ebiten/resources/utils"
 	"github.com/hajimehoshi/ebiten/v2"
 	"image"
 )
@@ -10,22 +11,81 @@ const (
 	PlayerFrameOY     = 0
 	PlayerFrameWidth  = 24
 	PlayerFrameHeight = 32
-	PlayerScale       = 3
+	PlayerScaleX      = 3
+	PlayerScaleY      = 3
+
+	Player1 = "player1"
+	Player2 = "player2"
 )
 
-// Player FrameNum - animate movement - all actions are from left to right in the sprite sheet
-// Player Direction - specifies which row to pick (0 = down, 1 = up, 2 = left, 3 = right)
-// Player LocX, LocY - the location of the image on the screen (starts from top left corner)
-// Player W, H - represent the size (width, height) which is calculated by multiplying each with PlayerScale
+// Player - game character which implements InteractiveSprite interface
+// FrameNum - animate movement - all actions are from left to right in the sprite sheet
+// Direction - specifies which row to pick (0 = down, 1 = up, 2 = left, 3 = right)
+// LX, LY - the location of the image on the screen (starts from top left corner)
+// W, H - represent the size (width, height) which is calculated by multiplying each with PlayerScale
 type Player struct {
-	Img            *ebiten.Image
-	FrameNum       int
-	Direction      int
-	LocX, LocY     float64
-	DeltaX, DeltaY float64
-	W, H           float64
-	Speed          float64
-	HitBox         map[string]float64 // X Y min and max values
+	Img       *ebiten.Image
+	Tag       string
+	FrameNum  int
+	Direction int
+	LX, LY    float64
+	DX, DY    float64
+	W, H      float64
+	Speed     float64
+	HitBox    map[string]float64 // X Y min and max values
+}
+
+func (p *Player) GetLocations() (float64, float64) {
+	return p.LX, p.LY
+}
+
+func (p *Player) GetSize() (float64, float64) {
+	return p.W, p.H
+}
+
+func (p *Player) GetFramePosition() (int, int, int, int) {
+	return PlayerFrameOX, PlayerFrameWidth, PlayerFrameOY, PlayerFrameHeight
+}
+
+func (p *Player) GetScaleVal() (float64, float64) {
+	return PlayerScaleX, PlayerScaleY
+}
+
+func (p *Player) GetFrameNum() int {
+	return p.FrameNum
+}
+
+func (p *Player) GetDirection() int {
+	return p.Direction
+}
+
+func (p *Player) GetImg() *ebiten.Image {
+	return p.Img
+}
+
+func (p *Player) SetLocation(axis string, val float64) {
+	if axis == u.X {
+		p.LX = val
+	} else if axis == u.Y {
+		p.LY = val
+	}
+}
+
+func (p *Player) SetDelta(axis string, val float64) {
+	if axis == u.X {
+		p.DX = val
+	} else if axis == u.Y {
+		p.DY = val
+	}
+}
+
+func (p *Player) DrawImg(screen *ebiten.Image) {
+	opPlayer := &ebiten.DrawImageOptions{}
+	opPlayer.GeoM.Scale(PlayerScaleX, PlayerScaleY)
+	opPlayer.GeoM.Translate(p.LX, p.LY)
+
+	x, y := PlayerFrameOX+p.FrameNum*PlayerFrameWidth, PlayerFrameOY+p.Direction*PlayerFrameHeight
+	screen.DrawImage(p.Img.SubImage(image.Rect(x, y, x+PlayerFrameWidth, y+PlayerFrameHeight)).(*ebiten.Image), opPlayer)
 }
 
 // HandleMovement - takes the vertices as params for screen cross boundary prevention
@@ -33,7 +93,7 @@ func (p *Player) HandleMovement(minX, maxX, minY, maxY float64) {
 	if ebiten.IsKeyPressed(ebiten.KeyS) {
 		p.Direction = 0
 		if ebiten.IsKeyPressed(ebiten.KeyA) || ebiten.IsKeyPressed(ebiten.KeyD) {
-			p.DeltaX = 0
+			p.DX = 0
 		}
 
 		p.FrameNum++
@@ -41,11 +101,12 @@ func (p *Player) HandleMovement(minX, maxX, minY, maxY float64) {
 			p.FrameNum = 0
 		}
 
-		p.DeltaY = 3 * p.Speed
-	} else if ebiten.IsKeyPressed(ebiten.KeyW) {
+		p.DY = 3 * p.Speed
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyW) {
 		p.Direction = 1
 		if ebiten.IsKeyPressed(ebiten.KeyA) || ebiten.IsKeyPressed(ebiten.KeyD) {
-			p.DeltaX = 0
+			p.DX = 0
 		}
 
 		p.FrameNum++
@@ -53,11 +114,12 @@ func (p *Player) HandleMovement(minX, maxX, minY, maxY float64) {
 			p.FrameNum = 0
 		}
 
-		p.DeltaY = -3 * p.Speed
-	} else if ebiten.IsKeyPressed(ebiten.KeyA) {
+		p.DY = -3 * p.Speed
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyA) {
 		p.Direction = 2
 		if ebiten.IsKeyPressed(ebiten.KeyW) || ebiten.IsKeyPressed(ebiten.KeyS) {
-			p.DeltaY = 0
+			p.DY = 0
 		}
 
 		p.FrameNum++
@@ -66,11 +128,12 @@ func (p *Player) HandleMovement(minX, maxX, minY, maxY float64) {
 		}
 
 		p.Direction = 2
-		p.DeltaX = -3 * p.Speed
-	} else if ebiten.IsKeyPressed(ebiten.KeyD) {
+		p.DX = -3 * p.Speed
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyD) {
 		p.Direction = 3
 		if ebiten.IsKeyPressed(ebiten.KeyW) || ebiten.IsKeyPressed(ebiten.KeyS) {
-			p.DeltaY = 0
+			p.DY = 0
 		}
 
 		p.FrameNum++
@@ -78,51 +141,25 @@ func (p *Player) HandleMovement(minX, maxX, minY, maxY float64) {
 			p.FrameNum = 0
 		}
 
-		p.DeltaX = 3 * p.Speed
+		p.DX = 3 * p.Speed
 	}
 
 	if !ebiten.IsKeyPressed(ebiten.KeyA) && !ebiten.IsKeyPressed(ebiten.KeyD) {
-		p.DeltaX = 0
+		p.DX = 0
 	}
 
 	if !ebiten.IsKeyPressed(ebiten.KeyS) && !ebiten.IsKeyPressed(ebiten.KeyW) {
-		p.DeltaY = 0
+		p.DY = 0
 	}
 
 	// when the player is not moving
-	if p.DeltaX == 0 && p.DeltaY == 0 {
+	if p.DX == 0 && p.DY == 0 {
 		p.FrameNum = 0
 	}
 
 	// update the position of the player
-	p.LocX += p.DeltaX
-	p.LocY += p.DeltaY
+	p.LX += p.DX
+	p.LY += p.DY
 
-	// prevent player to go over the screen boundaries
-	if p.LocX <= minX {
-		p.LocX = minX
-		p.DeltaX = 0
-	}
-	if p.LocX >= maxX-p.W {
-		p.LocX = maxX - p.W
-		p.DeltaX = 0
-	}
-	if p.LocY <= minY {
-		p.LocY = minY
-		p.DeltaY = 0
-	}
-	if p.LocY >= maxY-p.H {
-		p.LocY = maxY - p.H
-		p.DeltaY = 0
-	}
-}
-
-func (p *Player) DrawImage(screen *ebiten.Image) {
-	opPlayer := &ebiten.DrawImageOptions{}
-	opPlayer.GeoM.Scale(PlayerScale, PlayerScale)
-	opPlayer.GeoM.Translate(p.LocX, p.LocY)
-
-	// load every sub image based on the received key input
-	x, y := PlayerFrameOX+p.FrameNum*PlayerFrameWidth, PlayerFrameOY+p.Direction*PlayerFrameHeight
-	screen.DrawImage(p.Img.SubImage(image.Rect(x, y, x+PlayerFrameWidth, y+PlayerFrameHeight)).(*ebiten.Image), opPlayer)
+	u.BoundaryValidation(p, minX, maxX, minY, maxY)
 }

@@ -15,18 +15,18 @@ const (
 )
 
 type Food struct {
-	Img        *ebiten.Image
-	ImgCount   int
-	RowCount   int
-	LocX, LocY float64
-	W, H       float64
-	HitBox     map[string]float64
+	Img      *ebiten.Image
+	ImgCount int
+	RowCount int
+	LX, LY   float64
+	W, H     float64
+	HitBox   map[string]float64
 }
 
 func (f *Food) DrawImage(screen *ebiten.Image) {
 	opFood := &ebiten.DrawImageOptions{}
 	opFood.GeoM.Scale(FoodScale, FoodScale)
-	opFood.GeoM.Translate(f.LocX, f.LocY)
+	opFood.GeoM.Translate(f.LX, f.LY)
 
 	// load every sub image from left to right from the first row
 	x, y := FoodFrameOX+f.ImgCount*FoodFrameWidth, FoodFrameOY+f.RowCount*FoodFrameHeight
@@ -35,7 +35,7 @@ func (f *Food) DrawImage(screen *ebiten.Image) {
 
 // UpdateFoodState - mainly used to update location and sub image after every collision with the player or NPCs
 func (f *Food) UpdateFoodState() {
-	f.LocX, f.LocY = u.GenerateRandomLocation(Bounds[u.MinX], Bounds[u.MaxX]-FoodFrameWidth, Bounds[u.MinY], Bounds[u.MaxY]-FoodFrameHeight)
+	f.LX, f.LY = u.GenerateRandomLocation(Bounds[u.MinX], Bounds[u.MaxX]-FoodFrameWidth, Bounds[u.MinY], Bounds[u.MaxY]-FoodFrameHeight)
 	f.ImgCount++
 
 	if f.RowCount == 2 && f.ImgCount == 6 {
