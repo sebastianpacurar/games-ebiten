@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	ScreenWidth  = 1280
+	ScreenWidth  = 1480
 	ScreenHeight = 860
 	X            = "x"
 	Y            = "y"
@@ -18,6 +18,16 @@ const (
 	MinY         = "minY"
 	MaxX         = "maxX"
 	MaxY         = "maxY"
+
+	FrameOX = "FrameOX"
+	FrameOY = "FrameOY"
+	FrameW  = "FrameWidth"
+	FrameH  = "FrameHeight"
+
+	Hearts   = "Hearts"
+	Clubs    = "Clubs"
+	Diamonds = "Diamonds"
+	Spades   = "Spades"
 )
 
 func LoadSpriteImage(path string) image.Image {

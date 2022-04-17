@@ -19,6 +19,7 @@ const (
 )
 
 // Player - game character which implements InteractiveSprite interface
+// Tag - highlights which player is related to the context (player1 or player2)
 // FrameNum - animate movement - all actions are from left to right in the sprite sheet
 // Direction - specifies which row to pick (0 = down, 1 = up, 2 = left, 3 = right)
 // LX, LY - the location of the image on the screen (starts from top left corner)
@@ -79,7 +80,7 @@ func (p *Player) SetDelta(axis string, val float64) {
 	}
 }
 
-func (p *Player) DrawImg(screen *ebiten.Image) {
+func (p *Player) DrawInteractiveSprite(screen *ebiten.Image) {
 	opPlayer := &ebiten.DrawImageOptions{}
 	opPlayer.GeoM.Scale(PlayerScaleX, PlayerScaleY)
 	opPlayer.GeoM.Translate(p.LX, p.LY)

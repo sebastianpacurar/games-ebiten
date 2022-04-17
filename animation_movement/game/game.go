@@ -15,7 +15,7 @@ var (
 )
 
 type Game struct {
-	Food
+	Items   []*Item
 	Players []*Player
 	NPCs    []*NPC
 }
@@ -33,7 +33,7 @@ func NewGame() *Game {
 			npcLocations[npcTag] = []float64{x, y}
 		}
 	}
-	foodLocX, foodLocY := u.GenerateRandomLocation(Bounds[u.MinX], Bounds[u.MaxX]-FoodFrameWidth, Bounds[u.MinY], Bounds[u.MaxY]-FoodFrameHeight)
+	ItemLocX, ItemLocY := u.GenerateRandomLocation(Bounds[u.MinX], Bounds[u.MaxX]-ItemFrameWidth, Bounds[u.MinY], Bounds[u.MaxY]-ItemFrameHeight)
 
 	return &Game{
 		Players: []*Player{
@@ -48,12 +48,14 @@ func NewGame() *Game {
 				LY:        playerLocY,
 			},
 		},
-		Food: Food{
-			Img: ebiten.NewImageFromImage(u.LoadSpriteImage("resources/images/misc/food.png")),
-			W:   FoodFrameWidth * FoodScale,
-			H:   FoodFrameWidth * FoodScale,
-			LX:  foodLocX,
-			LY:  foodLocY,
+		Items: []*Item{
+			{
+				Img: ebiten.NewImageFromImage(u.LoadSpriteImage("resources/images/misc/food.png")),
+				W:   ItemFrameWidth * ItemScale,
+				H:   ItemFrameWidth * ItemScale,
+				LX:  ItemLocX,
+				LY:  ItemLocY,
+			},
 		},
 		NPCs: []*NPC{
 			{
@@ -116,7 +118,9 @@ func NewGame() *Game {
 }
 
 func (g *Game) Update() error {
-	g.Food.HitBox = u.HitBox(g.Food.LX, g.Food.LY, g.Food.W, g.Food.H)
+	for i := range g.Items {
+		g.Items[i].HitBox = u.HitBox(g.Items[i].LX, g.Items[i].LY, g.Items[i].W, g.Items[i].H)
+	}
 
 	for i := range g.Players {
 		g.Players[i].HitBox = u.HitBox(g.Players[i].LX, g.Players[i].LY, g.Players[i].W, g.Players[i].H)
@@ -135,17 +139,17 @@ func (g *Game) Update() error {
 		g.Players[0].Speed = 3
 	}
 
-	// update the food state if any NPC collides with food shape
+	// update the Item state if any NPC collides with Item shape
 	for i := range g.NPCs {
-		if u.IsCollision(g.NPCs[i].HitBox[u.MinX], g.NPCs[i].HitBox[u.MinY], g.NPCs[i].W, g.NPCs[i].H, g.Food.HitBox[u.MinX], g.Food.HitBox[u.MinY], g.Food.W, g.Food.H) {
-			g.Food.UpdateFoodState()
+		if u.IsCollision(g.NPCs[i].HitBox[u.MinX], g.NPCs[i].HitBox[u.MinY], g.NPCs[i].W, g.NPCs[i].H, g.Items[0].HitBox[u.MinX], g.Items[0].HitBox[u.MinY], g.Items[0].W, g.Items[0].H) {
+			g.Items[0].UpdateItemState()
 		}
 	}
 
-	// update the food state if the player and food shape areas overlap
+	// update the Item state if the player and Item shape areas overlap
 	for i := range g.Players {
-		if u.IsCollision(g.Players[i].HitBox[u.MinX], g.Players[i].HitBox[u.MinY], g.Players[i].W, g.Players[i].H, g.Food.HitBox[u.MinX], g.Food.HitBox[u.MinY], g.Food.W, g.Food.H) {
-			g.Food.UpdateFoodState()
+		if u.IsCollision(g.Players[i].HitBox[u.MinX], g.Players[i].HitBox[u.MinY], g.Players[i].W, g.Players[i].H, g.Items[0].HitBox[u.MinX], g.Items[0].HitBox[u.MinY], g.Items[0].W, g.Items[0].H) {
+			g.Items[0].UpdateItemState()
 		}
 	}
 
@@ -158,14 +162,16 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	screen.DrawImage(ebiten.NewImageFromImage(u.LoadSpriteImage("resources/images/misc/bg-grass.png")), op)
 
 	for i := range g.Players {
-		g.Players[i].DrawImg(screen)
+		g.Players[i].DrawInteractiveSprite(screen)
 	}
 
 	for i := range g.NPCs {
-		g.NPCs[i].DrawImg(screen)
+		g.NPCs[i].DrawInteractiveSprite(screen)
 	}
 
-	g.Food.DrawImage(screen)
+	for i := range g.Items {
+		g.Items[i].DrawStaticSprite(screen)
+	}
 
 	ebitenutil.DebugPrintAt(screen, "W A S D to move", 0, 0)
 	ebitenutil.DebugPrintAt(screen, "LEFT SHIFT to speed up", 0, 25)

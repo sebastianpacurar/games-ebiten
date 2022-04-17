@@ -2,8 +2,8 @@ package utils
 
 import "github.com/hajimehoshi/ebiten/v2"
 
-// InteractiveSprite - represents any type of image which can be animated and holds several states.
 type (
+	// InteractiveSprite - is implemented by structs which hold multiple states and which tend to be dynamic
 	InteractiveSprite interface {
 
 		// GetLocations - returns (LX, LY)
@@ -33,10 +33,29 @@ type (
 		// SetDelta - updates DX or DY, based on X or Y axis
 		SetDelta(string, float64)
 
-		// DrawImg - Draws the image (shorthand for writing it in Draw() directly)
-		DrawImg(image *ebiten.Image)
+		// DrawInteractiveSprite - Draws the image
+		DrawInteractiveSprite(*ebiten.Image)
 	}
 
+	// StaticSprite - is implemented by structs which don't contain many states to get updated frequently
 	StaticSprite interface {
+
+		// GetLocations - returns (LX, LY)
+		GetLocations() (float64, float64)
+
+		// GetSize - returns (width, height)
+		GetSize() (float64, float64)
+
+		// GetFramePosition - returns (FrameOX, FrameWidth, FrameOY, FrameHeight)
+		GetFramePosition() (int, int, int, int)
+
+		// GetImg - returns the Img of the sprite
+		GetImg() *ebiten.Image
+
+		// SetLocation - updates LX or LY, based on X or Y axis
+		SetLocation(string, float64)
+
+		// DrawStaticSprite - Draws the image
+		DrawStaticSprite(*ebiten.Image)
 	}
 )
