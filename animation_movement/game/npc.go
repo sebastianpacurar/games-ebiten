@@ -15,12 +15,6 @@ const (
 	NPCFrameHeight = 64
 	NPCScaleX      = 1.8
 	NPCScaleY      = 1.8
-
-	NPC1 = "npc1"
-	NPC2 = "npc2"
-	NPC3 = "npc3"
-	NPC4 = "npc4"
-	NPC5 = "npc5"
 )
 
 // NPC - game character which implements InteractiveSprite interface
@@ -48,8 +42,8 @@ func (npc *NPC) GetSize() (float64, float64) {
 	return npc.W, npc.H
 }
 
-func (npc *NPC) GetFramePosition() (int, int, int, int) {
-	return NPCFrameOX, NPCFrameWidth, NPCFrameOY, NPCFrameHeight
+func (npc *NPC) GetFrameInfo() (int, int, int, int) {
+	return NPCFrameOX, NPCFrameOY, NPCFrameWidth, NPCFrameHeight
 }
 
 func (npc *NPC) GetScaleVal() (float64, float64) {
@@ -91,6 +85,11 @@ func (npc *NPC) DrawInteractiveSprite(screen *ebiten.Image) {
 
 	x, y := NPCFrameOX+npc.FrameNum*NPCFrameWidth, NPCFrameOY+npc.Direction*NPCFrameHeight
 	screen.DrawImage(npc.Img.SubImage(image.Rect(x, y, x+NPCFrameWidth, y+NPCFrameHeight)).(*ebiten.Image), opNPC)
+}
+
+// GetHitBox - returns 4 values: minX, maxX, minY, maxY
+func (npc *NPC) GetHitBox() (float64, float64, float64, float64) {
+	return npc.HitBox[u.MinX], npc.HitBox[u.MaxX], npc.HitBox[u.MinY], npc.HitBox[u.MaxY]
 }
 
 func (npc *NPC) ValidateBoundaries(minX, maxX, minY, maxY float64) {

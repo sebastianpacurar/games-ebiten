@@ -34,6 +34,7 @@ type Player struct {
 	W, H      float64
 	Speed     float64
 	HitBox    map[string]float64 // X Y min and max values
+	FrameInfo map[string]int
 }
 
 func (p *Player) GetLocations() (float64, float64) {
@@ -44,8 +45,8 @@ func (p *Player) GetSize() (float64, float64) {
 	return p.W, p.H
 }
 
-func (p *Player) GetFramePosition() (int, int, int, int) {
-	return PlayerFrameOX, PlayerFrameWidth, PlayerFrameOY, PlayerFrameHeight
+func (p *Player) GetFrameInfo() (int, int, int, int) {
+	return PlayerFrameOX, PlayerFrameOY, PlayerFrameWidth, PlayerFrameHeight
 }
 
 func (p *Player) GetScaleVal() (float64, float64) {
@@ -87,6 +88,10 @@ func (p *Player) DrawInteractiveSprite(screen *ebiten.Image) {
 
 	x, y := PlayerFrameOX+p.FrameNum*PlayerFrameWidth, PlayerFrameOY+p.Direction*PlayerFrameHeight
 	screen.DrawImage(p.Img.SubImage(image.Rect(x, y, x+PlayerFrameWidth, y+PlayerFrameHeight)).(*ebiten.Image), opPlayer)
+}
+
+func (p *Player) GetHitBox() (float64, float64, float64, float64) {
+	return p.HitBox[u.MinX], p.HitBox[u.MaxX], p.HitBox[u.MinY], p.HitBox[u.MaxY]
 }
 
 // HandleMovement - takes the vertices as params for screen cross boundary prevention

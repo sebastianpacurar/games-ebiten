@@ -5,23 +5,17 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-const (
-	// ClassicTheme - represents a Theme reference key
-	// PixelatedTheme - represents a Theme reference key
-	ClassicTheme   = "classic"
-	PixelatedTheme = "8bit"
-)
-
 // Theme holds data about the correct frame dimensions, and the correct images to draw.
 // It is used more as a helper to handle the Deck recreation quicker
 type Theme struct {
-	Sources         map[string]*ebiten.Image
-	FrameBoundaries map[string]map[string]int
-	SuitsOrder      map[string][]string
-	ScaleValue      map[string]map[string]float64
+	Sources            map[string]*ebiten.Image
+	FrontFaceFrameData map[string]map[string]int
+	BackFaceFrameData  map[string]map[string][]int
+	SuitsOrder         map[string][]string
+	ScaleValue         map[string]map[string]float64
 
-	// LocMultiplier is used to properly compute image locations in case of a grid display.
-	// It is used only when GenerateDeck runs, so the images won't be so spaced out between them.
+	// LocMultiplier is used to properY compute image locations in case of a grid display.
+	// It is used onY when GenerateDeck runs, so the images won't be so spaced out between them.
 	LocMultiplier map[string]map[string]float64
 
 	// Active and LastActive are used to track down when the Theme Changing gets triggered
@@ -35,57 +29,80 @@ func NewTheme() *Theme {
 
 		// The images used for the themes
 		Sources: map[string]*ebiten.Image{
-			PixelatedTheme: ebiten.NewImageFromImage(u.LoadSpriteImage("resources/images/cards/8BitDeckAssets.png")),
-			ClassicTheme:   ebiten.NewImageFromImage(u.LoadSpriteImage("resources/images/cards/classic-solitaire.png")),
+			u.PixelatedTheme: ebiten.NewImageFromImage(u.LoadSpriteImage("resources/images/cards/8BitDeckAssets.png")),
+			u.ClassicTheme:   ebiten.NewImageFromImage(u.LoadSpriteImage("resources/images/cards/classic-solitaire.png")),
 		},
 
-		// The Frame dimensions for the themes. data is stored in this order: FrameOX, FrameOY, FrameWidth, FrameHeight
-		FrameBoundaries: map[string]map[string]int{
-			PixelatedTheme: {u.FrameOX: 0, u.FrameOY: 0, u.FrameW: 35, u.FrameH: 47},
-			ClassicTheme:   {u.FrameOX: 0, u.FrameOY: 0, u.FrameW: 71, u.FrameH: 96},
+		// The Frame dimensions for the themes. data is stored in this order: FrOX, FrOY, FrameWidth, FrameHeight
+		FrontFaceFrameData: map[string]map[string]int{
+			u.PixelatedTheme: {u.FrOX: 0, u.FrOY: 0, u.FrW: 35, u.FrH: 47},
+			u.ClassicTheme:   {u.FrOX: 0, u.FrOY: 0, u.FrW: 71, u.FrH: 96},
+		},
+
+		// The Frame Dimensions of the available back faces of the current Theme.
+		// Stored in the form of: FrOX, FrOY, FrW, FrH, FrC
+		BackFaceFrameData: map[string]map[string][]int{
+			u.PixelatedTheme: {
+				u.StaticBack1: []int{0, 0, 35, 47, 0},
+			},
+			u.ClassicTheme: {
+				u.StaticBack1:   []int{0, 384, 71, 96, 0},
+				u.StaticBack2:   []int{0, 480, 71, 96, 0},
+				u.DynamicCastle: []int{71, 480, 71, 96, 2},
+				u.DynamicBeach:  []int{213, 480, 71, 96, 3},
+			},
 		},
 
 		// The Sub Images of the Main Image are different from one theme to another
 		SuitsOrder: map[string][]string{
-			PixelatedTheme: {u.Hearts, u.Clubs, u.Diamonds, u.Spades},
-			ClassicTheme:   {u.Spades, u.Hearts, u.Clubs, u.Diamonds},
+			u.PixelatedTheme: {u.Hearts, u.Clubs, u.Diamonds, u.Spades},
+			u.ClassicTheme:   {u.Spades, u.Hearts, u.Clubs, u.Diamonds},
 		},
 
 		ScaleValue: map[string]map[string]float64{
-			PixelatedTheme: {
+			u.PixelatedTheme: {
 				u.X: 2,
 				u.Y: 2,
 			},
-			ClassicTheme: {
+			u.ClassicTheme: {
+				u.X: 1,
+				u.Y: 1,
+			},
+			u.SimpleTheme: {
 				u.X: 1,
 				u.Y: 1,
 			},
 		},
 
-		// The value which will be multiplied with either LX or LY, based on the given scenario
+		// The value which will be multiplied with either X or Y, based on the given scenario
 		LocMultiplier: map[string]map[string]float64{
-			PixelatedTheme: {
+			u.PixelatedTheme: {
 				u.X: 3,
 				u.Y: 3,
 			},
-			ClassicTheme: {
+			u.ClassicTheme: {
 				u.X: 1.5,
 				u.Y: 1.5,
 			},
 		},
 
-		// defaults to Pixelated Theme
-		Active: PixelatedTheme,
+		// defaults to Classic Theme
+		Active: u.ClassicTheme,
 
 		// used to see if the state of Active has changed
-		LastActive: PixelatedTheme,
+		LastActive: u.ClassicTheme,
 	}
 }
 
-// GetFrameBoundaries - returns 4 integer values which are: FrameOX, FrameOY, FrameWidth, FrameHeight
-func (th *Theme) GetFrameBoundaries(active string) (int, int, int, int) {
-	activeTh := th.FrameBoundaries[active]
-	return activeTh[u.FrameOX], activeTh[u.FrameOY], activeTh[u.FrameW], activeTh[u.FrameH]
+// GetFrontFrameGeomData - returns 4 integer values which are: FrOX, FrOY, FrameWidth, FrameHeight
+func (th *Theme) GetFrontFrameGeomData(active string) (int, int, int, int) {
+	activeTh := th.FrontFaceFrameData[active]
+	return activeTh[u.FrOX], activeTh[u.FrOY], activeTh[u.FrW], activeTh[u.FrH]
+}
+
+// GetBackFrameGeomData - returns 4 integer values which are: FrOX, FrOY, FrameWidth, FrameHeight
+func (th *Theme) GetBackFrameGeomData(active, backFace string) []int {
+	return th.BackFaceFrameData[active][backFace]
 }
 
 // GetSource - returns the source of the image. Useful to toggle between Themes

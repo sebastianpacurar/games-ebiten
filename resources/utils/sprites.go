@@ -15,8 +15,8 @@ type (
 		// GetScaleVal - returns (ScaleX, ScaleY)
 		GetScaleVal() (float64, float64)
 
-		// GetFramePosition - returns (FrameOX, FrameWidth, FrameOY, FrameHeight)
-		GetFramePosition() (int, int, int, int)
+		// GetFrameInfo - returns (FrOX, FrOY, FrameWidth, FrameHeight)
+		GetFrameInfo() (int, int, int, int)
 
 		// GetFrameNum - returns the current column from the current sprite sheet image row
 		GetFrameNum() int
@@ -35,6 +35,8 @@ type (
 
 		// DrawInteractiveSprite - Draws the image
 		DrawInteractiveSprite(*ebiten.Image)
+
+		GetHitBox() (float64, float64, float64, float64)
 	}
 
 	// StaticSprite - is implemented by structs which don't contain many states to get updated frequently
@@ -46,8 +48,8 @@ type (
 		// GetSize - returns (width, height)
 		GetSize() (float64, float64)
 
-		// GetFramePosition - returns (FrameOX, FrameWidth, FrameOY, FrameHeight)
-		GetFramePosition() (int, int, int, int)
+		// GetFrameInfo - returns (FrOX, FrameWidth, FrOY, FrameHeight)
+		GetFrameInfo() (int, int, int, int)
 
 		// GetImg - returns the Img of the sprite
 		GetImg() *ebiten.Image
@@ -57,5 +59,7 @@ type (
 
 		// DrawStaticSprite - Draws the image
 		DrawStaticSprite(*ebiten.Image)
+
+		GetHitBox() (float64, float64, float64, float64)
 	}
 )

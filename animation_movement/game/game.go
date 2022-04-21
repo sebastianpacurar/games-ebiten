@@ -8,11 +8,8 @@ import (
 	_ "image/png"
 )
 
-// Bounds - represents the main screen edges
-var (
-	Bounds = map[string]float64{u.MinX: 0, u.MaxX: u.ScreenWidth, u.MinY: 0, u.MaxY: u.ScreenHeight}
-	inset  = float64(15)
-)
+// u.ScreenDims - represents the main screen edges
+var inset = float64(15)
 
 type Game struct {
 	Items   []*Item
@@ -29,11 +26,11 @@ func NewGame() *Game {
 	for i := 1; i <= 5; i++ {
 		npcTag := fmt.Sprintf("npc%d", i)
 		if _, ok := npcLocations[npcTag]; !ok {
-			x, y := u.GenerateRandomLocation(Bounds[u.MinX]+NPCFrameWidth, Bounds[u.MaxX]-(NPCFrameWidth+inset), Bounds[u.MinY]+NPCFrameHeight, Bounds[u.MaxY]-(NPCFrameHeight+inset))
+			x, y := u.GenerateRandomLocation(u.ScreenDims[u.MinX]+NPCFrameWidth, u.ScreenDims[u.MaxX]-(NPCFrameWidth+inset), u.ScreenDims[u.MinY]+NPCFrameHeight, u.ScreenDims[u.MaxY]-(NPCFrameHeight+inset))
 			npcLocations[npcTag] = []float64{x, y}
 		}
 	}
-	ItemLocX, ItemLocY := u.GenerateRandomLocation(Bounds[u.MinX], Bounds[u.MaxX]-ItemFrameWidth, Bounds[u.MinY], Bounds[u.MaxY]-ItemFrameHeight)
+	ItemLocX, ItemLocY := u.GenerateRandomLocation(u.ScreenDims[u.MinX], u.ScreenDims[u.MaxX]-ItemFrameWidth, u.ScreenDims[u.MinY], u.ScreenDims[u.MaxY]-ItemFrameHeight)
 
 	return &Game{
 		Players: []*Player{
@@ -60,57 +57,57 @@ func NewGame() *Game {
 		NPCs: []*NPC{
 			{
 				Img:        ebiten.NewImageFromImage(u.LoadSpriteImage("resources/images/misc/character2.png")),
-				Name:       NPC1,
+				Name:       u.NPC1,
 				W:          NPCFrameWidth * NPCScaleX,
 				H:          NPCFrameHeight * NPCScaleY,
 				Speed:      3,
 				Direction:  2,
-				LX:         npcLocations[NPC1][0],
-				LY:         npcLocations[NPC1][1],
+				LX:         npcLocations[u.NPC1][0],
+				LY:         npcLocations[u.NPC1][1],
 				FrameLimit: 45,
 			},
 			{
 				Img:        ebiten.NewImageFromImage(u.LoadSpriteImage("resources/images/misc/character3.png")),
-				Name:       NPC2,
+				Name:       u.NPC2,
 				W:          NPCFrameWidth * NPCScaleX,
 				H:          NPCFrameHeight * NPCScaleY,
 				Speed:      3,
 				Direction:  2,
-				LX:         npcLocations[NPC2][0],
-				LY:         npcLocations[NPC2][1],
+				LX:         npcLocations[u.NPC2][0],
+				LY:         npcLocations[u.NPC2][1],
 				FrameLimit: 25,
 			},
 			{
 				Img:        ebiten.NewImageFromImage(u.LoadSpriteImage("resources/images/misc/character4.png")),
-				Name:       NPC3,
+				Name:       u.NPC3,
 				W:          NPCFrameWidth * NPCScaleX,
 				H:          NPCFrameHeight * NPCScaleY,
 				Speed:      3,
 				Direction:  2,
-				LX:         npcLocations[NPC3][0],
-				LY:         npcLocations[NPC3][1],
+				LX:         npcLocations[u.NPC3][0],
+				LY:         npcLocations[u.NPC3][1],
 				FrameLimit: 45,
 			},
 			{
 				Img:        ebiten.NewImageFromImage(u.LoadSpriteImage("resources/images/misc/character5.png")),
-				Name:       NPC4,
+				Name:       u.NPC4,
 				W:          NPCFrameWidth * NPCScaleX,
 				H:          NPCFrameHeight * NPCScaleY,
 				Speed:      3,
 				Direction:  2,
-				LX:         npcLocations[NPC4][0],
-				LY:         npcLocations[NPC4][1],
+				LX:         npcLocations[u.NPC4][0],
+				LY:         npcLocations[u.NPC4][1],
 				FrameLimit: 30,
 			},
 			{
 				Img:        ebiten.NewImageFromImage(u.LoadSpriteImage("resources/images/misc/character6.png")),
-				Name:       NPC5,
+				Name:       u.NPC5,
 				W:          NPCFrameWidth * NPCScaleX,
 				H:          NPCFrameHeight * NPCScaleY,
 				Speed:      3,
 				Direction:  2,
-				LX:         npcLocations[NPC5][0],
-				LY:         npcLocations[NPC5][1],
+				LX:         npcLocations[u.NPC5][0],
+				LY:         npcLocations[u.NPC5][1],
 				FrameLimit: 30,
 			},
 		},
@@ -119,17 +116,20 @@ func NewGame() *Game {
 
 func (g *Game) Update() error {
 	for i := range g.Items {
-		g.Items[i].HitBox = u.HitBox(g.Items[i].LX, g.Items[i].LY, g.Items[i].W, g.Items[i].H)
+		item := g.Items[i]
+		item.HitBox = u.HitBox(item.LX, item.LY, item.W, item.H)
 	}
 
 	for i := range g.Players {
-		g.Players[i].HitBox = u.HitBox(g.Players[i].LX, g.Players[i].LY, g.Players[i].W, g.Players[i].H)
-		g.Players[i].HandleMovement(Bounds[u.MinX], Bounds[u.MaxX], Bounds[u.MinY], Bounds[u.MaxY])
+		p := g.Players[i]
+		p.HitBox = u.HitBox(p.LX, p.LY, p.W, p.H)
+		p.HandleMovement(u.ScreenDims[u.MinX], u.ScreenDims[u.MaxX], u.ScreenDims[u.MinY], u.ScreenDims[u.MaxY])
 	}
 
 	for i := range g.NPCs {
-		g.NPCs[i].HitBox = u.HitBox(g.NPCs[i].LX, g.NPCs[i].LY, g.NPCs[i].W, g.NPCs[i].H)
-		g.NPCs[i].Move(Bounds[u.MinX], Bounds[u.MaxX], Bounds[u.MinY], Bounds[u.MaxY])
+		npc := g.NPCs[i]
+		npc.HitBox = u.HitBox(npc.LX, npc.LY, npc.W, npc.H)
+		npc.Move(u.ScreenDims[u.MinX], u.ScreenDims[u.MaxX], u.ScreenDims[u.MinY], u.ScreenDims[u.MaxY])
 	}
 
 	// player1 speed up
@@ -141,15 +141,19 @@ func (g *Game) Update() error {
 
 	// update the Item state if any NPC collides with Item shape
 	for i := range g.NPCs {
-		if u.IsCollision(g.NPCs[i].HitBox[u.MinX], g.NPCs[i].HitBox[u.MinY], g.NPCs[i].W, g.NPCs[i].H, g.Items[0].HitBox[u.MinX], g.Items[0].HitBox[u.MinY], g.Items[0].W, g.Items[0].H) {
+		npc := g.NPCs[i]
+		item := g.Items[0]
+		if u.IsCollision(npc.HitBox[u.MinX], npc.HitBox[u.MinY], npc.W, npc.H, item.HitBox[u.MinX], item.HitBox[u.MinY], item.W, item.H) {
 			g.Items[0].UpdateItemState()
 		}
 	}
 
 	// update the Item state if the player and Item shape areas overlap
 	for i := range g.Players {
-		if u.IsCollision(g.Players[i].HitBox[u.MinX], g.Players[i].HitBox[u.MinY], g.Players[i].W, g.Players[i].H, g.Items[0].HitBox[u.MinX], g.Items[0].HitBox[u.MinY], g.Items[0].W, g.Items[0].H) {
-			g.Items[0].UpdateItemState()
+		p := g.Players[i]
+		item := g.Items[0]
+		if u.IsCollision(p.HitBox[u.MinX], p.HitBox[u.MinY], p.W, p.H, item.HitBox[u.MinX], item.HitBox[u.MinY], item.W, item.H) {
+			item.UpdateItemState()
 		}
 	}
 

@@ -32,8 +32,8 @@ func (i *Item) GetSize() (float64, float64) {
 	return i.W, i.H
 }
 
-func (i *Item) GetFramePosition() (int, int, int, int) {
-	return ItemFrameOX, ItemFrameWidth, ItemFrameOY, ItemFrameHeight
+func (i *Item) GetFrameInfo() (int, int, int, int) {
+	return ItemFrameOX, ItemFrameOY, ItemFrameWidth, ItemFrameHeight
 }
 
 func (i *Item) GetImg() *ebiten.Image {
@@ -59,7 +59,7 @@ func (i *Item) DrawStaticSprite(screen *ebiten.Image) {
 
 // UpdateItemState - mainly used to update location and sub image after every collision with the player or NPCs
 func (i *Item) UpdateItemState() {
-	i.LX, i.LY = u.GenerateRandomLocation(Bounds[u.MinX], Bounds[u.MaxX]-ItemFrameWidth, Bounds[u.MinY], Bounds[u.MaxY]-ItemFrameHeight)
+	i.LX, i.LY = u.GenerateRandomLocation(u.ScreenDims[u.MinX], u.ScreenDims[u.MaxX]-ItemFrameWidth, u.ScreenDims[u.MinY], u.ScreenDims[u.MaxY]-ItemFrameHeight)
 	i.ImgCount++
 
 	if i.RowCount == 2 && i.ImgCount == 6 {

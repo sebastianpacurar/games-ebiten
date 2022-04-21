@@ -2,6 +2,8 @@ package utils
 
 import (
 	"bytes"
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"image"
 	"io/ioutil"
 	"log"
@@ -10,25 +12,55 @@ import (
 )
 
 const (
-	ScreenWidth  = 1480
+	ScreenWidth  = 1280
 	ScreenHeight = 860
-	X            = "x"
-	Y            = "y"
-	MinX         = "minX"
-	MinY         = "minY"
-	MaxX         = "maxX"
-	MaxY         = "maxY"
 
-	FrameOX = "FrameOX"
-	FrameOY = "FrameOY"
-	FrameW  = "FrameWidth"
-	FrameH  = "FrameHeight"
+	// X Y - used as aliases for Main Axis and Cross Axis
+	X = "x"
+	Y = "y"
 
+	// MinX MinY MaxX MaxY - represent the vertices points of an Image
+	MinX = "minX"
+	MinY = "minY"
+	MaxX = "maxX"
+	MaxY = "maxY"
+
+	// FrOX FrOY FrW FrH = minX, minY, maxX, maxY, for the area of an Image
+	// Used type is int, since these values represent the coords of a SubImage
+	FrOX = "FrameOX"
+	FrOY = "FrameOY"
+	FrW  = "FrameW"
+	FrH  = "FrameH"
+
+	// NPC1 NPC2 NPC3 NPC4 NPC5 are just aliases for quick reference
+	NPC1 = "npc1"
+	NPC2 = "NPC2"
+	NPC3 = "NPC3"
+	NPC4 = "NPC4"
+	NPC5 = "NPC5"
+
+	// Hearts Clubs Diamonds Spades are all Card Suites aliases
 	Hearts   = "Hearts"
 	Clubs    = "Clubs"
 	Diamonds = "Diamonds"
 	Spades   = "Spades"
+
+	// Card Themes
+	ClassicTheme   = "classic"
+	PixelatedTheme = "8bit"
+	AbstractTheme  = "abstract"
+	SimpleTheme    = "simple"
+
+	// Cards Faces
+	StaticBack1   = "StaticBack1"
+	StaticBack2   = "StaticBack2"
+	DynamicRobot  = "DynamicRobot"
+	DynamicCastle = "DynamicCastle"
+	DynamicBeach  = "DynamicBeach"
+	DynamicSleeve = "DynamicSleeve"
 )
+
+var ScreenDims = map[string]float64{MinX: 0, MaxX: ScreenWidth, MinY: 0, MaxY: ScreenHeight}
 
 func LoadSpriteImage(path string) image.Image {
 	file, err := ioutil.ReadFile(path)
@@ -57,10 +89,10 @@ func IsCollision(x1, y1, w1, h1, x2, y2, w2, h2 float64) bool {
 // HitBox - generate the shape's hitbox (minX, maxX, minY, maxY)
 func HitBox(x, y, w, h float64) map[string]float64 {
 	return map[string]float64{
-		"minX": x,
-		"maxX": x + w,
-		"minY": y,
-		"maxY": y + h,
+		MinX: x,
+		MaxX: x + w,
+		MinY: y,
+		MaxY: y + h,
 	}
 }
 
@@ -88,6 +120,43 @@ func BoundaryValidation(i interface{}, minX, maxX, minY, maxY float64) {
 		if locY >= maxY-h {
 			img.SetLocation(Y, maxY-h)
 			img.SetDelta(Y, 0)
+		}
+	}
+}
+
+// IsImgHovered - Returns true if the cursor overlaps the target interface
+func IsImgHovered(i interface{}, cx, cy int) bool {
+	var x, y, w, h float64
+
+	switch i.(type) {
+	case CasinoCards:
+		c := i.(CasinoCards)
+		x, y, w, h = c.GetPosition()
+	}
+	return int(x) <= cx && cx < int(x+w) && int(y) <= cy && cy < int(y+h)
+}
+
+// DragAndDrop - Drags the image
+func DragAndDrop(i interface{}) {
+	switch i.(type) {
+	case CasinoCards:
+		c := i.(CasinoCards)
+		cx, cy := ebiten.CursorPosition()
+
+		if IsImgHovered(c, cx, cy) && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+			c.SetDraggedState(true)
+		}
+
+		// drag and set location
+		if inpututil.MouseButtonPressDuration(ebiten.MouseButtonLeft) > 0 && c.GetDraggedState() {
+			_, _, w, h := c.GetPosition()
+			c.SetLocation(X, float64(cx)-w/2)
+			c.SetLocation(Y, float64(cy)-h/2)
+		}
+
+		// release
+		if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
+			c.SetDraggedState(false)
 		}
 	}
 }
