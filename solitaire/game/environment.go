@@ -11,13 +11,17 @@ type (
 		EmptySlotImg *ebiten.Image
 		Columns      []CardColumn
 		Stores       []CardStore
-		DrawnSlot
+		DrawnCardsSlot
 		DrawCardSlot
-		SpacerV int
-		SpacerH int
+		SpacerV float64
+		SpacerH float64
 	}
 
 	DrawCardSlot struct {
+		X            float64
+		Y            float64
+		W            float64
+		H            float64
 		GreenSlotImg *ebiten.Image
 		RedSlotImg   *ebiten.Image
 		Cards        []*Card
@@ -26,7 +30,8 @@ type (
 		TriesCount   bool
 	}
 
-	DrawnSlot struct {
+	DrawnCardsSlot struct {
+		Cards   []*Card
 		IsEmpty bool
 	}
 
@@ -41,20 +46,26 @@ type (
 	}
 )
 
+// IsDrawCardHovered - returns true if the DrawCardSlot is hovered. Applies only when there are no cards in stack
+func (e *Environment) IsDrawCardHovered(cx, cy int, th *Theme) bool {
+	x, y, w, h := e.DrawCardSlot.X, e.DrawCardSlot.Y, e.DrawCardSlot.W, e.DrawCardSlot.H
+	return int(x) <= cx && cx < int(x+w) && int(y) <= cy && cy < int(y+h)
+}
+
 func (e *Environment) DrawEnvironment(screen *ebiten.Image, th *Theme) {
 	// Draw the BG Image
 	opBg := &ebiten.DrawImageOptions{}
 	opBg.GeoM.Scale(50, 50)
 	screen.DrawImage(e.BgImg, opBg)
 
-	// Draw the Draw Stack and Placeholder
+	// Draw the Draw Stack and the Drawn Stack
 	for i := 1; i <= 2; i++ {
 		var img *ebiten.Image
 		opCardStack := &ebiten.DrawImageOptions{}
 		opCardStack.GeoM.Scale(th.ScaleValue[th.Active][u.X], th.ScaleValue[th.Active][u.Y])
 
-		x := float64(u.ScreenWidth/7 + (th.FrontFaceFrameData[th.Active][u.FrW]+e.SpacerH)*i)
-		y := float64(e.SpacerV)
+		x := (float64(th.FrontFaceFrameData[th.Active][u.FrW]) + e.SpacerH) * float64(i)
+		y := e.SpacerV
 		opCardStack.GeoM.Translate(x, y)
 
 		if i == 2 {
@@ -71,9 +82,9 @@ func (e *Environment) DrawEnvironment(screen *ebiten.Image, th *Theme) {
 		opStackSlot.GeoM.Scale(th.ScaleValue[th.Active][u.X], th.ScaleValue[th.Active][u.Y])
 
 		// align StackedCards with the last column from the column Stack Slot
-		x := float64(u.ScreenWidth)/2.05 + float64((th.FrontFaceFrameData[th.Active][u.FrW]+e.SpacerH)*i)
+		x := (float64(th.FrontFaceFrameData[th.Active][u.FrW]) + e.SpacerH) * (float64(i) + 4)
 
-		opStackSlot.GeoM.Translate(x, float64(e.SpacerV))
+		opStackSlot.GeoM.Translate(x, e.SpacerV)
 		screen.DrawImage(e.EmptySlotImg, opStackSlot)
 	}
 
@@ -82,7 +93,7 @@ func (e *Environment) DrawEnvironment(screen *ebiten.Image, th *Theme) {
 		opColumnSlot := &ebiten.DrawImageOptions{}
 		opColumnSlot.GeoM.Scale(th.ScaleValue[th.Active][u.X], th.ScaleValue[th.Active][u.Y])
 
-		x := float64(u.ScreenWidth/7 + (th.FrontFaceFrameData[th.Active][u.FrW]+e.SpacerH)*i)
+		x := (float64(th.FrontFaceFrameData[th.Active][u.FrW]) + e.SpacerH) * float64(i)
 		y := float64(u.ScreenHeight / 3)
 
 		opColumnSlot.GeoM.Translate(x, y)

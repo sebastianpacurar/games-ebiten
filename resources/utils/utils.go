@@ -51,7 +51,7 @@ const (
 	AbstractTheme  = "abstract"
 	SimpleTheme    = "simple"
 
-	// Cards Faces
+	// AllCards Faces
 	StaticBack1   = "StaticBack1"
 	StaticBack2   = "StaticBack2"
 	DynamicRobot  = "DynamicRobot"

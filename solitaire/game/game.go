@@ -10,9 +10,8 @@ import (
 
 type (
 	Game struct {
-		Cards []*Card
-		Environment
-		Th *Theme
+		*Theme
+		*Environment
 	}
 )
 
@@ -21,68 +20,154 @@ func NewGame() *Game {
 	th := NewTheme()
 	deck := GenerateDeck(th)
 
-	return &Game{
-		Cards: deck,
-		Th:    th,
-		Environment: Environment{
+	game := &Game{
+		Theme: th,
+		Environment: &Environment{
 			SpacerV:      50,
-			SpacerH:      40,
+			SpacerH:      float64(th.FrontFaceFrameData[th.Active][u.FrW]) + 10,
 			BgImg:        classicImg.SubImage(image.Rect(700, 500, 750, 550)).(*ebiten.Image),
 			EmptySlotImg: classicImg.SubImage(image.Rect(852, 384, 852+71, 384+96)).(*ebiten.Image),
 
 			DrawCardSlot: DrawCardSlot{
 				GreenSlotImg: classicImg.SubImage(image.Rect(710, 384, 710+71, 384+96)).(*ebiten.Image),
 				RedSlotImg:   classicImg.SubImage(image.Rect(781, 384, 781+71, 384+96)).(*ebiten.Image),
-				Cards:        []*Card{},
+				Cards:        make([]*Card, 0, 24),
+			},
+			DrawnCardsSlot: DrawnCardsSlot{
+				Cards: make([]*Card, 0, 24),
 			},
 			Stores: []CardStore{
-				{Cards: []*Card{}},
-				{Cards: []*Card{}},
-				{Cards: []*Card{}},
-				{Cards: []*Card{}},
+				{Cards: make([]*Card, 0, 13)},
+				{Cards: make([]*Card, 0, 13)},
+				{Cards: make([]*Card, 0, 13)},
+				{Cards: make([]*Card, 0, 13)},
 			},
 			Columns: []CardColumn{
-				{Cards: []*Card{}},
-				{Cards: []*Card{}},
-				{Cards: []*Card{}},
-				{Cards: []*Card{}},
-				{Cards: []*Card{}},
-				{Cards: []*Card{}},
-				{Cards: []*Card{}},
+				{Cards: make([]*Card, 0, 1)},
+				{Cards: make([]*Card, 0, 2)},
+				{Cards: make([]*Card, 0, 3)},
+				{Cards: make([]*Card, 0, 4)},
+				{Cards: make([]*Card, 0, 5)},
+				{Cards: make([]*Card, 0, 6)},
+				{Cards: make([]*Card, 0, 7)},
 			},
 		},
 	}
+	_, _, frW, frH := th.GetFrontFrameGeomData(game.Active)
+	x, y := float64(frW)+game.SpacerH, game.SpacerV
+	w, h := float64(frW)*th.ScaleValue[game.Active][u.X], float64(frH)*th.ScaleValue[game.Active][u.Y]
+
+	game.DrawCardSlot.X = x
+	game.DrawCardSlot.Y = y
+	game.DrawCardSlot.W = w
+	game.DrawCardSlot.H = h
+
+	// fill every column array with its relative count of cards
+	cardIndex := 0
+	for i := range game.Columns {
+		for j := 0; j <= i; j++ {
+			// keep only the last one revealed
+			if j == i {
+				deck[cardIndex].IsRevealed = true
+			}
+			game.Columns[i].Cards = append(game.Columns[i].Cards, deck[cardIndex])
+			cardIndex++
+		}
+	}
+
+	// fill the DrawCard array
+	for i := range deck[cardIndex:] {
+		game.DrawCardSlot.Cards = append(game.DrawCardSlot.Cards, deck[cardIndex:][i])
+	}
+
+	return game
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	g.DrawEnvironment(screen, g.Th)
+	g.DrawEnvironment(screen, g.Theme)
 
-	for _, c := range g.Cards {
-		c.Img = nil
+	// Draw the Card Columns
+	for i := range g.Columns {
+		x := (float64(g.FrontFaceFrameData[g.Active][u.FrW]) + g.SpacerH) * (float64(i) + 1)
+		for j := range g.Columns[i].Cards {
+			y := float64(u.ScreenHeight/3) + float64(j*20)
+			g.Columns[i].Cards[j].X = x
+			g.Columns[i].Cards[j].Y = y
+			g.Columns[i].Cards[j].DrawCardSprite(screen)
+		}
+	}
+
+	// Draw the Draw Card Slot
+	if len(g.DrawCardSlot.Cards) > 0 {
+		for i := range g.DrawCardSlot.Cards {
+			g.DrawCardSlot.Cards[i].X = g.DrawCardSlot.X
+			g.DrawCardSlot.Cards[i].Y = g.DrawCardSlot.Y
+			g.DrawCardSlot.Cards[i].DrawCardSprite(screen)
+		}
+	}
+
+	// Draw the Drawn Card Slot
+	for i := range g.DrawnCardsSlot.Cards {
+		x := (float64(g.FrontFaceFrameData[g.Active][u.FrW]) + g.SpacerH) * 2
+		y := g.SpacerV
+		g.DrawnCardsSlot.Cards[i].X = x
+		g.DrawnCardsSlot.Cards[i].Y = y
+		g.DrawnCardsSlot.Cards[i].IsRevealed = true
+		g.DrawnCardsSlot.Cards[i].DrawCardSprite(screen)
+	}
+
+	// force card image persistence while dragged
+	if HoveredCard != nil {
+		switch HoveredCard.(type) {
+		case *Card:
+			c := HoveredCard.(*Card)
+			opc := &ebiten.DrawImageOptions{}
+			opc.GeoM.Scale(c.ScaleX, c.ScaleY)
+			opc.GeoM.Translate(c.X, c.Y)
+			screen.DrawImage(c.Img, opc)
+		}
 	}
 
 	ebitenutil.DebugPrint(screen, "Press 1 or 2 to change Themes")
 }
 
 func (g *Game) Update() error {
-	if ebiten.IsKeyPressed(ebiten.Key1) && g.Th.Active != u.ClassicTheme {
-		g.Th.Active = u.ClassicTheme
-	} else if ebiten.IsKeyPressed(ebiten.Key2) && g.Th.Active != u.PixelatedTheme {
-		g.Th.Active = u.PixelatedTheme
+	cx, cy := ebiten.CursorPosition()
+	if ebiten.IsKeyPressed(ebiten.Key1) && g.Active != u.ClassicTheme {
+		g.Active = u.ClassicTheme
+	} else if ebiten.IsKeyPressed(ebiten.Key2) && g.Active != u.PixelatedTheme {
+		g.Active = u.PixelatedTheme
 	}
 
-	// when Active != LastActive, regenerate the cards, and update LastActive
-	if g.Th.IsToggled() {
-		g.Cards = GenerateDeck(g.Th)
-		g.Th.LastActive = g.Th.Active
-	}
-
-	for _, c := range g.Cards {
-		cx, cy := ebiten.CursorPosition()
-		if u.IsImgHovered(c, cx, cy) && inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonRight) {
-			c.IsRevealed = !c.IsRevealed
+	//
+	//
+	// handle the Draw Card functionality
+	if len(g.DrawCardSlot.Cards) > 0 {
+		if g.DrawCardSlot.Cards[0].IsCardHovered(cx, cy) {
+			last := len(g.DrawCardSlot.Cards) - 1
+			if len(g.DrawCardSlot.Cards) == 1 {
+				last = 0
+			}
+			// append every last card from DrawCardSlot to DrawnCardsSlot, then trim last card from DrawCardSlot
+			if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+				g.DrawnCardsSlot.Cards = append(g.DrawnCardsSlot.Cards, g.DrawCardSlot.Cards[last])
+				g.DrawCardSlot.Cards = g.DrawCardSlot.Cards[:last]
+			}
 		}
-		u.DragAndDrop(c)
+	} else {
+		// if there are no more cards, clicking the circle will reset the process
+		if g.IsDrawCardHovered(cx, cy, g.Theme) && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+			for i := range g.DrawnCardsSlot.Cards {
+				g.DrawCardSlot.Cards = append(g.DrawCardSlot.Cards, g.DrawnCardsSlot.Cards[i])
+				g.DrawCardSlot.Cards[i].IsRevealed = false
+			}
+			g.DrawnCardsSlot.Cards = g.DrawnCardsSlot.Cards[:0]
+
+			// reverse order of newly stacked DrawCardSlot cards:
+			for i, j := 0, len(g.DrawCardSlot.Cards)-1; i < j; i, j = i+1, j-1 {
+				g.DrawCardSlot.Cards[i], g.DrawCardSlot.Cards[j] = g.DrawCardSlot.Cards[j], g.DrawCardSlot.Cards[i]
+			}
+		}
 	}
 
 	return nil
@@ -103,7 +188,6 @@ func GenerateDeck(th *Theme) []*Card {
 
 	// set which FrontFace the cards have
 	frOX, frOY, frW, frH := th.GetFrontFrameGeomData(active)
-	//muX, muY := th.LocMultiplier[active][u.X], th.LocMultiplier[active][u.Y]
 
 	// this logic is needed due to the discrepancy of the sprite sheets:
 	// one Image starts with card Ace as the first Column value, while others start with card number or other value

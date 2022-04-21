@@ -65,8 +65,8 @@ func NewTheme() *Theme {
 				u.Y: 2,
 			},
 			u.ClassicTheme: {
-				u.X: 1,
-				u.Y: 1,
+				u.X: 1.5,
+				u.Y: 1.5,
 			},
 			u.SimpleTheme: {
 				u.X: 1,
@@ -81,8 +81,8 @@ func NewTheme() *Theme {
 				u.Y: 3,
 			},
 			u.ClassicTheme: {
-				u.X: 1.5,
-				u.Y: 1.5,
+				u.X: 1.25,
+				u.Y: 1.25,
 			},
 		},
 
