@@ -65,16 +65,6 @@ func (cl *CardColumn) GetCountOfHidden() int {
 	return count
 }
 
-func (cl *CardColumn) GetCountOfRevealed() int {
-	count := 0
-	for _, v := range cl.Cards {
-		if v.IsRevealed {
-			count++
-		}
-	}
-	return count
-}
-
 func (e *Environment) DrawEnvironment(screen *ebiten.Image, th *Theme) {
 	// Draw the BG Image
 	opBg := &ebiten.DrawImageOptions{}

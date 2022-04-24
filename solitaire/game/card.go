@@ -45,11 +45,12 @@ var (
 
 // Card - Implements CasinoCards interface
 // IsRevealed - if the card's frontFace is visible
-// IsLocked - if the card is in the stack slot (and has a card over it) or if it's in the draw stack
 // IsDragged - holds the dragged state
+// ColCount - refers to what column the card is currently in if it's in any column
 type Card struct {
 	Img        *ebiten.Image
 	BackImg    *ebiten.Image
+	ColCount   int
 	Suit       string
 	Value      int
 	Color      string
@@ -57,7 +58,6 @@ type Card struct {
 	ScaleX     float64
 	ScaleY     float64
 	IsRevealed bool
-	IsLocked   bool
 	IsDragged  bool
 }
 
