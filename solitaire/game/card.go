@@ -7,8 +7,9 @@ import (
 	_ "image/png"
 )
 
-// Translation - translates the value of a card which is located at certain coordinates
+// Translation - used for acquiring the right card index while getting the card SubImage from the Image
 // HoveredCard - used to force the hovered card to overlap other images, while dragged
+// CardRanks - smallest is "Ace"(0), while highest is "King"(13)
 var (
 	HoveredCard interface{}
 	Translation = map[string]map[int]string{
@@ -22,8 +23,23 @@ var (
 		},
 		//u.AbstractTheme: {
 		//	0: "2", 1: "3", 2: "4", 3: "5", 4: "6", 5: "7",
-		//	6: "8", 7: "9", 8: "10", 9: "J", 10: "Q", 11: "K", 12: "A",
+		//	6: "8", 7: "9", 8: "10", 9: "Jack", 10: "Queen", 11: "King", 12: "Ace",
 		//},
+	}
+	CardRanks = map[string]int{
+		u.Ace:   0,
+		"2":     1,
+		"3":     2,
+		"4":     3,
+		"5":     4,
+		"6":     5,
+		"7":     6,
+		"8":     7,
+		"9":     8,
+		"10":    9,
+		u.Jack:  10,
+		u.Queen: 11,
+		u.King:  12,
 	}
 )
 
@@ -35,7 +51,8 @@ type Card struct {
 	Img        *ebiten.Image
 	BackImg    *ebiten.Image
 	Suit       string
-	Value      string
+	Value      int
+	Color      string
 	X, Y, W, H float64
 	ScaleX     float64
 	ScaleY     float64
@@ -68,6 +85,11 @@ func (c *Card) DrawCardSprite(screen *ebiten.Image) {
 	// only revealed cards can be hovered
 	if c.IsRevealed {
 		c.DragAndDropCard()
+		// release
+		if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
+			c.IsDragged = false
+			HoveredCard = nil
+		}
 
 		// used to force to draw the card over the other images while being dragged
 		if c.IsDragged {
@@ -100,12 +122,6 @@ func (c *Card) DragAndDropCard() {
 		c.X = float64(cx) - w/2
 		c.Y = float64(cy) - h/2
 		HoveredCard = c
-	}
-
-	// release
-	if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
-		c.IsDragged = false
-		HoveredCard = nil
 	}
 }
 

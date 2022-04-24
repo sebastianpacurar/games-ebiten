@@ -23,7 +23,7 @@ type NPC struct {
 	Name         string
 	FrameNum     int
 	Direction    int
-	LX, LY       float64
+	X, Y         float64
 	DX, DY       float64
 	W, H         float64
 	Speed        float64
@@ -35,7 +35,7 @@ type NPC struct {
 }
 
 func (npc *NPC) GetLocations() (float64, float64) {
-	return npc.LX, npc.LY
+	return npc.X, npc.Y
 }
 
 func (npc *NPC) GetSize() (float64, float64) {
@@ -64,9 +64,9 @@ func (npc *NPC) GetImg() *ebiten.Image {
 
 func (npc *NPC) SetLocation(axis string, val float64) {
 	if axis == u.X {
-		npc.LX = val
+		npc.X = val
 	} else if axis == u.Y {
-		npc.LY = val
+		npc.Y = val
 	}
 }
 
@@ -81,7 +81,7 @@ func (npc *NPC) SetDelta(axis string, val float64) {
 func (npc *NPC) DrawInteractiveSprite(screen *ebiten.Image) {
 	opNPC := &ebiten.DrawImageOptions{}
 	opNPC.GeoM.Scale(NPCScaleX, NPCScaleY)
-	opNPC.GeoM.Translate(npc.LX, npc.LY)
+	opNPC.GeoM.Translate(npc.X, npc.Y)
 
 	x, y := NPCFrameOX+npc.FrameNum*NPCFrameWidth, NPCFrameOY+npc.Direction*NPCFrameHeight
 	screen.DrawImage(npc.Img.SubImage(image.Rect(x, y, x+NPCFrameWidth, y+NPCFrameHeight)).(*ebiten.Image), opNPC)
@@ -93,23 +93,23 @@ func (npc *NPC) GetHitBox() (float64, float64, float64, float64) {
 }
 
 func (npc *NPC) ValidateBoundaries(minX, maxX, minY, maxY float64) {
-	if npc.LX <= minX || npc.LX >= maxX-npc.W || npc.LY <= minY || npc.LY >= maxY-npc.H {
+	if npc.X <= minX || npc.X >= maxX-npc.W || npc.Y <= minY || npc.Y >= maxY-npc.H {
 		npc.IsNearMargin = true
 		npc.IsMoving = false
-		if npc.LX <= minX {
-			npc.LX = minX
+		if npc.X <= minX {
+			npc.X = minX
 			npc.DX = 0
 		}
-		if npc.LX >= maxX-npc.W {
-			npc.LX = maxX - npc.W
+		if npc.X >= maxX-npc.W {
+			npc.X = maxX - npc.W
 			npc.DX = 0
 		}
-		if npc.LY <= minY {
-			npc.LY = minY
+		if npc.Y <= minY {
+			npc.Y = minY
 			npc.DY = 0
 		}
-		if npc.LY >= maxY-npc.H {
-			npc.LY = maxY - npc.H
+		if npc.Y >= maxY-npc.H {
+			npc.Y = maxY - npc.H
 			npc.DY = 0
 		}
 	} else {
@@ -143,7 +143,7 @@ func (npc *NPC) Move(minX, maxX, minY, maxY float64) {
 		}
 	}
 
-	// update LX and LY based on Delta
+	// update X and Y based on Delta
 	if npc.IsMoving {
 		switch npc.Direction {
 
@@ -182,10 +182,10 @@ func (npc *NPC) Move(minX, maxX, minY, maxY float64) {
 			npc.DX = 3 * npc.Speed
 		}
 
-		npc.LX += npc.DX
-		npc.LY += npc.DY
+		npc.X += npc.DX
+		npc.Y += npc.DY
 
-		if npc.LX <= minX || npc.LX >= maxX-npc.W || npc.LY <= minY || npc.LY >= maxY-npc.H {
+		if npc.X <= minX || npc.X >= maxX-npc.W || npc.Y <= minY || npc.Y >= maxY-npc.H {
 			npc.IsNearMargin = true
 			npc.IsMoving = false
 

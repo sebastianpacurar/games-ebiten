@@ -10,39 +10,34 @@ type (
 		BgImg        *ebiten.Image
 		EmptySlotImg *ebiten.Image
 		Columns      []CardColumn
-		Stores       []CardStore
+		CardStores   []CardStore
 		DrawnCardsSlot
 		DrawCardSlot
-		SpacerV float64
-		SpacerH float64
+		CardsVSpacer float64
+		SpacerV      float64
+		SpacerH      float64
 	}
 
 	DrawCardSlot struct {
-		X            float64
-		Y            float64
-		W            float64
-		H            float64
+		X, Y, W, H   float64
 		GreenSlotImg *ebiten.Image
 		RedSlotImg   *ebiten.Image
 		Cards        []*Card
-		IsEmpty      bool
 		IsGreen      bool
-		TriesCount   bool
-	}
-
-	DrawnCardsSlot struct {
-		Cards   []*Card
-		IsEmpty bool
 	}
 
 	CardStore struct {
-		Cards   []*Card
-		IsEmpty bool
+		X, Y, W, H float64
+		Cards      []*Card
+	}
+
+	DrawnCardsSlot struct {
+		Cards []*Card
 	}
 
 	CardColumn struct {
-		Cards   []*Card
-		IsEmpty bool
+		X, Y, W, H float64
+		Cards      []*Card
 	}
 )
 
@@ -50,6 +45,34 @@ type (
 func (e *Environment) IsDrawCardHovered(cx, cy int, th *Theme) bool {
 	x, y, w, h := e.DrawCardSlot.X, e.DrawCardSlot.Y, e.DrawCardSlot.W, e.DrawCardSlot.H
 	return int(x) <= cx && cx < int(x+w) && int(y) <= cy && cy < int(y+h)
+}
+
+func (cs *CardStore) GetStoreGeomData() (float64, float64, float64, float64) {
+	return cs.X, cs.Y, cs.W, cs.H
+}
+
+func (cl *CardColumn) GetColumnGeoMData() (float64, float64, float64, float64) {
+	return cl.X, cl.Y, cl.W, cl.H
+}
+
+func (cl *CardColumn) GetCountOfHidden() int {
+	count := 0
+	for _, v := range cl.Cards {
+		if !v.IsRevealed {
+			count++
+		}
+	}
+	return count
+}
+
+func (cl *CardColumn) GetCountOfRevealed() int {
+	count := 0
+	for _, v := range cl.Cards {
+		if v.IsRevealed {
+			count++
+		}
+	}
+	return count
 }
 
 func (e *Environment) DrawEnvironment(screen *ebiten.Image, th *Theme) {
@@ -76,12 +99,12 @@ func (e *Environment) DrawEnvironment(screen *ebiten.Image, th *Theme) {
 		screen.DrawImage(img, opCardStack)
 	}
 
-	// Draw the to-fill stack slot area
+	// Draw the Card Stores
 	for i := 0; i < 4; i++ {
 		opStackSlot := &ebiten.DrawImageOptions{}
 		opStackSlot.GeoM.Scale(th.ScaleValue[th.Active][u.X], th.ScaleValue[th.Active][u.Y])
 
-		// align StackedCards with the last column from the column Stack Slot
+		// align Stacked Cards with the left columns of the Column slots
 		x := (float64(th.FrontFaceFrameData[th.Active][u.FrW]) + e.SpacerH) * (float64(i) + 4)
 
 		opStackSlot.GeoM.Translate(x, e.SpacerV)

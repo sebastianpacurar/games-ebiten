@@ -20,9 +20,10 @@ func NewGame() *Game {
 	th := NewTheme()
 	deck := GenerateDeck(th)
 
-	game := &Game{
+	g := &Game{
 		Theme: th,
 		Environment: &Environment{
+			CardsVSpacer: 30,
 			SpacerV:      50,
 			SpacerH:      float64(th.FrontFaceFrameData[th.Active][u.FrW]) + 10,
 			BgImg:        classicImg.SubImage(image.Rect(700, 500, 750, 550)).(*ebiten.Image),
@@ -36,7 +37,7 @@ func NewGame() *Game {
 			DrawnCardsSlot: DrawnCardsSlot{
 				Cards: make([]*Card, 0, 24),
 			},
-			Stores: []CardStore{
+			CardStores: []CardStore{
 				{Cards: make([]*Card, 0, 13)},
 				{Cards: make([]*Card, 0, 13)},
 				{Cards: make([]*Card, 0, 13)},
@@ -53,34 +54,50 @@ func NewGame() *Game {
 			},
 		},
 	}
-	_, _, frW, frH := th.GetFrontFrameGeomData(game.Active)
-	x, y := float64(frW)+game.SpacerH, game.SpacerV
-	w, h := float64(frW)*th.ScaleValue[game.Active][u.X], float64(frH)*th.ScaleValue[game.Active][u.Y]
+	_, _, frW, frH := th.GetFrontFrameGeomData(g.Active)
+	x, y := float64(frW)+g.SpacerH, g.SpacerV
+	w, h := float64(frW)*th.ScaleValue[g.Active][u.X], float64(frH)*th.ScaleValue[g.Active][u.Y]
 
-	game.DrawCardSlot.X = x
-	game.DrawCardSlot.Y = y
-	game.DrawCardSlot.W = w
-	game.DrawCardSlot.H = h
+	g.DrawCardSlot.X = x
+	g.DrawCardSlot.Y = y
+	g.DrawCardSlot.W = w
+	g.DrawCardSlot.H = h
 
-	// fill every column array with its relative count of cards
+	for s := range g.CardStores {
+		sx := (float64(frW) + g.SpacerH) * (float64(s) + 4)
+		g.CardStores[s].X = sx
+		g.CardStores[s].Y = y
+		g.CardStores[s].W = w
+		g.CardStores[s].H = h
+	}
+
+	// fill every column array with its relative count of cards and save GeomData of columns placeholders
 	cardIndex := 0
-	for i := range game.Columns {
+	for i := range g.Columns {
+		// initiate the location of the Card Column placeholders
+		colx := (float64(frW) + g.SpacerH) * float64(i+1)
+		coly := float64(u.ScreenHeight / 3)
+		g.Columns[i].X = colx
+		g.Columns[i].Y = coly
+		g.Columns[i].W = w
+		g.Columns[i].H = h
+
 		for j := 0; j <= i; j++ {
 			// keep only the last one revealed
 			if j == i {
 				deck[cardIndex].IsRevealed = true
 			}
-			game.Columns[i].Cards = append(game.Columns[i].Cards, deck[cardIndex])
+			g.Columns[i].Cards = append(g.Columns[i].Cards, deck[cardIndex])
 			cardIndex++
 		}
 	}
 
 	// fill the DrawCard array
 	for i := range deck[cardIndex:] {
-		game.DrawCardSlot.Cards = append(game.DrawCardSlot.Cards, deck[cardIndex:][i])
+		g.DrawCardSlot.Cards = append(g.DrawCardSlot.Cards, deck[cardIndex:][i])
 	}
 
-	return game
+	return g
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
@@ -90,7 +107,12 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	for i := range g.Columns {
 		x := (float64(g.FrontFaceFrameData[g.Active][u.FrW]) + g.SpacerH) * (float64(i) + 1)
 		for j := range g.Columns[i].Cards {
-			y := float64(u.ScreenHeight/3) + float64(j*20)
+			y := float64(u.ScreenHeight/3) + float64(j)*g.CardsVSpacer
+
+			// draw the overlapped with the height of the space in which the card is visible
+			if j != len(g.Columns[i].Cards)-1 {
+				g.Columns[i].Cards[j].H = g.CardsVSpacer
+			}
 			g.Columns[i].Cards[j].X = x
 			g.Columns[i].Cards[j].Y = y
 			g.Columns[i].Cards[j].DrawCardSprite(screen)
@@ -106,6 +128,15 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		}
 	}
 
+	//secondLast := len(g.DrawnCardsSlot.Cards) - 2
+	//if HoveredCard != nil && len(g.DrawnCardsSlot.Cards) > 1 {
+	//	g.DrawnCardsSlot.Cards[secondLast].X = (float64(g.FrontFaceFrameData[g.Active][u.FrW]) + g.SpacerH) * 2
+	//	g.DrawnCardsSlot.Cards[secondLast].Y = g.SpacerV
+	//	g.DrawCardSlot.Cards[secondLast].IsDragged = false
+	//	g.DrawnCardsSlot.Cards[secondLast].IsRevealed = true
+	//	g.DrawnCardsSlot.Cards[secondLast].DrawCardSprite(screen)
+	//}
+
 	// Draw the Drawn Card Slot
 	for i := range g.DrawnCardsSlot.Cards {
 		x := (float64(g.FrontFaceFrameData[g.Active][u.FrW]) + g.SpacerH) * 2
@@ -114,6 +145,17 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		g.DrawnCardsSlot.Cards[i].Y = y
 		g.DrawnCardsSlot.Cards[i].IsRevealed = true
 		g.DrawnCardsSlot.Cards[i].DrawCardSprite(screen)
+
+	}
+
+	for i := range g.CardStores {
+		x := (float64(g.FrontFaceFrameData[g.Active][u.FrW]) + g.SpacerH) * (float64(i) + 4)
+		for j := range g.CardStores[i].Cards {
+			y := g.SpacerV
+			g.CardStores[i].Cards[j].X = x
+			g.CardStores[i].Cards[j].Y = y
+			g.CardStores[i].Cards[j].DrawCardSprite(screen)
+		}
 	}
 
 	// force card image persistence while dragged
@@ -140,8 +182,8 @@ func (g *Game) Update() error {
 	}
 
 	//
-	//
 	// handle the Draw Card functionality
+	//
 	if len(g.DrawCardSlot.Cards) > 0 {
 		if g.DrawCardSlot.Cards[0].IsCardHovered(cx, cy) {
 			last := len(g.DrawCardSlot.Cards) - 1
@@ -166,6 +208,263 @@ func (g *Game) Update() error {
 			// reverse order of newly stacked DrawCardSlot cards:
 			for i, j := 0, len(g.DrawCardSlot.Cards)-1; i < j; i, j = i+1, j-1 {
 				g.DrawCardSlot.Cards[i], g.DrawCardSlot.Cards[j] = g.DrawCardSlot.Cards[j], g.DrawCardSlot.Cards[i]
+			}
+		}
+	}
+
+	if HoveredCard != nil {
+		//
+		// drag from Drawn Stack to valid Column or Store slot
+		//
+		if len(g.DrawnCardsSlot.Cards) > 0 {
+			lc := len(g.DrawnCardsSlot.Cards) - 1
+			ix, iy := g.DrawnCardsSlot.Cards[lc].X, g.DrawnCardsSlot.Cards[lc].Y
+			iw, ih := g.DrawnCardsSlot.Cards[lc].W, g.DrawnCardsSlot.Cards[lc].H
+
+			if g.DrawnCardsSlot.Cards[lc].IsDragged {
+				for j := range g.Columns {
+
+					// if there are no cards on the Column Slot and the source card is a King
+					if len(g.Columns[j].Cards) == 0 && g.DrawnCardsSlot.Cards[lc].Value == CardRanks[u.King] {
+						jx, jy, jw, jh := g.Columns[j].GetColumnGeoMData()
+						if u.IsCollision(ix, iy, iw, ih, jx, jy, jw, jh) &&
+							inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
+							g.Columns[j].Cards = append(g.Columns[j].Cards, g.DrawnCardsSlot.Cards[lc])
+							g.DrawnCardsSlot.Cards = g.DrawnCardsSlot.Cards[:lc]
+
+							HoveredCard = nil
+							return nil
+						}
+					} else {
+						lj := len(g.Columns[j].Cards) - 1 // lj = last card in the current context
+						jx, jy := g.Columns[j].Cards[lj].X, g.Columns[j].Cards[lj].Y
+						jw, jh := g.Columns[j].Cards[lj].W, g.Columns[j].Cards[lj].H
+
+						if u.IsCollision(ix, iy, iw, ih, jx, jy, jw, jh) &&
+							g.DrawnCardsSlot.Cards[lc].Value == g.Columns[j].Cards[lj].Value-1 &&
+							g.DrawnCardsSlot.Cards[lc].Color != g.Columns[j].Cards[lj].Color &&
+							inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
+
+							g.Columns[j].Cards = append(g.Columns[j].Cards, g.DrawnCardsSlot.Cards[lc])
+							g.DrawnCardsSlot.Cards = g.DrawnCardsSlot.Cards[:lc]
+
+							// exit entirely to prevent redundant iterations
+							HoveredCard = nil
+							return nil
+						}
+					}
+				}
+				for j := range g.CardStores {
+					jx, jy, jw, jh := g.CardStores[j].GetStoreGeomData()
+
+					if len(g.CardStores[j].Cards) == 0 {
+						if g.DrawnCardsSlot.Cards[lc].Value == CardRanks[u.Ace] &&
+							u.IsCollision(ix, iy, iw, ih, jx, jy, jw, jh) &&
+							inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
+
+							g.CardStores[j].Cards = append(g.CardStores[j].Cards, g.DrawnCardsSlot.Cards[lc])
+							g.DrawnCardsSlot.Cards = g.DrawnCardsSlot.Cards[:lc]
+
+							// exit entirely to prevent redundant iterations
+							HoveredCard = nil
+							return nil
+						}
+
+					} else {
+						lj := len(g.CardStores[j].Cards) - 1
+						if u.IsCollision(ix, iy, iw, ih, jx, jy, jw, jh) &&
+							g.DrawnCardsSlot.Cards[lc].Value > CardRanks[u.Ace] &&
+							g.DrawnCardsSlot.Cards[lc].Value == g.CardStores[j].Cards[lj].Value+1 &&
+							g.DrawnCardsSlot.Cards[lc].Suit == g.CardStores[j].Cards[lj].Suit &&
+							inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
+
+							g.CardStores[j].Cards = append(g.CardStores[j].Cards, g.DrawnCardsSlot.Cards[lc])
+							g.DrawnCardsSlot.Cards = g.DrawnCardsSlot.Cards[:lc]
+
+							// exit entirely to prevent redundant iterations
+							HoveredCard = nil
+							return nil
+						}
+					}
+				}
+			}
+		}
+
+		//
+		// drag from Column to valid Column or Store slot
+		//
+
+		for i := range g.Columns {
+			if len(g.Columns[i].Cards) > 0 {
+				hidden := g.Columns[i].GetCountOfHidden()
+				count := 0
+				//revealed := g.Columns[i].GetCountOfRevealed()
+
+				// iterate through all the visible cards, for multiple grab
+				for x, _ := range g.Columns[i].Cards[hidden:] {
+					count++
+					//li := len(g.Columns[i].Cards) - 1 // li = last card in the current context
+					if g.Columns[i].Cards[x].IsDragged {
+
+						ix, iy := g.Columns[i].Cards[x].X, g.Columns[i].Cards[x].Y
+						iw, ih := g.Columns[i].Cards[x].W, g.Columns[i].Cards[x].H
+
+						// loop over all the other columns
+						for j := range g.Columns {
+							if j != i {
+								if len(g.Columns[j].Cards) == 0 && g.Columns[i].Cards[x].Value == CardRanks[u.King] {
+									jx, jy, jw, jh := g.Columns[j].GetColumnGeoMData()
+									if u.IsCollision(ix, iy, iw, ih, jx, jy, jw, jh) &&
+										inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
+
+										g.Columns[j].Cards = append(g.Columns[j].Cards, g.Columns[i].Cards[hidden:hidden+count]...)
+										g.Columns[i].Cards = g.Columns[i].Cards[hidden : hidden+count]
+
+										// reveal the last card from the source column, and revert its height to original
+										last := len(g.Columns[i].Cards)
+										if last > 0 {
+											g.Columns[i].Cards[last-1].IsRevealed = true
+											g.Columns[i].Cards[last-1].H = g.DrawCardSlot.H
+										}
+
+										// exit entirely to prevent redundant iterations
+										HoveredCard = nil
+										return nil
+									}
+								}
+
+								// handle all cases except K
+								if len(g.Columns[j].Cards) > 0 {
+
+									lj := len(g.Columns[j].Cards) - 1 // lj = last card in the current context
+									jx, jy := g.Columns[j].Cards[lj].X, g.Columns[j].Cards[lj].Y
+									jw, jh := g.Columns[j].Cards[lj].W, g.Columns[j].Cards[lj].H
+
+									if u.IsCollision(ix, iy, iw, ih, jx, jy, jw, jh) &&
+										g.Columns[i].Cards[x].Value == g.Columns[j].Cards[lj].Value-1 &&
+										g.Columns[i].Cards[x].Color != g.Columns[j].Cards[lj].Color &&
+										inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
+
+										g.Columns[j].Cards = append(g.Columns[j].Cards, g.Columns[i].Cards[hidden:hidden+count]...)
+										g.Columns[i].Cards = g.Columns[i].Cards[hidden : hidden+count]
+
+										// reveal the last card from the source column, and revert its height to original
+										last := len(g.Columns[i].Cards)
+										if last > 0 {
+											g.Columns[i].Cards[last-1].IsRevealed = true
+											g.Columns[i].Cards[last-1].H = g.DrawCardSlot.H
+										}
+
+										// exit entirely to prevent redundant iterations
+										HoveredCard = nil
+										return nil
+									}
+								}
+							}
+						}
+
+						// loop over the Store slots
+						for j := range g.CardStores {
+							jx, jy, jw, jh := g.CardStores[j].GetStoreGeomData()
+
+							if len(g.CardStores[j].Cards) == 0 {
+								if u.IsCollision(ix, iy, iw, ih, jx, jy, jw, jh) &&
+									g.Columns[i].Cards[x].Value == CardRanks[u.Ace] &&
+									// check if it's the source card hovered is the last from the columns
+									g.Columns[i].Cards[x].Value == g.Columns[i].Cards[len(g.Columns[i].Cards)-1].Value &&
+									inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
+									g.CardStores[j].Cards = append(g.CardStores[j].Cards, g.Columns[i].Cards[x])
+									g.Columns[i].Cards = g.Columns[i].Cards[:x]
+
+									// reveal the last card from the source column, and revert its height to original
+									if len(g.Columns[i].Cards) > 0 {
+										g.Columns[i].Cards[x-1].IsRevealed = true
+										g.Columns[i].Cards[x-1].H = g.DrawCardSlot.H
+									}
+
+									// exit entirely to prevent redundant iterations
+									HoveredCard = nil
+									return nil
+								}
+							} else {
+								lj := len(g.CardStores[j].Cards) - 1
+								if u.IsCollision(ix, iy, iw, ih, jx, jy, jw, jh) &&
+									g.Columns[i].Cards[x].Value > CardRanks[u.Ace] &&
+									g.Columns[i].Cards[x].Value == g.CardStores[j].Cards[lj].Value+1 &&
+									g.Columns[i].Cards[x].Suit == g.CardStores[j].Cards[lj].Suit {
+
+									g.CardStores[j].Cards = append(g.CardStores[j].Cards, g.Columns[i].Cards[x])
+									g.Columns[i].Cards = g.Columns[i].Cards[:x]
+
+									HoveredCard = nil
+									return nil
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		//
+		// drag from Store to valid Column or another available Store
+		//
+		for i := range g.CardStores {
+			if len(g.CardStores[i].Cards) > 0 {
+				li := len(g.CardStores[i].Cards) - 1 // li = last card in the current context
+				if g.CardStores[i].Cards[li].IsDragged {
+					ix, iy := g.CardStores[i].Cards[li].X, g.CardStores[i].Cards[li].Y
+					iw, ih := g.CardStores[i].Cards[li].W, g.CardStores[i].Cards[li].H
+
+					// loop over all the columns
+					for j := range g.Columns {
+						if len(g.Columns[j].Cards) > 0 {
+							lj := len(g.Columns[j].Cards) - 1 // lj = last card in the current context
+							jx, jy := g.Columns[j].Cards[lj].X, g.Columns[j].Cards[lj].Y
+							jw, jh := g.Columns[j].Cards[lj].W, g.Columns[j].Cards[lj].H
+
+							if u.IsCollision(ix, iy, iw, ih, jx, jy, jw, jh) &&
+								g.CardStores[i].Cards[li].Value == g.Columns[j].Cards[lj].Value-1 &&
+								g.Columns[j].Cards[lj].Color != g.CardStores[i].Cards[li].Color {
+
+								if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
+									g.Columns[j].Cards = append(g.Columns[j].Cards, g.CardStores[i].Cards[li])
+									g.CardStores[i].Cards = g.CardStores[i].Cards[:li]
+
+									// exit entirely to prevent redundant iterations
+									HoveredCard = nil
+									return nil
+								}
+							}
+						}
+					}
+
+					// loop over the Other Store slots (this applies only to the Ace card being moved from a Store to another)
+					for j := range g.CardStores {
+						if i != j {
+							jx, jy, jw, jh := g.CardStores[j].GetStoreGeomData()
+
+							if len(g.CardStores[j].Cards) == 0 {
+								if g.CardStores[i].Cards[li].Value == CardRanks[u.Ace] && u.IsCollision(ix, iy, iw, ih, jx, jy, jw, jh) {
+									if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
+										g.CardStores[j].Cards = append(g.CardStores[j].Cards, g.CardStores[i].Cards[li])
+										g.CardStores[i].Cards = g.CardStores[i].Cards[:li]
+
+										// make the card under the current Revealed TODO: seems redundant
+										last := len(g.CardStores[i].Cards)
+										if last > 0 {
+											g.CardStores[i].Cards[last-1].IsRevealed = true
+										}
+
+										// exit entirely to prevent redundant iterations
+										HoveredCard = nil
+										return nil
+									}
+								}
+							}
+						}
+					}
+				}
 			}
 		}
 	}
@@ -202,8 +501,15 @@ func GenerateDeck(th *Theme) []*Card {
 
 	// there are 4 suits on the image, and 1 suit consists of 13 cards
 	for si, suit := range th.SuitsOrder[active] {
-		for i := colStart; i < colEnd; i++ {
+		color := ""
+		switch suit {
+		case u.Hearts, u.Diamonds:
+			color = u.Red
+		case u.Spades, u.Clubs:
+			color = u.Black
+		}
 
+		for i := colStart; i < colEnd; i++ {
 			x, y := frOX+i*frW, frOY+si*frH
 			w, h := float64(frW)*th.ScaleValue[active][u.X], float64(frH)*th.ScaleValue[active][u.Y]
 
@@ -212,7 +518,8 @@ func GenerateDeck(th *Theme) []*Card {
 				Img:     th.Sources[active].SubImage(image.Rect(x, y, x+frW, y+frH)).(*ebiten.Image),
 				BackImg: th.Sources[active].SubImage(image.Rect(bf[0], bf[1], bf[2]+bf[0], bf[3]+bf[1])).(*ebiten.Image),
 				Suit:    suit,
-				Value:   Translation[active][i],
+				Value:   CardRanks[Translation[active][i]],
+				Color:   color,
 				ScaleX:  th.ScaleValue[active][u.X],
 				ScaleY:  th.ScaleValue[active][u.Y],
 				W:       w,

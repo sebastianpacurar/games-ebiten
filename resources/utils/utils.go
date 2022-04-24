@@ -34,16 +34,24 @@ const (
 
 	// NPC1 NPC2 NPC3 NPC4 NPC5 are just aliases for quick reference
 	NPC1 = "npc1"
-	NPC2 = "NPC2"
-	NPC3 = "NPC3"
-	NPC4 = "NPC4"
-	NPC5 = "NPC5"
+	NPC2 = "npc2"
+	NPC3 = "npc3"
+	NPC4 = "npc4"
+	NPC5 = "npc5"
 
 	// Hearts Clubs Diamonds Spades are all Card Suites aliases
 	Hearts   = "Hearts"
 	Clubs    = "Clubs"
 	Diamonds = "Diamonds"
 	Spades   = "Spades"
+
+	Ace   = "A"
+	Jack  = "J"
+	Queen = "Q"
+	King  = "K"
+
+	Red   = "Red"
+	Black = "Black"
 
 	// Card Themes
 	ClassicTheme   = "classic"

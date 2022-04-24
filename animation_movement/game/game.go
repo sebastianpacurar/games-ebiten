@@ -41,8 +41,8 @@ func NewGame() *Game {
 				H:         PlayerFrameHeight * PlayerScaleY,
 				Speed:     3,
 				Direction: 0,
-				LX:        playerLocX,
-				LY:        playerLocY,
+				X:         playerLocX,
+				Y:         playerLocY,
 			},
 		},
 		Items: []*Item{
@@ -50,8 +50,8 @@ func NewGame() *Game {
 				Img: ebiten.NewImageFromImage(u.LoadSpriteImage("resources/images/misc/food.png")),
 				W:   ItemFrameWidth * ItemScale,
 				H:   ItemFrameWidth * ItemScale,
-				LX:  ItemLocX,
-				LY:  ItemLocY,
+				X:   ItemLocX,
+				Y:   ItemLocY,
 			},
 		},
 		NPCs: []*NPC{
@@ -62,8 +62,8 @@ func NewGame() *Game {
 				H:          NPCFrameHeight * NPCScaleY,
 				Speed:      3,
 				Direction:  2,
-				LX:         npcLocations[u.NPC1][0],
-				LY:         npcLocations[u.NPC1][1],
+				X:          npcLocations[u.NPC1][0],
+				Y:          npcLocations[u.NPC1][1],
 				FrameLimit: 45,
 			},
 			{
@@ -73,8 +73,8 @@ func NewGame() *Game {
 				H:          NPCFrameHeight * NPCScaleY,
 				Speed:      3,
 				Direction:  2,
-				LX:         npcLocations[u.NPC2][0],
-				LY:         npcLocations[u.NPC2][1],
+				X:          npcLocations[u.NPC2][0],
+				Y:          npcLocations[u.NPC2][1],
 				FrameLimit: 25,
 			},
 			{
@@ -84,8 +84,8 @@ func NewGame() *Game {
 				H:          NPCFrameHeight * NPCScaleY,
 				Speed:      3,
 				Direction:  2,
-				LX:         npcLocations[u.NPC3][0],
-				LY:         npcLocations[u.NPC3][1],
+				X:          npcLocations[u.NPC3][0],
+				Y:          npcLocations[u.NPC3][1],
 				FrameLimit: 45,
 			},
 			{
@@ -95,8 +95,8 @@ func NewGame() *Game {
 				H:          NPCFrameHeight * NPCScaleY,
 				Speed:      3,
 				Direction:  2,
-				LX:         npcLocations[u.NPC4][0],
-				LY:         npcLocations[u.NPC4][1],
+				X:          npcLocations[u.NPC4][0],
+				Y:          npcLocations[u.NPC4][1],
 				FrameLimit: 30,
 			},
 			{
@@ -106,8 +106,8 @@ func NewGame() *Game {
 				H:          NPCFrameHeight * NPCScaleY,
 				Speed:      3,
 				Direction:  2,
-				LX:         npcLocations[u.NPC5][0],
-				LY:         npcLocations[u.NPC5][1],
+				X:          npcLocations[u.NPC5][0],
+				Y:          npcLocations[u.NPC5][1],
 				FrameLimit: 30,
 			},
 		},
@@ -117,18 +117,18 @@ func NewGame() *Game {
 func (g *Game) Update() error {
 	for i := range g.Items {
 		item := g.Items[i]
-		item.HitBox = u.HitBox(item.LX, item.LY, item.W, item.H)
+		item.HitBox = u.HitBox(item.X, item.Y, item.W, item.H)
 	}
 
 	for i := range g.Players {
 		p := g.Players[i]
-		p.HitBox = u.HitBox(p.LX, p.LY, p.W, p.H)
+		p.HitBox = u.HitBox(p.X, p.Y, p.W, p.H)
 		p.HandleMovement(u.ScreenDims[u.MinX], u.ScreenDims[u.MaxX], u.ScreenDims[u.MinY], u.ScreenDims[u.MaxY])
 	}
 
 	for i := range g.NPCs {
 		npc := g.NPCs[i]
-		npc.HitBox = u.HitBox(npc.LX, npc.LY, npc.W, npc.H)
+		npc.HitBox = u.HitBox(npc.X, npc.Y, npc.W, npc.H)
 		npc.Move(u.ScreenDims[u.MinX], u.ScreenDims[u.MaxX], u.ScreenDims[u.MinY], u.ScreenDims[u.MaxY])
 	}
 
@@ -177,7 +177,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		g.Items[i].DrawStaticSprite(screen)
 	}
 
-	ebitenutil.DebugPrintAt(screen, "W A S D to move", 0, 0)
+	ebitenutil.DebugPrintAt(screen, "W Ace S D to move", 0, 0)
 	ebitenutil.DebugPrintAt(screen, "LEFT SHIFT to speed up", 0, 25)
 }
 

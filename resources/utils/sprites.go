@@ -6,7 +6,7 @@ type (
 	// InteractiveSprite - is implemented by structs which hold multiple states and which tend to be dynamic
 	InteractiveSprite interface {
 
-		// GetLocations - returns (LX, LY)
+		// GetLocations - returns (X, Y)
 		GetLocations() (float64, float64)
 
 		// GetSize - returns (width, height)
@@ -27,7 +27,7 @@ type (
 		// GetImg - returns the Img of the sprite
 		GetImg() *ebiten.Image
 
-		// SetLocation - updates LX or LY, based on X or Y axis
+		// SetLocation - updates X or Y, based on X or Y axis
 		SetLocation(string, float64)
 
 		// SetDelta - updates DX or DY, based on X or Y axis
@@ -42,7 +42,7 @@ type (
 	// StaticSprite - is implemented by structs which don't contain many states to get updated frequently
 	StaticSprite interface {
 
-		// GetLocations - returns (LX, LY)
+		// GetLocations - returns (X, Y)
 		GetLocations() (float64, float64)
 
 		// GetSize - returns (width, height)
@@ -54,7 +54,7 @@ type (
 		// GetImg - returns the Img of the sprite
 		GetImg() *ebiten.Image
 
-		// SetLocation - updates LX or LY, based on X or Y axis
+		// SetLocation - updates X or Y, based on X or Y axis
 		SetLocation(string, float64)
 
 		// DrawStaticSprite - Draws the image
