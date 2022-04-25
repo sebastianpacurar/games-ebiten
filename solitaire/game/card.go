@@ -8,10 +8,10 @@ import (
 )
 
 // Translation - used for acquiring the right card index while getting the card SubImage from the Image
-// HoveredCard - used to force the hovered card to overlap other images, while dragged
+// DraggedCard - used to force the hovered card to overlap other images, while dragged
 // CardRanks - smallest is "Ace"(0), while highest is "King"(13)
 var (
-	HoveredCard interface{}
+	DraggedCard interface{}
 	Translation = map[string]map[int]string{
 		u.PixelatedTheme: {
 			0: "2", 1: "3", 2: "4", 3: "5", 4: "6", 5: "7",
@@ -50,7 +50,6 @@ var (
 type Card struct {
 	Img        *ebiten.Image
 	BackImg    *ebiten.Image
-	ColCount   int
 	Suit       string
 	Value      int
 	Color      string
@@ -74,6 +73,8 @@ func (c *Card) SetLocation(axis string, val float64) {
 }
 
 func (c *Card) DrawCardSprite(screen *ebiten.Image) {
+	cx, cy := ebiten.CursorPosition()
+
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Scale(c.ScaleX, c.ScaleY)
 	img := c.Img
@@ -82,20 +83,30 @@ func (c *Card) DrawCardSprite(screen *ebiten.Image) {
 		img = c.BackImg
 	}
 
-	// only revealed cards can be hovered
-	if c.IsRevealed {
-		c.DragAndDropCard()
-		// release
-		if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
-			c.IsDragged = false
-			HoveredCard = nil
-		}
-
-		// used to force to draw the card over the other images while being dragged
-		if c.IsDragged {
-			HoveredCard = c
-		}
+	// drag only clicked revealed cards
+	if int(c.X) <= cx && cx < int(c.X+c.W) && int(c.Y) <= cy && cy < int(c.Y+c.H) && c.IsRevealed &&
+		inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		c.IsDragged = true
 	}
+
+	// drag and set location
+	if inpututil.MouseButtonPressDuration(ebiten.MouseButtonLeft) > 0 && c.GetDraggedState() {
+		_, _, w, h := c.GetPosition()
+		c.X = float64(cx) - w/2
+		c.Y = float64(cy) - h/2
+		DraggedCard = c
+	}
+
+	if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
+		c.IsDragged = false
+		DraggedCard = nil
+	}
+
+	// used to force to draw the card over the other images while being dragged
+	if c.IsDragged {
+		DraggedCard = c
+	}
+
 	op.GeoM.Translate(c.X, c.Y)
 	screen.DrawImage(img, op)
 }
@@ -106,23 +117,6 @@ func (c *Card) GetDraggedState() bool {
 
 func (c *Card) SetDraggedState(state bool) {
 	c.IsDragged = state
-}
-
-// DragAndDropCard - Drops the card on the valid card from a valid slot
-func (c *Card) DragAndDropCard() {
-	cx, cy := ebiten.CursorPosition()
-
-	if int(c.X) <= cx && cx < int(c.X+c.W) && int(c.Y) <= cy && cy < int(c.Y+c.H) && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
-		c.IsDragged = true
-	}
-
-	// drag and set location
-	if inpututil.MouseButtonPressDuration(ebiten.MouseButtonLeft) > 0 && c.GetDraggedState() {
-		_, _, w, h := c.GetPosition()
-		c.X = float64(cx) - w/2
-		c.Y = float64(cy) - h/2
-		HoveredCard = c
-	}
 }
 
 // IsCardHovered - Returns true if the image is hovered
