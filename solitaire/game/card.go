@@ -72,7 +72,7 @@ func (c *Card) SetLocation(axis string, val float64) {
 	}
 }
 
-func (c *Card) DrawCardSprite(screen *ebiten.Image) {
+func (c *Card) DrawCard(screen *ebiten.Image) {
 	cx, cy := ebiten.CursorPosition()
 
 	op := &ebiten.DrawImageOptions{}

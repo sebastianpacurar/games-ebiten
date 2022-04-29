@@ -32,14 +32,6 @@ func (i *Item) GetSize() (float64, float64) {
 	return i.W, i.H
 }
 
-func (i *Item) GetFrameInfo() (int, int, int, int) {
-	return ItemFrameOX, ItemFrameOY, ItemFrameWidth, ItemFrameHeight
-}
-
-func (i *Item) GetImg() *ebiten.Image {
-	return i.Img
-}
-
 func (i *Item) SetLocation(axis string, val float64) {
 	if axis == u.X {
 		i.X = val

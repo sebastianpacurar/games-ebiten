@@ -115,7 +115,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			}
 			g.Columns[i].Cards[j].X = x
 			g.Columns[i].Cards[j].Y = y
-			g.Columns[i].Cards[j].DrawCardSprite(screen)
+			g.Columns[i].Cards[j].DrawCard(screen)
 		}
 	}
 
@@ -124,7 +124,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		for i := range g.DrawCardSlot.Cards {
 			g.DrawCardSlot.Cards[i].X = g.DrawCardSlot.X
 			g.DrawCardSlot.Cards[i].Y = g.DrawCardSlot.Y
-			g.DrawCardSlot.Cards[i].DrawCardSprite(screen)
+			g.DrawCardSlot.Cards[i].DrawCard(screen)
 		}
 	}
 
@@ -135,7 +135,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		g.DrawnCardsSlot.Cards[i].X = x
 		g.DrawnCardsSlot.Cards[i].Y = y
 		g.DrawnCardsSlot.Cards[i].IsRevealed = true
-		g.DrawnCardsSlot.Cards[i].DrawCardSprite(screen)
+		g.DrawnCardsSlot.Cards[i].DrawCard(screen)
 
 	}
 
@@ -145,7 +145,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			y := g.SpacerV
 			g.CardStores[i].Cards[j].X = x
 			g.CardStores[i].Cards[j].Y = y
-			g.CardStores[i].Cards[j].DrawCardSprite(screen)
+			g.CardStores[i].Cards[j].DrawCard(screen)
 		}
 	}
 

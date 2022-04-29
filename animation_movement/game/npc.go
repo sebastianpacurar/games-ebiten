@@ -42,26 +42,6 @@ func (npc *NPC) GetSize() (float64, float64) {
 	return npc.W, npc.H
 }
 
-func (npc *NPC) GetFrameInfo() (int, int, int, int) {
-	return NPCFrameOX, NPCFrameOY, NPCFrameWidth, NPCFrameHeight
-}
-
-func (npc *NPC) GetScaleVal() (float64, float64) {
-	return NPCScaleX, NPCScaleY
-}
-
-func (npc *NPC) GetFrameNum() int {
-	return npc.FrameNum
-}
-
-func (npc *NPC) GetDirection() int {
-	return npc.Direction
-}
-
-func (npc *NPC) GetImg() *ebiten.Image {
-	return npc.Img
-}
-
 func (npc *NPC) SetLocation(axis string, val float64) {
 	if axis == u.X {
 		npc.X = val
@@ -85,11 +65,6 @@ func (npc *NPC) DrawInteractiveSprite(screen *ebiten.Image) {
 
 	x, y := NPCFrameOX+npc.FrameNum*NPCFrameWidth, NPCFrameOY+npc.Direction*NPCFrameHeight
 	screen.DrawImage(npc.Img.SubImage(image.Rect(x, y, x+NPCFrameWidth, y+NPCFrameHeight)).(*ebiten.Image), opNPC)
-}
-
-// GetHitBox - returns 4 values: minX, maxX, minY, maxY
-func (npc *NPC) GetHitBox() (float64, float64, float64, float64) {
-	return npc.HitBox[u.MinX], npc.HitBox[u.MaxX], npc.HitBox[u.MinY], npc.HitBox[u.MaxY]
 }
 
 func (npc *NPC) ValidateBoundaries(minX, maxX, minY, maxY float64) {

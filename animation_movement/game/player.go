@@ -45,26 +45,6 @@ func (p *Player) GetSize() (float64, float64) {
 	return p.W, p.H
 }
 
-func (p *Player) GetFrameInfo() (int, int, int, int) {
-	return PlayerFrameOX, PlayerFrameOY, PlayerFrameWidth, PlayerFrameHeight
-}
-
-func (p *Player) GetScaleVal() (float64, float64) {
-	return PlayerScaleX, PlayerScaleY
-}
-
-func (p *Player) GetFrameNum() int {
-	return p.FrameNum
-}
-
-func (p *Player) GetDirection() int {
-	return p.Direction
-}
-
-func (p *Player) GetImg() *ebiten.Image {
-	return p.Img
-}
-
 func (p *Player) SetLocation(axis string, val float64) {
 	if axis == u.X {
 		p.X = val
@@ -88,10 +68,6 @@ func (p *Player) DrawInteractiveSprite(screen *ebiten.Image) {
 
 	x, y := PlayerFrameOX+p.FrameNum*PlayerFrameWidth, PlayerFrameOY+p.Direction*PlayerFrameHeight
 	screen.DrawImage(p.Img.SubImage(image.Rect(x, y, x+PlayerFrameWidth, y+PlayerFrameHeight)).(*ebiten.Image), opPlayer)
-}
-
-func (p *Player) GetHitBox() (float64, float64, float64, float64) {
-	return p.HitBox[u.MinX], p.HitBox[u.MaxX], p.HitBox[u.MinY], p.HitBox[u.MaxY]
 }
 
 // HandleMovement - takes the vertices as params for screen cross boundary prevention

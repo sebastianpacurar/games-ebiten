@@ -26,20 +26,17 @@ const (
 	MaxY = "maxY"
 
 	// FrOX FrOY FrW FrH = minX, minY, maxX, maxY, for the area of an Image
-	// Used type is int, since these values represent the coords of a SubImage
 	FrOX = "FrameOX"
 	FrOY = "FrameOY"
 	FrW  = "FrameW"
 	FrH  = "FrameH"
 
-	// NPC1 NPC2 NPC3 NPC4 NPC5 are just aliases for quick reference
 	NPC1 = "npc1"
 	NPC2 = "npc2"
 	NPC3 = "npc3"
 	NPC4 = "npc4"
 	NPC5 = "npc5"
 
-	// Hearts Clubs Diamonds Spades are all Card Suites aliases
 	Hearts   = "Hearts"
 	Clubs    = "Clubs"
 	Diamonds = "Diamonds"
@@ -53,13 +50,11 @@ const (
 	Red   = "Red"
 	Black = "Black"
 
-	// Card Themes
 	ClassicTheme   = "classic"
 	PixelatedTheme = "8bit"
 	AbstractTheme  = "abstract"
 	SimpleTheme    = "simple"
 
-	// AllCards Faces
 	StaticBack1   = "StaticBack1"
 	StaticBack2   = "StaticBack2"
 	DynamicRobot  = "DynamicRobot"
@@ -132,14 +127,17 @@ func BoundaryValidation(i interface{}, minX, maxX, minY, maxY float64) {
 	}
 }
 
-// IsImgHovered - Returns true if the cursor overlaps the target interface
-func IsImgHovered(i interface{}, cx, cy int) bool {
+// IsAreaHovered - Returns true if the cursor overlaps the target interface
+func IsAreaHovered(i interface{}, cx, cy int) bool {
 	var x, y, w, h float64
 
 	switch i.(type) {
 	case CasinoCards:
 		c := i.(CasinoCards)
 		x, y, w, h = c.GetPosition()
+	case MatchIcons:
+		mi := i.(MatchIcons)
+		x, y, w, h = mi.GetPosition()
 	}
 	return int(x) <= cx && cx < int(x+w) && int(y) <= cy && cy < int(y+h)
 }
@@ -151,7 +149,7 @@ func DragAndDrop(i interface{}) {
 		c := i.(CasinoCards)
 		cx, cy := ebiten.CursorPosition()
 
-		if IsImgHovered(c, cx, cy) && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		if IsAreaHovered(c, cx, cy) && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 			c.SetDraggedState(true)
 		}
 
