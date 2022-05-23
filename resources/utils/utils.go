@@ -3,7 +3,6 @@ package utils
 import (
 	"bytes"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"image"
 	"io/ioutil"
 	"log"
@@ -128,7 +127,8 @@ func BoundaryValidation(i interface{}, minX, maxX, minY, maxY float64) {
 }
 
 // IsAreaHovered - Returns true if the cursor overlaps the target interface
-func IsAreaHovered(i interface{}, cx, cy int) bool {
+func IsAreaHovered(i interface{}) bool {
+	cx, cy := ebiten.CursorPosition()
 	var x, y, w, h float64
 
 	switch i.(type) {
@@ -143,26 +143,26 @@ func IsAreaHovered(i interface{}, cx, cy int) bool {
 }
 
 // DragAndDrop - Drags the image
-func DragAndDrop(i interface{}) {
-	switch i.(type) {
-	case CasinoCards:
-		c := i.(CasinoCards)
-		cx, cy := ebiten.CursorPosition()
-
-		if IsAreaHovered(c, cx, cy) && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
-			c.SetDraggedState(true)
-		}
-
-		// drag and set location
-		if inpututil.MouseButtonPressDuration(ebiten.MouseButtonLeft) > 0 && c.GetDraggedState() {
-			_, _, w, h := c.GetPosition()
-			c.SetLocation(X, float64(cx)-w/2)
-			c.SetLocation(Y, float64(cy)-h/2)
-		}
-
-		// release
-		if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
-			c.SetDraggedState(false)
-		}
-	}
-}
+//func DragAndDrop(i interface{}) {
+//	switch i.(type) {
+//	case CasinoCards:
+//		c := i.(CasinoCards)
+//
+//		if IsAreaHovered(c) && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+//			c.SetDraggedState(true)`
+//		}
+//
+//		// drag and set location
+//		if inpututil.MouseButtonPressDuration(ebiten.MouseButtonLeft) > 0 && c.GetDraggedState() {
+//			cx, cy := ebiten.CursorPosition()
+//			_, _, w, h := c.GetPosition()
+//			c.SetLocation(X, float64(cx)-w/2)
+//			c.SetLocation(Y, float64(cy)-h/2)
+//		}
+//
+//		// release
+//		if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
+//			c.SetDraggedState(false)
+//		}
+//	}
+//}

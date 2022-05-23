@@ -155,7 +155,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		case *Card:
 			c := DraggedCard.(*Card)
 			opc := &ebiten.DrawImageOptions{}
-			opc.GeoM.Scale(c.ScaleX, c.ScaleY)
+			opc.GeoM.Scale(c.ScX, c.ScY)
 			opc.GeoM.Translate(c.X, c.Y)
 			screen.DrawImage(c.Img, opc)
 		}
@@ -507,8 +507,8 @@ func GenerateDeck(th *Theme) []*Card {
 				Suit:    suit,
 				Value:   CardRanks[Translation[active][i]],
 				Color:   color,
-				ScaleX:  th.ScaleValue[active][u.X],
-				ScaleY:  th.ScaleValue[active][u.Y],
+				ScX:     th.ScaleValue[active][u.X],
+				ScY:     th.ScaleValue[active][u.Y],
 				W:       w,
 				H:       h,
 			}

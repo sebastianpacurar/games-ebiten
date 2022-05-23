@@ -11,8 +11,8 @@ const (
 	PlayerFrameOY     = 0
 	PlayerFrameWidth  = 24
 	PlayerFrameHeight = 32
-	PlayerScaleX      = 3
-	PlayerScaleY      = 3
+	PlayerScX         = 3
+	PlayerScY         = 3
 
 	Player1 = "player1"
 	Player2 = "player2"
@@ -63,7 +63,7 @@ func (p *Player) SetDelta(axis string, val float64) {
 
 func (p *Player) DrawInteractiveSprite(screen *ebiten.Image) {
 	opPlayer := &ebiten.DrawImageOptions{}
-	opPlayer.GeoM.Scale(PlayerScaleX, PlayerScaleY)
+	opPlayer.GeoM.Scale(PlayerScX, PlayerScY)
 	opPlayer.GeoM.Translate(p.X, p.Y)
 
 	x, y := PlayerFrameOX+p.FrameNum*PlayerFrameWidth, PlayerFrameOY+p.Direction*PlayerFrameHeight

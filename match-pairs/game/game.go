@@ -18,47 +18,57 @@ var (
 	FrOY        = 41
 	FrW         = 34
 	FrH         = 34
-	SpacingV    = 25
-	SpacingH    = 50
+	ScX         = float64(2)
+	ScY         = float64(2)
+	SpacingV    = float64(25)
+	SpacingH    = float64(50)
 )
 
+// Game
+// Icons - represents all the generated icons (around 300)
+// IconPairs - all the generated pairs for the current game
+// IDs - stores uuid of the current revealed cards
+// PairCount - the number of icons in a pair
 type Game struct {
-	Icons      []*Icon
-	IconPairs  []*Icon
-	Rows, Cols int
+	Icons       []*Icon
+	IconPairs   []*Icon
+	RevealedIDs []string
+	PairNum     int
+	Rows, Cols  int
 }
 
 func NewGame() *Game {
 	g := &Game{
-		Rows: 4,
-		Cols: 4,
+		RevealedIDs: make([]string, 0),
+		PairNum:     2,
 	}
 	g.Icons = GenerateAvailableIcons()
-	g.GeneratePairs(2)
+	g.GeneratePairs(g.PairNum)
 	return g
 }
 
 func (g *Game) Update() error {
-	cx, cy := ebiten.CursorPosition()
-	for i := range g.IconPairs {
-		if u.IsAreaHovered(g.IconPairs[i], cx, cy) {
-			if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
-				g.IconPairs[i].IsRevealed = !g.IconPairs[i].IsRevealed
+	for _, v := range g.IconPairs {
+		if u.IsAreaHovered(v) {
+			if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+				if !v.IsRevealed {
+					v.IsRevealed = true
+					g.RevealedIDs = append(g.RevealedIDs, v.ID)
+				} else {
+					v.IsRevealed = false
+					g.RevealedIDs = g.RemoveRevealedID(v.ID)
+				}
 			}
 		}
 	}
+
+	g.HandleRevealLogic()
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	count := 0
-	for i := 0; i < g.Rows; i++ {
-		for j := 0; j < g.Cols; j++ {
-			icon := g.IconPairs[count]
-
-			icon.DrawIcon(screen)
-			count++
-		}
+	for _, ic := range g.IconPairs {
+		ic.DrawIcon(screen)
 	}
 }
 
@@ -66,39 +76,48 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return u.ScreenWidth, u.ScreenHeight
 }
 
-//TODO: broken
+// GeneratePairs - generates the given pairs. if smaller than 2 or bigger than 3, then default to 2
 func (g *Game) GeneratePairs(p int) {
-	var id string
+	if p < 2 || p > 3 {
+		p = 2
+	}
+
+	// 16 icons for 2 pairs and 36 icons for 3 pairs
+	if p%2 == 0 {
+		g.Rows = 4
+		g.Cols = 4
+	} else if p%3 == 0 {
+		g.Rows = 6
+		g.Cols = 6
+	}
 	maxNum := g.Rows * g.Cols
+	count := 0
 
-	rand.Seed(time.Now().UnixNano())
+	// append only the first half of all the icons with the correct ID
+	for i := 0; i < maxNum/p; i++ {
+		id := strings.Split(uuid.New().String(), "-")[1]
+		for dup := 0; dup < p; dup++ {
 
-	// shuffle g.Icons array
-	rand.Shuffle(len(g.Icons), func(i, j int) {
-		g.Icons[i], g.Icons[j] = g.Icons[j], g.Icons[i]
-	})
-
-	// iterate p number of times (pair elements in a pair)
-	for j := 0; j < p; j++ {
-		// append only the first half of all the icons with the correct ID
-		for i := 0; i < maxNum/2; i++ {
-			if i%p == 0 {
-				id = strings.Split(uuid.New().String(), "-")[1]
-			}
-			for dup := 0; dup < p; dup++ {
-				g.IconPairs = append(g.IconPairs, g.Icons[i])
-				g.IconPairs[i].ID = id
-			}
+			// create a unique icon, add it to the pairs array, then assign the id
+			g.IconPairs = append(g.IconPairs, &Icon{
+				Img: g.Icons[i].Img,
+				W:   g.Icons[i].W,
+				H:   g.Icons[i].H,
+			})
+			g.IconPairs[count].ID = id
+			count++
 		}
 	}
-	// shuffle g.IconPairs array
+
+	//shuffle g.IconPairs array
+	rand.Seed(time.Now().UnixNano())
 	rand.Shuffle(len(g.IconPairs), func(i, j int) {
 		g.IconPairs[i], g.IconPairs[j] = g.IconPairs[j], g.IconPairs[i]
 	})
 
+	g.GeneratePositions()
 }
 
-//TODO: broken
 func GenerateAvailableIcons() []*Icon {
 	icons := make([]*Icon, 0, 300)
 
@@ -108,11 +127,68 @@ func GenerateAvailableIcons() []*Icon {
 
 			icon := &Icon{
 				Img: iconsSprite.SubImage(image.Rect(x, y, x+FrW, y+FrH)).(*ebiten.Image),
-				W:   float64(FrW),
-				H:   float64(FrH),
+				W:   float64(FrW) * ScX,
+				H:   float64(FrH) * ScY,
 			}
 			icons = append(icons, icon)
 		}
 	}
 	return icons
+}
+
+// GeneratePositions - add the x, y coords for every icon
+func (g *Game) GeneratePositions() {
+	count := 0
+	for i := 0; i < g.Rows; i++ {
+		for j := 0; j < g.Cols; j++ {
+			icon := g.IconPairs[count]
+
+			icon.X = (icon.W+50)*float64(j) + SpacingV
+			icon.Y = (icon.H+50)*float64(i) + SpacingH
+			count++
+		}
+	}
+}
+
+func (g *Game) HandleRevealLogic() {
+	if len(g.RevealedIDs) > 1 {
+		allTrue := true
+
+		firstId := g.RevealedIDs[0]
+		for _, id := range g.RevealedIDs[1:] {
+			if firstId != id {
+				allTrue = false
+				break
+			}
+		}
+		if allTrue {
+			for _, ic := range g.IconPairs {
+				if firstId == ic.ID {
+					ic.IsRevealed = false
+					ic.Img.Clear()
+				}
+			}
+		} else {
+			g.RevealedIDs = nil
+			for _, ic := range g.IconPairs {
+				ic.IsRevealed = false
+			}
+		}
+	}
+}
+
+// RemoveRevealedID - remove the uid from RevealedIDs, based on the uid string
+func (g *Game) RemoveRevealedID(val string) []string {
+	res := make([]string, 0)
+	i := 0
+	if len(g.RevealedIDs) > 1 {
+		for _, v := range g.IconPairs {
+			if v.ID == val {
+				break
+			}
+			i++
+		}
+		res = append(g.RevealedIDs[:i], g.RevealedIDs[i+1:]...)
+	}
+	return res
 }

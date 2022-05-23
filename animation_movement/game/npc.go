@@ -13,8 +13,8 @@ const (
 	NPCFrameOY     = 0
 	NPCFrameWidth  = 64
 	NPCFrameHeight = 64
-	NPCScaleX      = 1.8
-	NPCScaleY      = 1.8
+	NPCScX         = 1.8
+	NPCScY         = 1.8
 )
 
 // NPC - game character which implements InteractiveSprite interface
@@ -60,7 +60,7 @@ func (npc *NPC) SetDelta(axis string, val float64) {
 
 func (npc *NPC) DrawInteractiveSprite(screen *ebiten.Image) {
 	opNPC := &ebiten.DrawImageOptions{}
-	opNPC.GeoM.Scale(NPCScaleX, NPCScaleY)
+	opNPC.GeoM.Scale(NPCScX, NPCScY)
 	opNPC.GeoM.Translate(npc.X, npc.Y)
 
 	x, y := NPCFrameOX+npc.FrameNum*NPCFrameWidth, NPCFrameOY+npc.Direction*NPCFrameHeight

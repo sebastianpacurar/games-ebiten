@@ -54,8 +54,8 @@ type Card struct {
 	Value      int
 	Color      string
 	X, Y, W, H float64
-	ScaleX     float64
-	ScaleY     float64
+	ScX        float64
+	ScY        float64
 	IsRevealed bool
 	IsDragged  bool
 }
@@ -76,7 +76,7 @@ func (c *Card) DrawCard(screen *ebiten.Image) {
 	cx, cy := ebiten.CursorPosition()
 
 	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Scale(c.ScaleX, c.ScaleY)
+	op.GeoM.Scale(c.ScX, c.ScY)
 	img := c.Img
 
 	if !c.IsRevealed {
