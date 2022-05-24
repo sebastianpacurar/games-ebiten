@@ -10,6 +10,7 @@ type Icon struct {
 	X, Y, W, H float64
 	ID         string
 	IsRevealed bool
+	IsRemoved  bool
 }
 
 func (ic *Icon) DrawIcon(screen *ebiten.Image) {
@@ -20,11 +21,21 @@ func (ic *Icon) DrawIcon(screen *ebiten.Image) {
 		img = ebiten.NewImage(img.Size())
 		img.Fill(color.NRGBA{R: 120, G: 175, B: 175, A: 255})
 	}
+	if ic.IsRemoved {
+		img = ebiten.NewImage(img.Size())
+		img.Fill(color.NRGBA{R: 240, G: 240, B: 240, A: 255})
+	}
 
 	// sprite image
 	opi := &ebiten.DrawImageOptions{}
-	opi.GeoM.Scale(ScX, ScY)
-	opi.GeoM.Translate(ic.X, ic.Y)
+	if !ic.IsRemoved {
+		opi.GeoM.Scale(ScX, ScY)
+		opi.GeoM.Translate(ic.X, ic.Y)
+	} else {
+		opi.GeoM.Scale(0, 0)
+		opi.GeoM.Translate(0, 0)
+	}
+
 	screen.DrawImage(img, opi)
 }
 

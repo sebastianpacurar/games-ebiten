@@ -18,20 +18,22 @@ const (
 )
 
 // NPC - game character which implements InteractiveSprite interface
+// FrTiming - used to time an action (movement or idle)
+// FrTimingLimit - used as limit to count frames for an action (the time for an action to complete)
 type NPC struct {
-	Img          *ebiten.Image
-	Name         string
-	FrameNum     int
-	Direction    int
-	X, Y         float64
-	DX, DY       float64
-	W, H         float64
-	Speed        float64
-	HitBox       map[string]float64
-	IsMoving     bool
-	IsNearMargin bool
-	FrameCount   int // used to time an action (movement or idle)
-	FrameLimit   int // used as limit to count frames for an action (the time for an action to complete)
+	Img           *ebiten.Image
+	Name          string
+	FrameNum      int
+	Direction     int
+	X, Y          float64
+	DX, DY        float64
+	W, H          float64
+	Speed         float64
+	HitBox        map[string]float64
+	IsMoving      bool
+	IsNearMargin  bool
+	FrTiming      int
+	FrTimingLimit int
 }
 
 func (npc *NPC) GetLocations() (float64, float64) {
@@ -93,8 +95,8 @@ func (npc *NPC) ValidateBoundaries(minX, maxX, minY, maxY float64) {
 }
 
 func (npc *NPC) Move(minX, maxX, minY, maxY float64) {
-	if npc.FrameCount == npc.FrameLimit-1 {
-		npc.FrameCount = 0
+	if npc.FrTiming == npc.FrTimingLimit-1 {
+		npc.FrTiming = 0
 		npc.IsMoving = !npc.IsMoving
 
 		// force the NPC to walk the opposite way, no matter the IsMoving state
@@ -109,7 +111,7 @@ func (npc *NPC) Move(minX, maxX, minY, maxY float64) {
 			case 3:
 				npc.Direction = 1
 			}
-			npc.FrameCount = 0
+			npc.FrTiming = 0
 			npc.IsMoving = true
 			npc.IsNearMargin = false
 		} else {
@@ -173,5 +175,5 @@ func (npc *NPC) Move(minX, maxX, minY, maxY float64) {
 		npc.DX = 0
 		npc.DY = 0
 	}
-	npc.FrameCount++
+	npc.FrTiming++
 }

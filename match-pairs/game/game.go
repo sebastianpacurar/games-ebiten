@@ -27,8 +27,8 @@ var (
 // Game
 // Icons - represents all the generated icons (around 300)
 // IconPairs - all the generated pairs for the current game
-// IDs - stores uuid of the current revealed cards
-// PairCount - the number of icons in a pair
+// RevealedIDs - stores uuid of the current revealed cards
+// PairNum - the number of icons in a pair
 type Game struct {
 	Icons       []*Icon
 	IconPairs   []*Icon
@@ -48,6 +48,8 @@ func NewGame() *Game {
 }
 
 func (g *Game) Update() error {
+	g.HandleRevealLogic()
+
 	for _, v := range g.IconPairs {
 		if u.IsAreaHovered(v) {
 			if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
@@ -62,7 +64,6 @@ func (g *Game) Update() error {
 		}
 	}
 
-	g.HandleRevealLogic()
 	return nil
 }
 
@@ -161,18 +162,21 @@ func (g *Game) HandleRevealLogic() {
 				break
 			}
 		}
+
 		if allTrue {
+			// if the pair is a match, set all icons to removed and clear array
 			for _, ic := range g.IconPairs {
 				if firstId == ic.ID {
-					ic.IsRevealed = false
-					ic.Img.Clear()
+					ic.IsRemoved = true
 				}
 			}
-		} else {
 			g.RevealedIDs = nil
+		} else {
+			// if the pair isn't a match, set all icons to hidden and clear array
 			for _, ic := range g.IconPairs {
 				ic.IsRevealed = false
 			}
+			g.RevealedIDs = nil
 		}
 	}
 }
