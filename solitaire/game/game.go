@@ -1,6 +1,7 @@
 package game
 
 import (
+	"fmt"
 	u "games-ebiten/resources/utils"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -87,6 +88,7 @@ func NewGame() *Game {
 			if j == i {
 				deck[cardIndex].IsRevealed = true
 			}
+			deck[cardIndex].IsColCard = true
 			g.Columns[i].Cards = append(g.Columns[i].Cards, deck[cardIndex])
 			cardIndex++
 		}
@@ -107,15 +109,26 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	for i := range g.Columns {
 		x := (float64(g.FrontFaceFrameData[g.Active][u.FrW]) + g.SpacerH) * (float64(i) + 1)
 		for j := range g.Columns[i].Cards {
+
 			y := float64(u.ScreenHeight/3) + float64(j)*g.CardsVSpacer
 
 			// draw the overlapped with the height of the space in which the card is visible
 			if j != len(g.Columns[i].Cards)-1 {
 				g.Columns[i].Cards[j].H = g.CardsVSpacer
 			}
+
 			g.Columns[i].Cards[j].X = x
 			g.Columns[i].Cards[j].Y = y
-			g.Columns[i].Cards[j].DrawCard(screen)
+
+			if g.Columns[i].Cards[j].IsDragged && g.Columns[i].Cards[j] != g.Columns[i].Cards[len(g.Columns[i].Cards)-1] {
+				index := g.GetIndexOfDraggedColCard(i)
+				for k := range g.Columns[i].Cards[index:] {
+					g.Columns[i].Cards[k].DrawCard(screen)
+					//g.Columns[i].Cards[k].DrawColCard(screen, k, len(g.Columns[i].Cards[index:]))
+				}
+			} else {
+				g.Columns[i].Cards[j].DrawCard(screen)
+			}
 		}
 	}
 
@@ -135,8 +148,13 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		g.DrawnCardsSlot.Cards[i].X = x
 		g.DrawnCardsSlot.Cards[i].Y = y
 		g.DrawnCardsSlot.Cards[i].IsRevealed = true
-		g.DrawnCardsSlot.Cards[i].DrawCard(screen)
 
+		// draw the prior card as revealed when the current card is dragged
+		if i > 0 && g.DrawnCardsSlot.Cards[i].IsDragged {
+			g.DrawnCardsSlot.Cards[i-1].DrawCard(screen)
+		}
+
+		g.DrawnCardsSlot.Cards[i].DrawCard(screen)
 	}
 
 	for i := range g.CardStores {
@@ -154,13 +172,16 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		switch DraggedCard.(type) {
 		case *Card:
 			c := DraggedCard.(*Card)
-			opc := &ebiten.DrawImageOptions{}
-			opc.GeoM.Scale(c.ScX, c.ScY)
-			opc.GeoM.Translate(c.X, c.Y)
-			screen.DrawImage(c.Img, opc)
+			if !c.IsColCard {
+				opc := &ebiten.DrawImageOptions{}
+				opc.GeoM.Scale(c.ScX, c.ScY)
+				opc.GeoM.Translate(c.X, c.Y)
+				screen.DrawImage(c.Img, opc)
+			} else {
+				fmt.Println("col card")
+			}
 		}
 	}
-
 	ebitenutil.DebugPrint(screen, "Press 1 or 2 to change Themes")
 }
 
@@ -212,11 +233,16 @@ func (g *Game) Update() error {
 			ix, iy := g.DrawnCardsSlot.Cards[lc].X, g.DrawnCardsSlot.Cards[lc].Y
 			iw, ih := g.DrawnCardsSlot.Cards[lc].W, g.DrawnCardsSlot.Cards[lc].H
 
+			// set the prior card's state dragged to false, so it can stick to its location
 			if g.DrawnCardsSlot.Cards[lc].IsDragged {
-				for j := range g.Columns {
+				if len(g.DrawnCardsSlot.Cards) > 1 {
+					g.DrawnCardsSlot.Cards[lc-1].IsDragged = false
+				}
 
-					// if there are no cards on the Column Slot and the source card is a King
+				// draw from Drawn Stack to Column Slot
+				for j := range g.Columns {
 					if len(g.Columns[j].Cards) == 0 && g.DrawnCardsSlot.Cards[lc].Value == CardRanks[u.King] {
+						// if there are no cards on the Column Slot and the source card is a King
 						jx, jy, jw, jh := g.Columns[j].GetColumnGeoMData()
 						if u.IsCollision(ix, iy, iw, ih, jx, jy, jw, jh) &&
 							inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
@@ -228,7 +254,8 @@ func (g *Game) Update() error {
 							DraggedCard = nil
 							return nil
 						}
-					} else {
+					} else if len(g.Columns[j].Cards) > 0 {
+						// applies for any other card than K, also prevents iteration over the empty slots if there are any
 						lj := len(g.Columns[j].Cards) - 1 // lj = last card in the current context
 						jx, jy := g.Columns[j].Cards[lj].X, g.Columns[j].Cards[lj].Y
 						jw, jh := g.Columns[j].Cards[lj].W, g.Columns[j].Cards[lj].H
@@ -247,6 +274,8 @@ func (g *Game) Update() error {
 						}
 					}
 				}
+
+				// draw from Drawn Stack to Card Stores
 				for j := range g.CardStores {
 					jx, jy, jw, jh := g.CardStores[j].GetStoreGeomData()
 
@@ -298,6 +327,7 @@ func (g *Game) Update() error {
 				if g.Columns[i].Cards[li].IsDragged {
 
 					// loop over all the other columns
+					//TODO: add here functionality related to IsDragged
 					for j := range g.Columns {
 						if j != i {
 
@@ -518,4 +548,14 @@ func GenerateDeck(th *Theme) []*Card {
 		}
 	}
 	return deck
+}
+
+func (g *Game) GetIndexOfDraggedColCard(col int) int {
+	count := 0
+	for _, v := range g.Columns[col].Cards {
+		if !v.IsDragged {
+			count++
+		}
+	}
+	return count
 }

@@ -57,6 +57,7 @@ type Card struct {
 	ScX        float64
 	ScY        float64
 	IsRevealed bool
+	IsColCard  bool
 	IsDragged  bool
 }
 
@@ -83,33 +84,72 @@ func (c *Card) DrawCard(screen *ebiten.Image) {
 		img = c.BackImg
 	}
 
-	// drag only clicked revealed cards
-	if int(c.X) <= cx && cx < int(c.X+c.W) && int(c.Y) <= cy && cy < int(c.Y+c.H) && c.IsRevealed &&
-		inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
-		c.IsDragged = true
-	}
+	if c.IsRevealed {
+		// drag only clicked revealed cards
+		if int(c.X) <= cx && cx < int(c.X+c.W) && int(c.Y) <= cy && cy < int(c.Y+c.H) &&
+			inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+			c.IsDragged = true
+		}
 
-	// drag and set location
-	if inpututil.MouseButtonPressDuration(ebiten.MouseButtonLeft) > 0 && c.GetDraggedState() {
-		_, _, w, h := c.GetPosition()
-		c.X = float64(cx) - w/2
-		c.Y = float64(cy) - h/2
-		DraggedCard = c
-	}
+		// drag and set location
+		if inpututil.MouseButtonPressDuration(ebiten.MouseButtonLeft) > 0 && c.GetDraggedState() {
+			_, _, w, h := c.GetPosition()
+			c.X = float64(cx) - w/2
+			c.Y = float64(cy) - h/2
+			DraggedCard = c
+		}
 
-	if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
-		c.IsDragged = false
-		DraggedCard = nil
-	}
-
-	// used to force to draw the card over the other images while being dragged
-	if c.IsDragged {
-		DraggedCard = c
+		if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
+			c.IsDragged = false
+			DraggedCard = nil
+		}
 	}
 
 	op.GeoM.Translate(c.X, c.Y)
 	screen.DrawImage(img, op)
 }
+
+////TODO: add here functionality
+//func (c *Card) DrawColCard(screen *ebiten.Image, index, length int) {
+//	cx, cy := ebiten.CursorPosition()
+//
+//	op := &ebiten.DrawImageOptions{}
+//	op.GeoM.Scale(c.ScX, c.ScY)
+//	img := c.Img
+//
+//	if c.IsRevealed {
+//		// drag only clicked revealed cards
+//		if index == 0 && int(c.X) <= cx && cx < int(c.X+c.W) && int(c.Y) <= cy && cy < int(c.Y+c.H) &&
+//			inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+//			c.IsDragged = true
+//		}
+//
+//		if c.IsDragged {
+//			IsColCardDragged = true
+//		}
+//
+//		// drag and set location
+//		if inpututil.MouseButtonPressDuration(ebiten.MouseButtonLeft) > 0 && IsColCardDragged {
+//			_, _, w, h := c.GetPosition()
+//			c.X = float64(cx) - w/2
+//			if index == length-1 {
+//				c.Y = float64(cy) - h/2
+//				DraggedCard = c
+//			} else {
+//				c.Y = float64(cy) - 50
+//			}
+//		}
+//
+//		if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
+//			c.IsDragged = false
+//			IsColCardDragged = false
+//			DraggedCard = 0
+//		}
+//	}
+//
+//	op.GeoM.Translate(c.X, c.Y)
+//	screen.DrawImage(img, op)
+//}
 
 func (c *Card) GetDraggedState() bool {
 	return c.IsDragged
