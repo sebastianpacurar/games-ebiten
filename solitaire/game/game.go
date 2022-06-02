@@ -1,7 +1,6 @@
 package game
 
 import (
-	"fmt"
 	u "games-ebiten/resources/utils"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -24,7 +23,7 @@ func NewGame() *Game {
 	g := &Game{
 		Theme: th,
 		Environment: &Environment{
-			CardsVSpacer: 30,
+			CardsVSpacer: 35,
 			SpacerV:      50,
 			SpacerH:      float64(th.FrontFaceFrameData[th.Active][u.FrW]) + 10,
 			BgImg:        classicImg.SubImage(image.Rect(700, 500, 750, 550)).(*ebiten.Image),
@@ -88,7 +87,7 @@ func NewGame() *Game {
 			if j == i {
 				deck[cardIndex].IsRevealed = true
 			}
-			deck[cardIndex].IsColCard = true
+			deck[cardIndex].ColNum = i + 1
 			g.Columns[i].Cards = append(g.Columns[i].Cards, deck[cardIndex])
 			cardIndex++
 		}
@@ -104,6 +103,7 @@ func NewGame() *Game {
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	g.DrawEnvironment(screen, g.Theme)
+	cx, cy := ebiten.CursorPosition()
 
 	// Draw the Card Columns
 	for i := range g.Columns {
@@ -112,23 +112,16 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 			y := float64(u.ScreenHeight/3) + float64(j)*g.CardsVSpacer
 
-			// draw the overlapped with the height of the space in which the card is visible
-			if j != len(g.Columns[i].Cards)-1 {
-				g.Columns[i].Cards[j].H = g.CardsVSpacer
-			}
-
 			g.Columns[i].Cards[j].X = x
 			g.Columns[i].Cards[j].Y = y
 
-			if g.Columns[i].Cards[j].IsDragged && g.Columns[i].Cards[j] != g.Columns[i].Cards[len(g.Columns[i].Cards)-1] {
-				index := g.GetIndexOfDraggedColCard(i)
-				for k := range g.Columns[i].Cards[index:] {
-					g.Columns[i].Cards[k].DrawCard(screen)
-					//g.Columns[i].Cards[k].DrawColCard(screen, k, len(g.Columns[i].Cards[index:]))
-				}
+			// draw the overlapped with the height of the space in which the card is visible
+			if j != len(g.Columns[i].Cards)-1 {
+				g.Columns[i].Cards[j].H = g.CardsVSpacer
 			} else {
-				g.Columns[i].Cards[j].DrawCard(screen)
+				g.Columns[i].Cards[j].H = float64(g.FrontFaceFrameData[g.Active][u.FrH]) * g.Theme.ScaleValue[g.Active][u.Y]
 			}
+			g.Columns[i].Cards[j].DrawColCard(screen, g.Columns[i].Cards, j, cx, cy)
 		}
 	}
 
@@ -137,6 +130,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		for i := range g.DrawCardSlot.Cards {
 			g.DrawCardSlot.Cards[i].X = g.DrawCardSlot.X
 			g.DrawCardSlot.Cards[i].Y = g.DrawCardSlot.Y
+			g.DrawCardSlot.Cards[i].H = float64(g.FrontFaceFrameData[g.Active][u.FrH]) * g.Theme.ScaleValue[g.Active][u.Y]
 			g.DrawCardSlot.Cards[i].DrawCard(screen)
 		}
 	}
@@ -147,6 +141,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		y := g.SpacerV
 		g.DrawnCardsSlot.Cards[i].X = x
 		g.DrawnCardsSlot.Cards[i].Y = y
+		g.DrawnCardsSlot.Cards[i].H = float64(g.FrontFaceFrameData[g.Active][u.FrH]) * g.Theme.ScaleValue[g.Active][u.Y]
 		g.DrawnCardsSlot.Cards[i].IsRevealed = true
 
 		// draw the prior card as revealed when the current card is dragged
@@ -163,22 +158,26 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			y := g.SpacerV
 			g.CardStores[i].Cards[j].X = x
 			g.CardStores[i].Cards[j].Y = y
+			g.CardStores[i].Cards[j].H = float64(g.FrontFaceFrameData[g.Active][u.FrH]) * g.Theme.ScaleValue[g.Active][u.Y]
 			g.CardStores[i].Cards[j].DrawCard(screen)
 		}
 	}
 
-	// force card image persistence over other cards
+	// force card or stack of cards image(s) persistence over other cards
+	// practically draw the dragged card again. or draw the entire stack again, at the end
 	if DraggedCard != nil {
 		switch DraggedCard.(type) {
 		case *Card:
 			c := DraggedCard.(*Card)
-			if !c.IsColCard {
+			if c.ColNum == 0 {
 				opc := &ebiten.DrawImageOptions{}
 				opc.GeoM.Scale(c.ScX, c.ScY)
 				opc.GeoM.Translate(c.X, c.Y)
 				screen.DrawImage(c.Img, opc)
 			} else {
-				fmt.Println("col card")
+				for i, card := range g.Columns[c.ColNum-1].Cards {
+					card.DrawColCard(screen, g.Columns[c.ColNum-1].Cards, i, cx, cy)
+				}
 			}
 		}
 	}
@@ -247,6 +246,7 @@ func (g *Game) Update() error {
 						if u.IsCollision(ix, iy, iw, ih, jx, jy, jw, jh) &&
 							inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
 
+							g.DrawnCardsSlot.Cards[lc].ColNum = j + 1
 							g.Columns[j].Cards = append(g.Columns[j].Cards, g.DrawnCardsSlot.Cards[lc])
 							g.DrawnCardsSlot.Cards = g.DrawnCardsSlot.Cards[:lc]
 
@@ -265,6 +265,7 @@ func (g *Game) Update() error {
 							g.DrawnCardsSlot.Cards[lc].Color != g.Columns[j].Cards[lj].Color &&
 							inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
 
+							g.DrawnCardsSlot.Cards[lc].ColNum = j + 1
 							g.Columns[j].Cards = append(g.Columns[j].Cards, g.DrawnCardsSlot.Cards[lc])
 							g.DrawnCardsSlot.Cards = g.DrawnCardsSlot.Cards[:lc]
 
@@ -284,6 +285,7 @@ func (g *Game) Update() error {
 							u.IsCollision(ix, iy, iw, ih, jx, jy, jw, jh) &&
 							inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
 
+							g.DrawnCardsSlot.Cards[lc].ColNum = 0
 							g.CardStores[j].Cards = append(g.CardStores[j].Cards, g.DrawnCardsSlot.Cards[lc])
 							g.DrawnCardsSlot.Cards = g.DrawnCardsSlot.Cards[:lc]
 
@@ -300,6 +302,7 @@ func (g *Game) Update() error {
 							g.DrawnCardsSlot.Cards[lc].Suit == g.CardStores[j].Cards[lj].Suit &&
 							inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
 
+							g.DrawnCardsSlot.Cards[lc].ColNum = 0
 							g.CardStores[j].Cards = append(g.CardStores[j].Cards, g.DrawnCardsSlot.Cards[lc])
 							g.DrawnCardsSlot.Cards = g.DrawnCardsSlot.Cards[:lc]
 
@@ -323,7 +326,6 @@ func (g *Game) Update() error {
 				iw, ih := g.Columns[i].Cards[li].W, g.Columns[i].Cards[li].H
 
 				// iterate through all the visible cards, for multiple grab
-				//li := len(g.Columns[i].Cards) - 1 // li = last card in the current context
 				if g.Columns[i].Cards[li].IsDragged {
 
 					// loop over all the other columns
@@ -337,6 +339,7 @@ func (g *Game) Update() error {
 								if u.IsCollision(ix, iy, iw, ih, jx, jy, jw, jh) &&
 									inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
 
+									g.Columns[i].Cards[li].ColNum = j + 1
 									g.Columns[j].Cards = append(g.Columns[j].Cards, g.Columns[i].Cards[li])
 									g.Columns[i].Cards = g.Columns[i].Cards[:li]
 
@@ -356,7 +359,7 @@ func (g *Game) Update() error {
 							// handle all cases except K
 							if len(g.Columns[j].Cards) > 0 {
 
-								lj := len(g.Columns[j].Cards) - 1 // lj = last card in the current context
+								lj := len(g.Columns[j].Cards) - 1 // lj = last card in the current context (target)
 								jx, jy := g.Columns[j].Cards[lj].X, g.Columns[j].Cards[lj].Y
 								jw, jh := g.Columns[j].Cards[lj].W, g.Columns[j].Cards[lj].H
 
@@ -365,14 +368,13 @@ func (g *Game) Update() error {
 									g.Columns[i].Cards[li].Color != g.Columns[j].Cards[lj].Color {
 
 									if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
-
+										g.Columns[i].Cards[li].ColNum = j + 1
 										g.Columns[j].Cards = append(g.Columns[j].Cards, g.Columns[i].Cards[li])
 										g.Columns[i].Cards = g.Columns[i].Cards[:li]
 
 										// reveal the last card from the source column, and revert its height to original
 										last := len(g.Columns[i].Cards)
 										if last > 0 {
-
 											g.Columns[i].Cards[last-1].IsRevealed = true
 											g.Columns[i].Cards[last-1].H = g.DrawCardSlot.H
 										}
@@ -397,6 +399,7 @@ func (g *Game) Update() error {
 							g.Columns[i].Cards[li].Value == CardRanks[u.Ace] &&
 							inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
 
+							g.Columns[i].Cards[li].ColNum = 0
 							g.CardStores[j].Cards = append(g.CardStores[j].Cards, g.Columns[i].Cards[li])
 							g.Columns[i].Cards = g.Columns[i].Cards[:li]
 
@@ -419,6 +422,7 @@ func (g *Game) Update() error {
 							g.Columns[i].Cards[li].Suit == g.CardStores[j].Cards[lj].Suit &&
 							inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
 
+							g.Columns[i].Cards[li].ColNum = 0
 							g.CardStores[j].Cards = append(g.CardStores[j].Cards, g.Columns[i].Cards[li])
 							g.Columns[i].Cards = g.Columns[i].Cards[:li]
 
@@ -452,6 +456,7 @@ func (g *Game) Update() error {
 								g.Columns[j].Cards[lj].Color != g.CardStores[i].Cards[li].Color {
 
 								if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
+									g.CardStores[i].Cards[li].ColNum = j + 1
 									g.Columns[j].Cards = append(g.Columns[j].Cards, g.CardStores[i].Cards[li])
 									g.CardStores[i].Cards = g.CardStores[i].Cards[:li]
 
@@ -553,8 +558,10 @@ func GenerateDeck(th *Theme) []*Card {
 func (g *Game) GetIndexOfDraggedColCard(col int) int {
 	count := 0
 	for _, v := range g.Columns[col].Cards {
-		if !v.IsDragged {
-			count++
+		if v.IsRevealed {
+			if !v.IsDragged {
+				count++
+			}
 		}
 	}
 	return count
