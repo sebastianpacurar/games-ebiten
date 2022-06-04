@@ -13,9 +13,8 @@ type (
 		CardStores   []CardStore
 		DrawnCardsSlot
 		DrawCardSlot
-		CardsVSpacer float64
-		SpacerV      float64
-		SpacerH      float64
+		SpacerV float64
+		SpacerH float64
 	}
 
 	DrawCardSlot struct {
@@ -42,7 +41,7 @@ type (
 )
 
 // IsDrawCardHovered - returns true if the DrawCardSlot is hovered. Applies only when there are no cards in stack
-func (e *Environment) IsDrawCardHovered(cx, cy int, th *Theme) bool {
+func (e *Environment) IsDrawCardHovered(cx, cy int) bool {
 	x, y, w, h := e.DrawCardSlot.X, e.DrawCardSlot.Y, e.DrawCardSlot.W, e.DrawCardSlot.H
 	return int(x) <= cx && cx < int(x+w) && int(y) <= cy && cy < int(y+h)
 }
@@ -55,17 +54,7 @@ func (cl *CardColumn) GetColumnGeoMData() (float64, float64, float64, float64) {
 	return cl.X, cl.Y, cl.W, cl.H
 }
 
-func (cl *CardColumn) GetCountOfHidden() int {
-	count := 0
-	for _, v := range cl.Cards {
-		if !v.IsRevealed {
-			count++
-		}
-	}
-	return count
-}
-
-func (e *Environment) DrawEnvironment(screen *ebiten.Image, th *Theme) {
+func (e *Environment) DrawPlayground(screen *ebiten.Image, th *Theme) {
 	// Draw the BG Image
 	opBg := &ebiten.DrawImageOptions{}
 	opBg.GeoM.Scale(50, 50)
@@ -112,4 +101,19 @@ func (e *Environment) DrawEnvironment(screen *ebiten.Image, th *Theme) {
 		opColumnSlot.GeoM.Translate(x, y)
 		screen.DrawImage(e.EmptySlotImg, opColumnSlot)
 	}
+}
+
+func (e *Environment) DrawEnding(screen *ebiten.Image) {
+	opBg := &ebiten.DrawImageOptions{}
+	opBg.GeoM.Scale(50, 50)
+	screen.DrawImage(e.BgImg, opBg)
+}
+
+// IsGameOver - if count of cards in CardStores is 52, return true
+func (e *Environment) IsGameOver() bool {
+	total := 0
+	for _, store := range e.CardStores {
+		total += len(store.Cards)
+	}
+	return total == 52
 }

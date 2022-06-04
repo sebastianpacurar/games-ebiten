@@ -136,8 +136,8 @@ func (c *Card) DrawColCard(screen *ebiten.Image, cards []*Card, ci, cx, cy int) 
 			c.Y = float64(cy)
 
 			// if not the last card then height is 35
-			if c != cards[len(cards[ci:])-1] {
-				c.H = 35
+			if len(cards[ci:]) > 1 && c != cards[len(cards[ci:])-1] {
+				c.H = u.CardsVSpacer
 			}
 
 			// draw the dragged card first
@@ -149,10 +149,10 @@ func (c *Card) DrawColCard(screen *ebiten.Image, cards []*Card, ci, cx, cy int) 
 			// draw the rest of the cards
 			for i, card := range cards[ci+1:] {
 				if i != len(cards[ci+1:])-1 {
-					card.H = 35
+					card.H = u.CardsVSpacer
 				}
 				card.X = float64(cx) - card.W/2
-				card.Y = float64(cy) + (float64(i+1) * 35)
+				card.Y = float64(cy) + (float64(i+1) * u.CardsVSpacer)
 				card.IsActive = true
 				opc := &ebiten.DrawImageOptions{}
 				opc.GeoM.Scale(card.ScX, card.ScY)

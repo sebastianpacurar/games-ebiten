@@ -60,6 +60,8 @@ const (
 	DynamicCastle = "DynamicCastle"
 	DynamicBeach  = "DynamicBeach"
 	DynamicSleeve = "DynamicSleeve"
+
+	CardsVSpacer = float64(35)
 )
 
 var ScreenDims = map[string]float64{MinX: 0, MaxX: ScreenWidth, MinY: 0, MaxY: ScreenHeight}
