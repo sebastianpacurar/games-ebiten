@@ -159,6 +159,13 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			g.CardStores[i].Cards[j].X = x
 			g.CardStores[i].Cards[j].Y = y
 			g.CardStores[i].Cards[j].H = float64(g.FrontFaceFrameData[g.Active][u.FrH]) * g.Theme.ScaleValue[g.Active][u.Y]
+
+			// draw the prior card as revealed when the current card is dragged
+			if j > 0 && g.CardStores[i].Cards[j].IsDragged {
+				g.CardStores[i].Cards[j-1].IsDragged = false
+				g.CardStores[i].Cards[j-1].DrawCard(screen)
+			}
+
 			g.CardStores[i].Cards[j].DrawCard(screen)
 		}
 	}
@@ -242,7 +249,7 @@ func (g *Game) Update() error {
 				for j := range g.Columns {
 					if len(g.Columns[j].Cards) == 0 && g.DrawnCardsSlot.Cards[lc].Value == CardRanks[u.King] {
 						// if there are no cards on the Column Slot and the source card is a King
-						jx, jy, jw, jh := g.Columns[j].GetColumnGeoMData()
+						jx, jy, jw, jh := g.Columns[j].GetColumnGeoMData() // get column pos and size
 						if u.IsCollision(ix, iy, iw, ih, jx, jy, jw, jh) &&
 							inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
 
@@ -325,52 +332,28 @@ func (g *Game) Update() error {
 				ix, iy := g.Columns[i].Cards[li].X, g.Columns[i].Cards[li].Y
 				iw, ih := g.Columns[i].Cards[li].W, g.Columns[i].Cards[li].H
 
-				// iterate through all the visible cards, for multiple grab
-				if g.Columns[i].Cards[li].IsDragged {
+				// drag card(s) from Column to Column
+				for j := range g.Columns {
 
-					// loop over all the other columns
-					//TODO: add here functionality related to IsDragged
-					for j := range g.Columns {
-						if j != i {
+					// avoid iteration over the same column
+					if j != i {
 
-							// handle K case
-							if len(g.Columns[j].Cards) == 0 && g.Columns[i].Cards[li].Value == CardRanks[u.King] {
-								jx, jy, jw, jh := g.Columns[j].GetColumnGeoMData()
-								if u.IsCollision(ix, iy, iw, ih, jx, jy, jw, jh) &&
-									inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
+						// handle moving K Column card or stack on empty Column slot
+						if len(g.Columns[j].Cards) == 0 {
+							for _, c := range g.Columns[i].Cards {
 
-									g.Columns[i].Cards[li].ColNum = j + 1
-									g.Columns[j].Cards = append(g.Columns[j].Cards, g.Columns[i].Cards[li])
-									g.Columns[i].Cards = g.Columns[i].Cards[:li]
+								if c.Value == CardRanks[u.King] {
+									jx, jy, jw, jh := g.Columns[j].GetColumnGeoMData() // get column pos and size
 
-									// reveal the last card from the source column, and revert its height to original
-									last := len(g.Columns[i].Cards)
-									if last > 0 {
-										g.Columns[i].Cards[last-1].IsRevealed = true
-										g.Columns[i].Cards[last-1].H = g.DrawCardSlot.H
-									}
+									if u.IsCollision(c.X, c.Y, c.W, c.H, jx, jy, jw, jh) &&
+										inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
 
-									// exit entirely to prevent redundant iterations
-									DraggedCard = nil
-									return nil
-								}
-							}
+										g.Columns[j].Cards = append(g.Columns[j].Cards, g.Columns[i].Cards[g.GetIndexOfDraggedColCard(c.ColNum-1):]...)
+										g.Columns[i].Cards = g.Columns[i].Cards[:g.GetIndexOfDraggedColCard(c.ColNum-1)]
 
-							// handle all cases except K
-							if len(g.Columns[j].Cards) > 0 {
-
-								lj := len(g.Columns[j].Cards) - 1 // lj = last card in the current context (target)
-								jx, jy := g.Columns[j].Cards[lj].X, g.Columns[j].Cards[lj].Y
-								jw, jh := g.Columns[j].Cards[lj].W, g.Columns[j].Cards[lj].H
-
-								if u.IsCollision(ix, iy, iw, ih, jx, jy, jw, jh) &&
-									g.Columns[i].Cards[li].Value == g.Columns[j].Cards[lj].Value-1 &&
-									g.Columns[i].Cards[li].Color != g.Columns[j].Cards[lj].Color {
-
-									if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
-										g.Columns[i].Cards[li].ColNum = j + 1
-										g.Columns[j].Cards = append(g.Columns[j].Cards, g.Columns[i].Cards[li])
-										g.Columns[i].Cards = g.Columns[i].Cards[:li]
+										for _, card := range g.Columns[j].Cards {
+											card.ColNum = j + 1
+										}
 
 										// reveal the last card from the source column, and revert its height to original
 										last := len(g.Columns[i].Cards)
@@ -382,6 +365,42 @@ func (g *Game) Update() error {
 										// exit entirely to prevent redundant iterations
 										DraggedCard = nil
 										return nil
+									}
+								}
+							}
+
+						} else {
+							// handle all cases except K
+							if len(g.Columns[j].Cards) > 0 {
+								lj := len(g.Columns[j].Cards) - 1 // lj = last card in the current context (target)
+								jx, jy := g.Columns[j].Cards[lj].X, g.Columns[j].Cards[lj].Y
+								jw, jh := g.Columns[j].Cards[lj].W, g.Columns[j].Cards[lj].H
+
+								for _, c := range g.Columns[i].Cards {
+									if u.IsCollision(c.X, c.Y, c.W, c.H, jx, jy, jw, jh) && c.IsDragged &&
+										c.Value == g.Columns[j].Cards[lj].Value-1 &&
+										c.Color != g.Columns[j].Cards[lj].Color {
+
+										if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
+
+											g.Columns[j].Cards = append(g.Columns[j].Cards, g.Columns[i].Cards[g.GetIndexOfDraggedColCard(c.ColNum-1):]...)
+											g.Columns[i].Cards = g.Columns[i].Cards[:g.GetIndexOfDraggedColCard(c.ColNum-1)]
+
+											for _, card := range g.Columns[j].Cards {
+												card.ColNum = j + 1
+											}
+
+											// reveal the last card from the source column, and revert its height to original
+											last := len(g.Columns[i].Cards)
+											if last > 0 {
+												g.Columns[i].Cards[last-1].IsRevealed = true
+												g.Columns[i].Cards[last-1].H = g.DrawCardSlot.H
+											}
+
+											// exit entirely to prevent redundant iterations
+											DraggedCard = nil
+											return nil
+										}
 									}
 								}
 							}
@@ -558,11 +577,10 @@ func GenerateDeck(th *Theme) []*Card {
 func (g *Game) GetIndexOfDraggedColCard(col int) int {
 	count := 0
 	for _, v := range g.Columns[col].Cards {
-		if v.IsRevealed {
-			if !v.IsDragged {
-				count++
-			}
+		if v.IsDragged {
+			break
 		}
+		count++
 	}
 	return count
 }

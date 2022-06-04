@@ -52,14 +52,14 @@ type Card struct {
 	Img        *ebiten.Image
 	BackImg    *ebiten.Image
 	Suit       string
-	Value      int
 	Color      string
+	Value      int
+	ColNum     int
 	X, Y, W, H float64
 	ScX        float64
 	ScY        float64
 	IsRevealed bool
 	IsActive   bool
-	ColNum     int
 	IsDragged  bool
 }
 
@@ -112,9 +112,9 @@ func (c *Card) DrawCard(screen *ebiten.Image) {
 }
 
 // DrawColCard - handles the drag multiple revealed cards functionality
-// cards param = the cards array the DraggedCard is part of
-// ci param - the index of the DraggedCard
-// cx, cy params - cursor position
+// cards param = cards array of which the DraggedCard is part
+// ci param = index of the DraggedCard
+// cx, cy params = cursor position
 func (c *Card) DrawColCard(screen *ebiten.Image, cards []*Card, ci, cx, cy int) {
 	var img *ebiten.Image
 
