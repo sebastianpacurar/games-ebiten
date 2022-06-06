@@ -3,55 +3,85 @@ package game
 import (
 	u "games-ebiten/resources/utils"
 	"github.com/hajimehoshi/ebiten/v2"
+	"image"
 )
 
 type (
 	Environment struct {
-		BgImg        *ebiten.Image
-		EmptySlotImg *ebiten.Image
-		Columns      []CardColumn
-		CardStores   []CardStore
-		DrawnCardsSlot
-		DrawCardSlot
-		SpacerV float64
-		SpacerH float64
+		BgImg           *ebiten.Image
+		EmptySlotImg    *ebiten.Image
+		Columns         []CardColumn
+		FoundationPiles []FoundationPile
+		WastePile
+		StockPile
+		SpacerV   int
+		SpacerH   int
+		CardFullH int
 	}
 
-	DrawCardSlot struct {
-		X, Y, W, H   float64
+	StockPile struct {
+		X, Y, W, H   int
 		GreenSlotImg *ebiten.Image
 		RedSlotImg   *ebiten.Image
 		Cards        []*Card
 		IsGreen      bool
 	}
 
-	CardStore struct {
-		X, Y, W, H float64
+	FoundationPile struct {
+		X, Y, W, H int
 		Cards      []*Card
 	}
 
-	DrawnCardsSlot struct {
+	WastePile struct {
 		Cards []*Card
 	}
 
 	CardColumn struct {
-		X, Y, W, H float64
+		X, Y, W, H int
 		Cards      []*Card
 	}
 )
 
-// IsDrawCardHovered - returns true if the DrawCardSlot is hovered. Applies only when there are no cards in stack
-func (e *Environment) IsDrawCardHovered(cx, cy int) bool {
-	x, y, w, h := e.DrawCardSlot.X, e.DrawCardSlot.Y, e.DrawCardSlot.W, e.DrawCardSlot.H
-	return int(x) <= cx && cx < int(x+w) && int(y) <= cy && cy < int(y+h)
+// IsStockPileHovered - returns true if the StockPile is hovered. Applies only when there are no cards in stack
+func (e *Environment) IsStockPileHovered(cx, cy int) bool {
+	x, y, w, h := e.StockPile.X, e.StockPile.Y, e.StockPile.W, e.StockPile.H
+	pt := image.Pt(cx, cy)
+	dims := image.Rectangle{
+		Min: image.Point{X: x, Y: y},
+		Max: image.Point{X: x + w, Y: y + h},
+	}
+	return pt.In(dims)
 }
 
-func (cs *CardStore) GetStoreGeomData() (float64, float64, float64, float64) {
-	return cs.X, cs.Y, cs.W, cs.H
-}
-
-func (cl *CardColumn) GetColumnGeoMData() (float64, float64, float64, float64) {
-	return cl.X, cl.Y, cl.W, cl.H
+func (e *Environment) GetGeomData(i interface{}) image.Rectangle {
+	data := image.Rectangle{}
+	switch i.(type) {
+	case FoundationPile:
+		area := i.(FoundationPile)
+		data = image.Rectangle{
+			Min: image.Point{X: area.X, Y: area.Y},
+			Max: image.Point{X: area.X + area.W, Y: area.Y + area.H},
+		}
+	case StockPile:
+		area := i.(StockPile)
+		data = image.Rectangle{
+			Min: image.Point{X: area.X, Y: area.Y},
+			Max: image.Point{X: area.X + area.W, Y: area.Y + area.H},
+		}
+	case CardColumn:
+		area := i.(CardColumn)
+		data = image.Rectangle{
+			Min: image.Point{X: area.X, Y: area.Y},
+			Max: image.Point{X: area.X + area.W, Y: area.Y + area.H},
+		}
+	case Card:
+		area := i.(Card)
+		data = image.Rectangle{
+			Min: image.Point{X: area.X, Y: area.Y},
+			Max: image.Point{X: area.X + area.W, Y: area.Y + area.H},
+		}
+	}
+	return data
 }
 
 func (e *Environment) DrawPlayground(screen *ebiten.Image, th *Theme) {
@@ -66,9 +96,9 @@ func (e *Environment) DrawPlayground(screen *ebiten.Image, th *Theme) {
 		opCardStack := &ebiten.DrawImageOptions{}
 		opCardStack.GeoM.Scale(th.ScaleValue[th.Active][u.X], th.ScaleValue[th.Active][u.Y])
 
-		x := (float64(th.FrontFaceFrameData[th.Active][u.FrW]) + e.SpacerH) * float64(i)
+		x := (th.FrontFaceFrameData[th.Active][u.FrW] + e.SpacerH) * i
 		y := e.SpacerV
-		opCardStack.GeoM.Translate(x, y)
+		opCardStack.GeoM.Translate(float64(x), float64(y))
 
 		if i == 2 {
 			img = e.EmptySlotImg
@@ -84,9 +114,9 @@ func (e *Environment) DrawPlayground(screen *ebiten.Image, th *Theme) {
 		opStackSlot.GeoM.Scale(th.ScaleValue[th.Active][u.X], th.ScaleValue[th.Active][u.Y])
 
 		// align Stacked Cards with the left columns of the Column slots
-		x := (float64(th.FrontFaceFrameData[th.Active][u.FrW]) + e.SpacerH) * (float64(i) + 4)
+		x := (th.FrontFaceFrameData[th.Active][u.FrW] + e.SpacerH) * (i + 4)
 
-		opStackSlot.GeoM.Translate(x, e.SpacerV)
+		opStackSlot.GeoM.Translate(float64(x), float64(e.SpacerV))
 		screen.DrawImage(e.EmptySlotImg, opStackSlot)
 	}
 
@@ -95,10 +125,10 @@ func (e *Environment) DrawPlayground(screen *ebiten.Image, th *Theme) {
 		opColumnSlot := &ebiten.DrawImageOptions{}
 		opColumnSlot.GeoM.Scale(th.ScaleValue[th.Active][u.X], th.ScaleValue[th.Active][u.Y])
 
-		x := (float64(th.FrontFaceFrameData[th.Active][u.FrW]) + e.SpacerH) * float64(i)
-		y := float64(u.ScreenHeight / 3)
+		x := (th.FrontFaceFrameData[th.Active][u.FrW] + e.SpacerH) * i
+		y := u.ScreenHeight / 3
 
-		opColumnSlot.GeoM.Translate(x, y)
+		opColumnSlot.GeoM.Translate(float64(x), float64(y))
 		screen.DrawImage(e.EmptySlotImg, opColumnSlot)
 	}
 }
@@ -109,10 +139,10 @@ func (e *Environment) DrawEnding(screen *ebiten.Image) {
 	screen.DrawImage(e.BgImg, opBg)
 }
 
-// IsGameOver - if count of cards in CardStores is 52, return true
+// IsGameOver - if count of cards in FoundationPiles is 52, return true
 func (e *Environment) IsGameOver() bool {
 	total := 0
-	for _, store := range e.CardStores {
+	for _, store := range e.FoundationPiles {
 		total += len(store.Cards)
 	}
 	return total == 52

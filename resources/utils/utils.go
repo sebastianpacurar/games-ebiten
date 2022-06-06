@@ -61,7 +61,7 @@ const (
 	DynamicBeach  = "DynamicBeach"
 	DynamicSleeve = "DynamicSleeve"
 
-	CardsVSpacer = float64(35)
+	CardsVSpacer = 35
 )
 
 var ScreenDims = map[string]float64{MinX: 0, MaxX: ScreenWidth, MinY: 0, MaxY: ScreenHeight}
@@ -86,8 +86,8 @@ func GenerateRandomLocation(minX, maxX, minY, maxY float64) (float64, float64) {
 }
 
 // IsCollision - returns true if rectangle images overlap in any way
-func IsCollision(x1, y1, w1, h1, x2, y2, w2, h2 float64) bool {
-	return x1 < x2+w2 && x1+w1 > x2 && y1 < y2+h2 && h1+y1 > y2
+func IsCollision(src, target image.Rectangle) bool {
+	return target.Overlaps(src)
 }
 
 // HitBox - generate the shape's hitbox (minX, maxX, minY, maxY)
@@ -130,41 +130,15 @@ func BoundaryValidation(i interface{}, minX, maxX, minY, maxY float64) {
 
 // IsAreaHovered - Returns true if the cursor overlaps the target interface
 func IsAreaHovered(i interface{}) bool {
-	cx, cy := ebiten.CursorPosition()
-	var x, y, w, h float64
-
+	pt := image.Pt(ebiten.CursorPosition())
+	var area image.Rectangle
 	switch i.(type) {
 	case CasinoCards:
 		c := i.(CasinoCards)
-		x, y, w, h = c.GetPosition()
+		area = c.GetGeomData()
 	case MatchIcons:
 		mi := i.(MatchIcons)
-		x, y, w, h = mi.GetPosition()
+		area = mi.GetGeomData()
 	}
-	return int(x) <= cx && cx < int(x+w) && int(y) <= cy && cy < int(y+h)
+	return pt.In(area)
 }
-
-// DragAndDrop - Drags the image
-//func DragAndDrop(i interface{}) {
-//	switch i.(type) {
-//	case CasinoCards:
-//		c := i.(CasinoCards)
-//
-//		if IsAreaHovered(c) && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
-//			c.SetDraggedState(true)`
-//		}
-//
-//		// drag and set location
-//		if inpututil.MouseButtonPressDuration(ebiten.MouseButtonLeft) > 0 && c.GetDraggedState() {
-//			cx, cy := ebiten.CursorPosition()
-//			_, _, w, h := c.GetPosition()
-//			c.SetLocation(X, float64(cx)-w/2)
-//			c.SetLocation(Y, float64(cy)-h/2)
-//		}
-//
-//		// release
-//		if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
-//			c.SetDraggedState(false)
-//		}
-//	}
-//}

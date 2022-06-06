@@ -4,6 +4,7 @@ import (
 	u "games-ebiten/resources/utils"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"image"
 	_ "image/png"
 )
 
@@ -55,24 +56,12 @@ type Card struct {
 	Color      string
 	Value      int
 	ColNum     int
-	X, Y, W, H float64
+	X, Y, W, H int
 	ScX        float64
 	ScY        float64
 	IsRevealed bool
 	IsActive   bool
 	IsDragged  bool
-}
-
-func (c *Card) GetPosition() (float64, float64, float64, float64) {
-	return c.X, c.Y, c.W, c.H
-}
-
-func (c *Card) SetLocation(axis string, val float64) {
-	if axis == u.X {
-		c.X = val
-	} else if axis == u.Y {
-		c.Y = val
-	}
 }
 
 func (c *Card) DrawCard(screen *ebiten.Image) {
@@ -82,22 +71,21 @@ func (c *Card) DrawCard(screen *ebiten.Image) {
 	op.GeoM.Scale(c.ScX, c.ScY)
 	img := c.Img
 
-	if !c.IsRevealed {
+	if !c.GetRevealedState() {
 		img = c.BackImg
 	}
 
-	if c.IsRevealed {
+	if c.GetRevealedState() {
 		// drag only clicked revealed cards
-		if int(c.X) <= cx && cx < int(c.X+c.W) && int(c.Y) <= cy && cy < int(c.Y+c.H) &&
-			inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+
+		if c.IsHovered(cx, cy) && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 			c.SetDraggedState(true)
 		}
 
 		// drag and set location
 		if inpututil.MouseButtonPressDuration(ebiten.MouseButtonLeft) > 0 && c.GetDraggedState() {
-			_, _, w, h := c.GetPosition()
-			c.X = float64(cx) - w/2
-			c.Y = float64(cy) - h/2
+			c.X = cx - c.W/2
+			c.Y = cy - c.H/2
 			DraggedCard = c
 		}
 
@@ -107,7 +95,7 @@ func (c *Card) DrawCard(screen *ebiten.Image) {
 		}
 	}
 
-	op.GeoM.Translate(c.X, c.Y)
+	op.GeoM.Translate(float64(c.X), float64(c.Y))
 	screen.DrawImage(img, op)
 }
 
@@ -119,12 +107,11 @@ func (c *Card) DrawColCard(screen *ebiten.Image, cards []*Card, ci, cx, cy int) 
 	var img *ebiten.Image
 
 	// if card is revealed
-	if c.IsRevealed {
+	if c.GetRevealedState() {
 		img = c.Img
 
 		// set the clicked card's drag status to true
-		if int(c.X) <= cx && cx < int(c.X+c.W) && int(c.Y) <= cy && cy < int(c.Y+c.H) &&
-			inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		if c.IsHovered(cx, cy) && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 			c.SetDraggedState(true)
 		}
 
@@ -132,8 +119,8 @@ func (c *Card) DrawColCard(screen *ebiten.Image, cards []*Card, ci, cx, cy int) 
 		if inpututil.MouseButtonPressDuration(ebiten.MouseButtonLeft) > 0 && c.GetDraggedState() {
 			DraggedCard = c
 			c.IsActive = true
-			c.X = float64(cx) - c.W/2
-			c.Y = float64(cy)
+			c.X = cx - c.W/2
+			c.Y = cy
 
 			// if not the last card then height is 35
 			if len(cards[ci:]) > 1 && c != cards[len(cards[ci:])-1] {
@@ -143,7 +130,7 @@ func (c *Card) DrawColCard(screen *ebiten.Image, cards []*Card, ci, cx, cy int) 
 			// draw the dragged card first
 			op := &ebiten.DrawImageOptions{}
 			op.GeoM.Scale(c.ScX, c.ScY)
-			op.GeoM.Translate(c.X, c.Y)
+			op.GeoM.Translate(float64(c.X), float64(c.Y))
 			screen.DrawImage(c.Img, op)
 
 			// draw the rest of the cards
@@ -151,12 +138,12 @@ func (c *Card) DrawColCard(screen *ebiten.Image, cards []*Card, ci, cx, cy int) 
 				if i != len(cards[ci+1:])-1 {
 					card.H = u.CardsVSpacer
 				}
-				card.X = float64(cx) - card.W/2
-				card.Y = float64(cy) + (float64(i+1) * u.CardsVSpacer)
+				card.X = cx - card.W/2
+				card.Y = cy + ((i + 1) * u.CardsVSpacer)
 				card.IsActive = true
 				opc := &ebiten.DrawImageOptions{}
 				opc.GeoM.Scale(card.ScX, card.ScY)
-				opc.GeoM.Translate(card.X, card.Y)
+				opc.GeoM.Translate(float64(card.X), float64(card.Y))
 				screen.DrawImage(card.Img, opc)
 			}
 		}
@@ -172,7 +159,7 @@ func (c *Card) DrawColCard(screen *ebiten.Image, cards []*Card, ci, cx, cy int) 
 		img = c.BackImg
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Scale(c.ScX, c.ScY)
-		op.GeoM.Translate(c.X, c.Y)
+		op.GeoM.Translate(float64(c.X), float64(c.Y))
 		screen.DrawImage(img, op)
 	}
 
@@ -180,7 +167,7 @@ func (c *Card) DrawColCard(screen *ebiten.Image, cards []*Card, ci, cx, cy int) 
 	if !c.IsActive {
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Scale(c.ScX, c.ScY)
-		op.GeoM.Translate(c.X, c.Y)
+		op.GeoM.Translate(float64(c.X), float64(c.Y))
 		screen.DrawImage(img, op)
 	}
 }
@@ -193,8 +180,22 @@ func (c *Card) SetDraggedState(state bool) {
 	c.IsDragged = state
 }
 
-// IsCardHovered - Returns true if the image is hovered
-func (c *Card) IsCardHovered(cx, cy int) bool {
-	x, y, w, h := c.GetPosition()
-	return int(x) <= cx && cx < int(x+w) && int(y) <= cy && cy < int(y+h)
+func (c *Card) GetRevealedState() bool {
+	return c.IsRevealed
+}
+
+func (c *Card) SetRevealedState(state bool) {
+	c.IsRevealed = state
+}
+
+// IsHovered - Returns true if the card is hovered
+func (c *Card) IsHovered(cx, cy int) bool {
+	return image.Pt(cx, cy).In(c.GetGeomData())
+}
+
+func (c *Card) GetGeomData() image.Rectangle {
+	return image.Rectangle{
+		Min: image.Point{X: c.X, Y: c.Y},
+		Max: image.Point{X: c.X + c.W, Y: c.Y + c.H},
+	}
 }

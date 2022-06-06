@@ -2,12 +2,13 @@ package game
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
+	"image"
 	"image/color"
 )
 
 type Icon struct {
 	Img        *ebiten.Image
-	X, Y, W, H float64
+	X, Y, W, H int
 	ID         string
 	IsRevealed bool
 	IsRemoved  bool
@@ -30,7 +31,7 @@ func (ic *Icon) DrawIcon(screen *ebiten.Image) {
 	opi := &ebiten.DrawImageOptions{}
 	if !ic.IsRemoved {
 		opi.GeoM.Scale(ScX, ScY)
-		opi.GeoM.Translate(ic.X, ic.Y)
+		opi.GeoM.Translate(float64(ic.X), float64(ic.Y))
 	} else {
 		opi.GeoM.Scale(0, 0)
 		opi.GeoM.Translate(0, 0)
@@ -39,15 +40,18 @@ func (ic *Icon) DrawIcon(screen *ebiten.Image) {
 	screen.DrawImage(img, opi)
 }
 
-func (ic *Icon) GetRevealState() bool {
+func (ic *Icon) GetRevealedState() bool {
 	return true
 }
 
-func (ic *Icon) SetRevealState(val bool) {
+func (ic *Icon) SetRevealedState(val bool) {
 	ic.IsRevealed = val
 }
 
-// GetPosition - returns the icon position (x, y, w, h)
-func (ic *Icon) GetPosition() (float64, float64, float64, float64) {
-	return ic.X, ic.Y, ic.W, ic.H
+// GetGeomData - returns the shape in image.Rectangle format
+func (ic *Icon) GetGeomData() image.Rectangle {
+	return image.Rectangle{
+		Min: image.Point{X: ic.X, Y: ic.Y},
+		Max: image.Point{X: ic.X + ic.W, Y: ic.Y + ic.H},
+	}
 }

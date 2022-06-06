@@ -14,14 +14,14 @@ import (
 
 var (
 	iconsSprite = ebiten.NewImageFromImage(u.LoadSpriteImage("resources/images/misc/icons.jpeg"))
+	SpacingV    = 25
+	SpacingH    = 50
 	FrOX        = 19
 	FrOY        = 41
 	FrW         = 34
 	FrH         = 34
 	ScX         = float64(2)
 	ScY         = float64(2)
-	SpacingV    = float64(25)
-	SpacingH    = float64(50)
 )
 
 // Game
@@ -128,8 +128,8 @@ func GenerateAvailableIcons() []*Icon {
 
 			icon := &Icon{
 				Img: iconsSprite.SubImage(image.Rect(x, y, x+FrW, y+FrH)).(*ebiten.Image),
-				W:   float64(FrW) * ScX,
-				H:   float64(FrH) * ScY,
+				W:   int(float64(FrW) * ScX),
+				H:   int(float64(FrH) * ScY),
 			}
 			icons = append(icons, icon)
 		}
@@ -144,8 +144,8 @@ func (g *Game) GeneratePositions() {
 		for j := 0; j < g.Cols; j++ {
 			icon := g.IconPairs[count]
 
-			icon.X = (icon.W+50)*float64(j) + SpacingV
-			icon.Y = (icon.H+50)*float64(i) + SpacingH
+			icon.X = (icon.W+50)*j + SpacingV
+			icon.Y = (icon.H+50)*i + SpacingH
 			count++
 		}
 	}

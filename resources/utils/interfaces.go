@@ -1,20 +1,25 @@
 package utils
 
-import "github.com/hajimehoshi/ebiten/v2"
+import (
+	"github.com/hajimehoshi/ebiten/v2"
+	"image"
+)
 
 type (
 	CasinoCards interface {
-		GetPosition() (float64, float64, float64, float64) // GetPosition - returns x, y, w, h
-		SetLocation(string, float64)                       // SetLocation - updates x or y, based on the axis
-		GetDraggedState() bool                             // GetDraggedState - returns true if the image is dragged
-		SetDraggedState(bool)                              // SetDraggedState - sets the drag state to the given value
+		GetGeomData() image.Rectangle // GetGeomData - returns Min x,y and Max x,y
+		IsHovered(int, int) bool      // IsHovered - returns true if cursor is inside the shape
+		GetDraggedState() bool        // GetDraggedState - returns true if the image is dragged
+		SetDraggedState(bool)         // SetDraggedState - sets the Dragged state to the given value
+		GetRevealedState() bool       // GetRevealedState - returns true if the image is revealed
+		SetRevealedState(bool)        // SetRevealedState - sets the Revealed state to the given value
 		DrawCard(*ebiten.Image)
 	}
 
 	MatchIcons interface {
-		GetPosition() (float64, float64, float64, float64) // GetPosition - returns x, y, w, h
-		GetRevealState() bool                              // GetRevealState - returns true if an icon is revealed
-		SetRevealState(bool)                               // SetRevealState - sets an icon to be hidden or revealed
+		GetGeomData() image.Rectangle // GetGeomData - returns Min x,y and Max x,y
+		GetRevealedState() bool       // GetRevealedState - returns true if an icon is revealed
+		SetRevealedState(bool)        // SetRevealedState - sets an icon to be hidden or revealed
 		DrawIcon(image *ebiten.Image)
 	}
 
