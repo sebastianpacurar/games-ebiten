@@ -20,7 +20,6 @@ type (
 func NewGame() *Game {
 	classicImg := ebiten.NewImageFromImage(u.LoadSpriteImage("resources/images/cards/classic-solitaire.png"))
 	th := NewTheme()
-	deck := GenerateDeck(th, true)
 
 	g := &Game{
 		Theme: th,
@@ -33,75 +32,79 @@ func NewGame() *Game {
 			StockPile: StockPile{
 				GreenSlotImg: classicImg.SubImage(image.Rect(710, 384, 710+71, 384+96)).(*ebiten.Image),
 				RedSlotImg:   classicImg.SubImage(image.Rect(781, 384, 781+71, 384+96)).(*ebiten.Image),
-				Cards:        make([]*Card, 0, 24),
-			},
-			WastePile: WastePile{
-				Cards: make([]*Card, 0, 24),
-			},
-			FoundationPiles: []FoundationPile{
-				{Cards: make([]*Card, 0, 13)},
-				{Cards: make([]*Card, 0, 13)},
-				{Cards: make([]*Card, 0, 13)},
-				{Cards: make([]*Card, 0, 13)},
-			},
-			Columns: []CardColumn{
-				{Cards: make([]*Card, 0, 1)},
-				{Cards: make([]*Card, 0, 2)},
-				{Cards: make([]*Card, 0, 3)},
-				{Cards: make([]*Card, 0, 4)},
-				{Cards: make([]*Card, 0, 5)},
-				{Cards: make([]*Card, 0, 6)},
-				{Cards: make([]*Card, 0, 7)},
 			},
 		},
 	}
-	_, _, frW, frH := th.GetFrontFrameGeomData(g.Active)
-	x, y := frW+g.SpacerH, g.SpacerV
-	w, h := int(float64(frW)*th.ScaleValue[g.Active][u.X]), int(float64(frH)*th.ScaleValue[g.Active][u.Y])
+	g.BuildDeck(th)
+	return g
+}
 
-	g.CardFullH = h
+// BuildDeck - initiates the Piles and populates them with cards
+func (g *Game) BuildDeck(th *Theme) {
+	g.Deck = g.GenerateDeck(th)
+	g.UpdateEnv(th)
+}
 
-	g.StockPile.X = x
-	g.StockPile.Y = y
-	g.StockPile.W = w
-	g.StockPile.H = h
+// GenerateDeck - returns a []*Card{} in which all elements have the corresponding details and images
+func (g *Game) GenerateDeck(th *Theme) []*Card {
+	var colStart, colEnd int
+	deck := make([]*Card, 0, 52)
+	active := th.Active
 
-	for s := range g.FoundationPiles {
-		sx := (frW + g.SpacerH) * (s + 4)
-		g.FoundationPiles[s].X = sx
-		g.FoundationPiles[s].Y = y
-		g.FoundationPiles[s].W = w
-		g.FoundationPiles[s].H = h
+	// set which BackFace the cards have (FrOX, FRoY, FrW, FrH)
+	bf := th.GetBackFrameGeomData(active, u.StaticBack1)
+
+	// set which FrontFace the cards have
+	frame := th.GetFrontFrameGeomData(active)
+
+	// this logic is needed due to the discrepancy of the sprite sheets:
+	// one Image starts with card Ace as the first Column value, while others start with card number or other value
+	switch active {
+	case u.PixelatedTheme:
+		colStart = 1
+		colEnd = 14
+	case u.ClassicTheme:
+		colStart = 0
+		colEnd = 13
 	}
 
-	// fill every column array with its relative count of cards and save GeomData of columns placeholders
-	cardIndex := 0
-	for i := range g.Columns {
-		// initiate the location of the Card Column placeholders
-		colx := (frW + g.SpacerH) * (i + 1)
-		coly := u.ScreenHeight / 3
-		g.Columns[i].X = colx
-		g.Columns[i].Y = coly
-		g.Columns[i].W = w
-		g.Columns[i].H = h
+	// there are 4 suits on the image, and 1 suit consists of 13 cards
+	for si, suit := range th.SuitsOrder[active] {
+		color := ""
+		switch suit {
+		case u.Hearts, u.Diamonds:
+			color = u.Red
+		case u.Spades, u.Clubs:
+			color = u.Black
+		}
 
-		for j := 0; j <= i; j++ {
-			// keep only the last one revealed
-			if j == i {
-				deck[cardIndex].SetRevealedState(true)
+		for i := colStart; i < colEnd; i++ {
+			x, y := frame.Min.X+i*frame.Dx(), frame.Min.Y+si*frame.Dy()
+			w, h := int(float64(frame.Dx())*th.ScaleValue[active][u.X]), int(float64(frame.Dy())*th.ScaleValue[active][u.Y])
+
+			// crete card dynamicalY, based on the Active Theme.
+			card := &Card{
+				Img:     th.Sources[active].SubImage(image.Rect(x, y, x+w, y+h)).(*ebiten.Image),
+				BackImg: th.Sources[active].SubImage(image.Rect(bf[0], bf[1], bf[2]+bf[0], bf[3]+bf[1])).(*ebiten.Image),
+				Suit:    suit,
+				Value:   CardRanks[Translation[active][i]],
+				Color:   color,
+				ScX:     th.ScaleValue[active][u.X],
+				ScY:     th.ScaleValue[active][u.Y],
+				W:       w,
+				H:       h,
 			}
-			deck[cardIndex].ColNum = i + 1
-			g.Columns[i].Cards = append(g.Columns[i].Cards, deck[cardIndex])
-			cardIndex++
+
+			// append every customized card to the deck
+			deck = append(deck, card)
+
+			rand.Seed(time.Now().UnixNano())
+			rand.Shuffle(len(deck), func(i, j int) {
+				deck[i], deck[j] = deck[j], deck[i]
+			})
 		}
 	}
-
-	// fill the DrawCard array
-	for i := range deck[cardIndex:] {
-		g.StockPile.Cards = append(g.StockPile.Cards, deck[cardIndex:][i])
-	}
-
-	return g
+	return deck
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
@@ -198,15 +201,22 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	} else {
 		g.DrawEnding(screen)
 	}
-	ebitenutil.DebugPrint(screen, "Press 1 or 2 to change Themes")
+	ebitenutil.DebugPrintAt(screen, "Press F2 to start new game", 10, u.ScreenHeight-35)
+	ebitenutil.DebugPrintAt(screen, "Press 1 or 2 to change Themes", 10, u.ScreenHeight-65)
 }
 
 func (g *Game) Update() error {
 	cx, cy := ebiten.CursorPosition()
-	if ebiten.IsKeyPressed(ebiten.Key1) && g.Active != u.ClassicTheme {
+
+	switch {
+	case inpututil.IsKeyJustReleased(ebiten.Key1):
 		g.Active = u.ClassicTheme
-	} else if ebiten.IsKeyPressed(ebiten.Key2) && g.Active != u.PixelatedTheme {
+		g.BuildDeck(g.Theme)
+	case inpututil.IsKeyJustReleased(ebiten.Key2):
 		g.Active = u.PixelatedTheme
+		g.BuildDeck(g.Theme)
+	case inpututil.IsKeyJustReleased(ebiten.KeyF2):
+		g.BuildDeck(g.Theme)
 	}
 
 	if !g.IsGameOver() {
@@ -228,7 +238,7 @@ func (g *Game) Update() error {
 			}
 		} else {
 			// if there are no more cards, clicking the circle will reset the process
-			if g.IsStockPileHovered(cx, cy) && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+			if !g.IsVegas && g.IsStockPileHovered(cx, cy) && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 				for i := range g.WastePile.Cards {
 					g.StockPile.Cards = append(g.StockPile.Cards, g.WastePile.Cards[i])
 					g.StockPile.Cards[i].SetRevealedState(false)
@@ -525,70 +535,6 @@ func (g *Game) Update() error {
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return u.ScreenWidth, u.ScreenHeight
-}
-
-// GenerateDeck - returns a []*Card{} in which all elements have the corresponding details and images
-func GenerateDeck(th *Theme, shuffle bool) []*Card {
-	var colStart, colEnd int
-	deck := make([]*Card, 0, 52)
-	active := th.Active
-
-	// set which BackFace the cards have (FrOX, FRoY, FrW, FrH)
-	bf := th.GetBackFrameGeomData(active, u.StaticBack1)
-
-	// set which FrontFace the cards have
-	frOX, frOY, frW, frH := th.GetFrontFrameGeomData(active)
-
-	// this logic is needed due to the discrepancy of the sprite sheets:
-	// one Image starts with card Ace as the first Column value, while others start with card number or other value
-	switch active {
-	case u.PixelatedTheme:
-		colStart = 1
-		colEnd = 14
-	case u.ClassicTheme:
-		colStart = 0
-		colEnd = 13
-	}
-
-	// there are 4 suits on the image, and 1 suit consists of 13 cards
-	for si, suit := range th.SuitsOrder[active] {
-		color := ""
-		switch suit {
-		case u.Hearts, u.Diamonds:
-			color = u.Red
-		case u.Spades, u.Clubs:
-			color = u.Black
-		}
-
-		for i := colStart; i < colEnd; i++ {
-			x, y := frOX+i*frW, frOY+si*frH
-			w, h := int(float64(frW)*th.ScaleValue[active][u.X]), int(float64(frH)*th.ScaleValue[active][u.Y])
-
-			// crete card dynamicalY, based on the Active Theme.
-			card := &Card{
-				Img:     th.Sources[active].SubImage(image.Rect(x, y, x+frW, y+frH)).(*ebiten.Image),
-				BackImg: th.Sources[active].SubImage(image.Rect(bf[0], bf[1], bf[2]+bf[0], bf[3]+bf[1])).(*ebiten.Image),
-				Suit:    suit,
-				Value:   CardRanks[Translation[active][i]],
-				Color:   color,
-				ScX:     th.ScaleValue[active][u.X],
-				ScY:     th.ScaleValue[active][u.Y],
-				W:       w,
-				H:       h,
-			}
-
-			// append every customized card to the deck
-			deck = append(deck, card)
-
-			if shuffle {
-				rand.Seed(time.Now().UnixNano())
-				rand.Shuffle(len(deck), func(i, j int) {
-					deck[i], deck[j] = deck[j], deck[i]
-				})
-			}
-		}
-	}
-	return deck
 }
 
 func (g *Game) GetIndexOfDraggedColCard(col int) int {

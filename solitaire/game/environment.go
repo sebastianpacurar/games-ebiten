@@ -8,6 +8,7 @@ import (
 
 type (
 	Environment struct {
+		Deck            []*Card
 		BgImg           *ebiten.Image
 		EmptySlotImg    *ebiten.Image
 		Columns         []CardColumn
@@ -17,6 +18,7 @@ type (
 		SpacerV   int
 		SpacerH   int
 		CardFullH int
+		IsVegas   bool
 	}
 
 	StockPile struct {
@@ -114,7 +116,7 @@ func (e *Environment) DrawPlayground(screen *ebiten.Image, th *Theme) {
 		opStackSlot.GeoM.Scale(th.ScaleValue[th.Active][u.X], th.ScaleValue[th.Active][u.Y])
 
 		// align Stacked Cards with the left columns of the Column slots
-		x := (th.FrontFaceFrameData[th.Active][u.FrW] + e.SpacerH) * (i + 4)
+		x := (int(float64(th.FrontFaceFrameData[th.Active][u.FrW])*th.ScaleValue[th.Active][u.X]) + e.SpacerH) * (i + 4)
 
 		opStackSlot.GeoM.Translate(float64(x), float64(e.SpacerV))
 		screen.DrawImage(e.EmptySlotImg, opStackSlot)
@@ -146,4 +148,70 @@ func (e *Environment) IsGameOver() bool {
 		total += len(store.Cards)
 	}
 	return total == 52
+}
+
+func (e *Environment) UpdateEnv(th *Theme) {
+	//c := e.Deck[0]
+	e.StockPile.Cards = make([]*Card, 0, 24)
+	e.WastePile.Cards = make([]*Card, 0, 24)
+	e.FoundationPiles = []FoundationPile{
+		{Cards: make([]*Card, 0, 13)},
+		{Cards: make([]*Card, 0, 13)},
+		{Cards: make([]*Card, 0, 13)},
+		{Cards: make([]*Card, 0, 13)},
+	}
+	e.Columns = []CardColumn{
+		{Cards: make([]*Card, 0, 1)},
+		{Cards: make([]*Card, 0, 2)},
+		{Cards: make([]*Card, 0, 3)},
+		{Cards: make([]*Card, 0, 4)},
+		{Cards: make([]*Card, 0, 5)},
+		{Cards: make([]*Card, 0, 6)},
+		{Cards: make([]*Card, 0, 7)},
+	}
+	frame := th.GetFrontFrameGeomData(th.Active)
+	x, y := frame.Dx()+e.SpacerH, e.SpacerV
+	w, h := int(float64(frame.Dx())*th.ScaleValue[th.Active][u.X]), int(float64(frame.Dy())*th.ScaleValue[th.Active][u.Y])
+
+	e.CardFullH = h
+
+	e.StockPile.X = x
+	e.StockPile.Y = y
+	e.StockPile.W = w
+	e.StockPile.H = h
+
+	for s := range e.FoundationPiles {
+		sx := (frame.Dx() + e.SpacerH) * (s + 4)
+		e.FoundationPiles[s].X = sx
+		e.FoundationPiles[s].Y = y
+		e.FoundationPiles[s].W = w
+		e.FoundationPiles[s].H = h
+	}
+
+	// fill every column array with its relative count of cards and save GeomData of columns placeholders
+	cardIndex := 0
+	for i := range e.Columns {
+		// initiate the location of the Card Column placeholders
+		colx := (frame.Dx() + e.SpacerH) * (i + 1)
+		coly := u.ScreenHeight / 3
+		e.Columns[i].X = colx
+		e.Columns[i].Y = coly
+		e.Columns[i].W = w
+		e.Columns[i].H = h
+
+		for j := 0; j <= i; j++ {
+			// keep only the last one revealed
+			if j == i {
+				e.Deck[cardIndex].SetRevealedState(true)
+			}
+			e.Deck[cardIndex].ColNum = i + 1
+			e.Columns[i].Cards = append(e.Columns[i].Cards, e.Deck[cardIndex])
+			cardIndex++
+		}
+	}
+
+	// fill the DrawCard array
+	for i := range e.Deck[cardIndex:] {
+		e.StockPile.Cards = append(e.StockPile.Cards, e.Deck[cardIndex:][i])
+	}
 }

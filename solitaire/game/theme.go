@@ -3,6 +3,7 @@ package game
 import (
 	u "games-ebiten/resources/utils"
 	"github.com/hajimehoshi/ebiten/v2"
+	"image"
 )
 
 // Theme holds data about the correct frame dimensions, and the correct images to draw.
@@ -11,6 +12,7 @@ type Theme struct {
 	Sources            map[string]*ebiten.Image
 	FrontFaceFrameData map[string]map[string]int
 	BackFaceFrameData  map[string]map[string][]int
+	EmptySlotFrameData map[string][]int
 	SuitsOrder         map[string][]string
 	ScaleValue         map[string]map[string]float64
 
@@ -18,9 +20,8 @@ type Theme struct {
 	// It is used onY when GenerateDeck runs, so the images won't be so spaced out between them.
 	LocMultiplier map[string]map[string]float64
 
-	// Active and LastActive are used to track down when the Theme Changing gets triggered
-	Active     string
-	LastActive string
+	// Active represents the current theme
+	Active string
 }
 
 // NewTheme - returns data about the current frame dimensions, related to what Theme is being used
@@ -37,6 +38,11 @@ func NewTheme() *Theme {
 		FrontFaceFrameData: map[string]map[string]int{
 			u.PixelatedTheme: {u.FrOX: 0, u.FrOY: 0, u.FrW: 35, u.FrH: 47},
 			u.ClassicTheme:   {u.FrOX: 0, u.FrOY: 0, u.FrW: 71, u.FrH: 96},
+		},
+
+		EmptySlotFrameData: map[string][]int{
+			u.PixelatedTheme: {852, 384, 35, 47, 0},
+			u.ClassicTheme:   {500, 1, 35, 47, 0},
 		},
 
 		// The Frame Dimensions of the available back faces of the current Theme.
@@ -61,8 +67,8 @@ func NewTheme() *Theme {
 
 		ScaleValue: map[string]map[string]float64{
 			u.PixelatedTheme: {
-				u.X: 2,
-				u.Y: 2,
+				u.X: 3,
+				u.Y: 3,
 			},
 			u.ClassicTheme: {
 				u.X: 1.5,
@@ -75,29 +81,26 @@ func NewTheme() *Theme {
 		},
 
 		// The value which will be multiplied with either X or Y, based on the given scenario
-		LocMultiplier: map[string]map[string]float64{
-			u.PixelatedTheme: {
-				u.X: 3,
-				u.Y: 3,
-			},
-			u.ClassicTheme: {
-				u.X: 1.25,
-				u.Y: 1.25,
-			},
-		},
+		//LocMultiplier: map[string]map[string]float64{
+		//	u.PixelatedTheme: {
+		//		u.X: 3,
+		//		u.Y: 3,
+		//	},
+		//	u.ClassicTheme: {
+		//		u.X: 1.25,
+		//		u.Y: 1.25,
+		//	},
+		//},
 
 		// defaults to Classic Theme
 		Active: u.ClassicTheme,
-
-		// used to see if the state of Active has changed
-		LastActive: u.ClassicTheme,
 	}
 }
 
 // GetFrontFrameGeomData - returns 4 integer values which are: FrOX, FrOY, FrameWidth, FrameHeight
-func (th *Theme) GetFrontFrameGeomData(active string) (int, int, int, int) {
+func (th *Theme) GetFrontFrameGeomData(active string) image.Rectangle {
 	activeTh := th.FrontFaceFrameData[active]
-	return activeTh[u.FrOX], activeTh[u.FrOY], activeTh[u.FrW], activeTh[u.FrH]
+	return image.Rect(activeTh[u.FrOX], activeTh[u.FrOY], activeTh[u.FrOX]+activeTh[u.FrW], activeTh[u.FrOY]+activeTh[u.FrH])
 }
 
 // GetBackFrameGeomData - returns 4 integer values which are: FrOX, FrOY, FrameWidth, FrameHeight
@@ -112,9 +115,4 @@ func (th *Theme) GetSource(active string) *ebiten.Image {
 
 func (th *Theme) GetScaleValue(active string) (float64, float64) {
 	return th.ScaleValue[active][u.X], th.ScaleValue[active][u.Y]
-}
-
-// IsToggled - whenever the "Change Theme" gets triggered, should return true
-func (th *Theme) IsToggled() bool {
-	return th.LastActive != th.Active
 }

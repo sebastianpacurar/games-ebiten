@@ -83,7 +83,7 @@ func (c *Card) DrawCard(screen *ebiten.Image) {
 		}
 
 		// drag and set location
-		if inpututil.MouseButtonPressDuration(ebiten.MouseButtonLeft) > 0 && c.GetDraggedState() {
+		if inpututil.MouseButtonPressDuration(ebiten.MouseButtonLeft) > 2 && c.GetDraggedState() {
 			c.X = cx - c.W/2
 			c.Y = cy - c.H/2
 			DraggedCard = c
@@ -116,15 +116,16 @@ func (c *Card) DrawColCard(screen *ebiten.Image, cards []*Card, ci, cx, cy int) 
 		}
 
 		// drag the stack of cards, and set the cards' IsActive state to true
-		if inpututil.MouseButtonPressDuration(ebiten.MouseButtonLeft) > 0 && c.GetDraggedState() {
+		if inpututil.MouseButtonPressDuration(ebiten.MouseButtonLeft) > 1 && c.GetDraggedState() {
 			DraggedCard = c
 			c.IsActive = true
 			c.X = cx - c.W/2
-			c.Y = cy
+			c.Y = cy - c.H/2
 
-			// if not the last card then height is 35
+			// if not the last card then height is 35, and c.Y is 35/2
 			if len(cards[ci:]) > 1 && c != cards[len(cards[ci:])-1] {
 				c.H = u.CardsVSpacer
+				c.Y = cy
 			}
 
 			// draw the dragged card first
@@ -194,8 +195,5 @@ func (c *Card) IsHovered(cx, cy int) bool {
 }
 
 func (c *Card) GetGeomData() image.Rectangle {
-	return image.Rectangle{
-		Min: image.Point{X: c.X, Y: c.Y},
-		Max: image.Point{X: c.X + c.W, Y: c.Y + c.H},
-	}
+	return image.Rect(c.X, c.Y, c.X+c.W, c.Y+c.H)
 }
