@@ -80,7 +80,7 @@ func (g *Game) GenerateDeck(th *Theme) []*Card {
 
 		for i := colStart; i < colEnd; i++ {
 			x, y := frame.Min.X+i*frame.Dx(), frame.Min.Y+si*frame.Dy()
-			w, h := int(float64(frame.Dx())*th.ScaleValue[active][u.X]), int(float64(frame.Dy())*th.ScaleValue[active][u.Y])
+			w, h := frame.Dx(), frame.Dy()
 
 			// crete card dynamicalY, based on the Active Theme.
 			card := &Card{
@@ -89,20 +89,19 @@ func (g *Game) GenerateDeck(th *Theme) []*Card {
 				Suit:    suit,
 				Value:   CardRanks[Translation[active][i]],
 				Color:   color,
-				ScX:     th.ScaleValue[active][u.X],
-				ScY:     th.ScaleValue[active][u.Y],
-				W:       w,
-				H:       h,
+				ScX:     th.CardScaleValue[active][u.X],
+				ScY:     th.CardScaleValue[active][u.Y],
+				W:       int(float64(w) * th.CardScaleValue[active][u.X]),
+				H:       int(float64(w) * th.CardScaleValue[active][u.Y]),
 			}
 
 			// append every customized card to the deck
 			deck = append(deck, card)
-
-			rand.Seed(time.Now().UnixNano())
-			rand.Shuffle(len(deck), func(i, j int) {
-				deck[i], deck[j] = deck[j], deck[i]
-			})
 		}
+		rand.Seed(time.Now().UnixNano())
+		rand.Shuffle(len(deck), func(i, j int) {
+			deck[i], deck[j] = deck[j], deck[i]
+		})
 	}
 	return deck
 }
@@ -127,7 +126,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 				if j != len(g.Columns[i].Cards)-1 {
 					g.Columns[i].Cards[j].H = u.CardsVSpacer
 				} else {
-					g.Columns[i].Cards[j].H = int(float64(g.FrontFaceFrameData[g.Active][u.FrH]) * g.Theme.ScaleValue[g.Active][u.Y])
+					g.Columns[i].Cards[j].H = int(float64(g.FrontFaceFrameData[g.Active][u.FrH]) * g.Theme.CardScaleValue[g.Active][u.Y])
 				}
 				g.Columns[i].Cards[j].DrawColCard(screen, g.Columns[i].Cards, j, cx, cy)
 			}
@@ -138,7 +137,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			for i := range g.StockPile.Cards {
 				g.StockPile.Cards[i].X = g.StockPile.X
 				g.StockPile.Cards[i].Y = g.StockPile.Y
-				g.StockPile.Cards[i].H = int(float64(g.FrontFaceFrameData[g.Active][u.FrH]) * g.Theme.ScaleValue[g.Active][u.Y])
+				g.StockPile.Cards[i].H = int(float64(g.FrontFaceFrameData[g.Active][u.FrH]) * g.Theme.CardScaleValue[g.Active][u.Y])
 				g.StockPile.Cards[i].DrawCard(screen)
 			}
 		}
@@ -149,7 +148,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			y := g.SpacerV
 			g.WastePile.Cards[i].X = x
 			g.WastePile.Cards[i].Y = y
-			g.WastePile.Cards[i].H = int(float64(g.FrontFaceFrameData[g.Active][u.FrH]) * g.Theme.ScaleValue[g.Active][u.Y])
+			g.WastePile.Cards[i].H = int(float64(g.FrontFaceFrameData[g.Active][u.FrH]) * g.Theme.CardScaleValue[g.Active][u.Y])
 			g.WastePile.Cards[i].SetRevealedState(true)
 
 			// draw the prior card as revealed when the current card is dragged
@@ -168,7 +167,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 				y := g.SpacerV
 				g.FoundationPiles[i].Cards[j].X = x
 				g.FoundationPiles[i].Cards[j].Y = y
-				g.FoundationPiles[i].Cards[j].H = int(float64(g.FrontFaceFrameData[g.Active][u.FrH]) * g.Theme.ScaleValue[g.Active][u.Y])
+				g.FoundationPiles[i].Cards[j].H = int(float64(g.FrontFaceFrameData[g.Active][u.FrH]) * g.Theme.CardScaleValue[g.Active][u.Y])
 
 				// draw the prior card as revealed when the current card is dragged
 				if j > 0 && g.FoundationPiles[i].Cards[j].GetDraggedState() {

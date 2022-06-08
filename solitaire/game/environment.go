@@ -92,13 +92,16 @@ func (e *Environment) DrawPlayground(screen *ebiten.Image, th *Theme) {
 	opBg.GeoM.Scale(50, 50)
 	screen.DrawImage(e.BgImg, opBg)
 
-	// Draw the Draw Stack and the Drawn Stack
+	cardTh := th.FrontFaceFrameData[th.Active]
+	envTh := th.EnvScaleValue[th.Active]
+
+	// Draw the Stock and Waste Slots
 	for i := 1; i <= 2; i++ {
 		var img *ebiten.Image
 		opCardStack := &ebiten.DrawImageOptions{}
-		opCardStack.GeoM.Scale(th.ScaleValue[th.Active][u.X], th.ScaleValue[th.Active][u.Y])
+		opCardStack.GeoM.Scale(envTh[u.X], envTh[u.Y])
 
-		x := (th.FrontFaceFrameData[th.Active][u.FrW] + e.SpacerH) * i
+		x := (cardTh[u.FrW] + e.SpacerH) * i
 		y := e.SpacerV
 		opCardStack.GeoM.Translate(float64(x), float64(y))
 
@@ -110,24 +113,24 @@ func (e *Environment) DrawPlayground(screen *ebiten.Image, th *Theme) {
 		screen.DrawImage(img, opCardStack)
 	}
 
-	// Draw the Card Stores
+	// Draw the Foundation Slots
 	for i := 0; i < 4; i++ {
 		opStackSlot := &ebiten.DrawImageOptions{}
-		opStackSlot.GeoM.Scale(th.ScaleValue[th.Active][u.X], th.ScaleValue[th.Active][u.Y])
+		opStackSlot.GeoM.Scale(envTh[u.X], envTh[u.Y])
 
 		// align Stacked Cards with the left columns of the Column slots
-		x := (int(float64(th.FrontFaceFrameData[th.Active][u.FrW])*th.ScaleValue[th.Active][u.X]) + e.SpacerH) * (i + 4)
+		x := (cardTh[u.FrW] + e.SpacerH) * (i + 4)
 
 		opStackSlot.GeoM.Translate(float64(x), float64(e.SpacerV))
 		screen.DrawImage(e.EmptySlotImg, opStackSlot)
 	}
 
-	// Draw the colum slots
+	// Draw the Column Slots
 	for i := 1; i <= 7; i++ {
 		opColumnSlot := &ebiten.DrawImageOptions{}
-		opColumnSlot.GeoM.Scale(th.ScaleValue[th.Active][u.X], th.ScaleValue[th.Active][u.Y])
+		opColumnSlot.GeoM.Scale(envTh[u.X], envTh[u.Y])
 
-		x := (th.FrontFaceFrameData[th.Active][u.FrW] + e.SpacerH) * i
+		x := (cardTh[u.FrW] + e.SpacerH) * i
 		y := u.ScreenHeight / 3
 
 		opColumnSlot.GeoM.Translate(float64(x), float64(y))
@@ -151,7 +154,7 @@ func (e *Environment) IsGameOver() bool {
 }
 
 func (e *Environment) UpdateEnv(th *Theme) {
-	//c := e.Deck[0]
+	c := e.Deck[0]
 	e.StockPile.Cards = make([]*Card, 0, 24)
 	e.WastePile.Cards = make([]*Card, 0, 24)
 	e.FoundationPiles = []FoundationPile{
@@ -171,7 +174,8 @@ func (e *Environment) UpdateEnv(th *Theme) {
 	}
 	frame := th.GetFrontFrameGeomData(th.Active)
 	x, y := frame.Dx()+e.SpacerH, e.SpacerV
-	w, h := int(float64(frame.Dx())*th.ScaleValue[th.Active][u.X]), int(float64(frame.Dy())*th.ScaleValue[th.Active][u.Y])
+	w := c.W
+	h := c.H
 
 	e.CardFullH = h
 
@@ -210,7 +214,7 @@ func (e *Environment) UpdateEnv(th *Theme) {
 		}
 	}
 
-	// fill the DrawCard array
+	// fill the StockPile array
 	for i := range e.Deck[cardIndex:] {
 		e.StockPile.Cards = append(e.StockPile.Cards, e.Deck[cardIndex:][i])
 	}

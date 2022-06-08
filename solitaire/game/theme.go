@@ -14,7 +14,8 @@ type Theme struct {
 	BackFaceFrameData  map[string]map[string][]int
 	EmptySlotFrameData map[string][]int
 	SuitsOrder         map[string][]string
-	ScaleValue         map[string]map[string]float64
+	CardScaleValue     map[string]map[string]float64
+	EnvScaleValue      map[string]map[string]float64
 
 	// LocMultiplier is used to properY compute image locations in case of a grid display.
 	// It is used onY when GenerateDeck runs, so the images won't be so spaced out between them.
@@ -65,7 +66,7 @@ func NewTheme() *Theme {
 			u.ClassicTheme:   {u.Spades, u.Hearts, u.Clubs, u.Diamonds},
 		},
 
-		ScaleValue: map[string]map[string]float64{
+		CardScaleValue: map[string]map[string]float64{
 			u.PixelatedTheme: {
 				u.X: 3,
 				u.Y: 3,
@@ -80,17 +81,16 @@ func NewTheme() *Theme {
 			},
 		},
 
-		// The value which will be multiplied with either X or Y, based on the given scenario
-		//LocMultiplier: map[string]map[string]float64{
-		//	u.PixelatedTheme: {
-		//		u.X: 3,
-		//		u.Y: 3,
-		//	},
-		//	u.ClassicTheme: {
-		//		u.X: 1.25,
-		//		u.Y: 1.25,
-		//	},
-		//},
+		EnvScaleValue: map[string]map[string]float64{
+			u.PixelatedTheme: {
+				u.X: 1.4,
+				u.Y: 1.4,
+			},
+			u.ClassicTheme: {
+				u.X: 1.5,
+				u.Y: 1.5,
+			},
+		},
 
 		// defaults to Classic Theme
 		Active: u.ClassicTheme,
@@ -99,20 +99,12 @@ func NewTheme() *Theme {
 
 // GetFrontFrameGeomData - returns 4 integer values which are: FrOX, FrOY, FrameWidth, FrameHeight
 func (th *Theme) GetFrontFrameGeomData(active string) image.Rectangle {
-	activeTh := th.FrontFaceFrameData[active]
-	return image.Rect(activeTh[u.FrOX], activeTh[u.FrOY], activeTh[u.FrOX]+activeTh[u.FrW], activeTh[u.FrOY]+activeTh[u.FrH])
+	ath := th.FrontFaceFrameData[active]
+	return image.Rect(ath[u.FrOX], ath[u.FrOY], ath[u.FrOX]+ath[u.FrW], ath[u.FrOY]+ath[u.FrH])
 }
 
 // GetBackFrameGeomData - returns 4 integer values which are: FrOX, FrOY, FrameWidth, FrameHeight
+// TODO: consolidate with FrontFrameGeomData
 func (th *Theme) GetBackFrameGeomData(active, backFace string) []int {
 	return th.BackFaceFrameData[active][backFace]
-}
-
-// GetSource - returns the source of the image. Useful to toggle between Themes
-func (th *Theme) GetSource(active string) *ebiten.Image {
-	return th.Sources[active]
-}
-
-func (th *Theme) GetScaleValue(active string) (float64, float64) {
-	return th.ScaleValue[active][u.X], th.ScaleValue[active][u.Y]
 }
