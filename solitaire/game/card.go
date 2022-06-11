@@ -10,7 +10,7 @@ import (
 
 // Translation - used for acquiring the right card index while getting the card SubImage from the Image
 // DraggedCard - used to force the hovered card to overlap other images, while dragged
-// CardRanks - smallest is "Ace"(0), while highest is "King"(13)
+// CardRanks - smallest is "Ace"(0), while highest is "King"(12)
 var (
 	DraggedCard interface{}
 	Translation = map[string]map[int]string{

@@ -19,6 +19,7 @@ type (
 		SpacerH   int
 		CardFullH int
 		IsVegas   bool
+		DrawCount int
 	}
 
 	StockPile struct {
@@ -44,46 +45,26 @@ type (
 	}
 )
 
-// IsStockPileHovered - returns true if the StockPile is hovered. Applies only when there are no cards in stack
+// IsStockPileHovered - returns true if the StockPile is hovered - used to click on green Circle to redraw
 func (e *Environment) IsStockPileHovered(cx, cy int) bool {
 	x, y, w, h := e.StockPile.X, e.StockPile.Y, e.StockPile.W, e.StockPile.H
-	pt := image.Pt(cx, cy)
-	dims := image.Rectangle{
-		Min: image.Point{X: x, Y: y},
-		Max: image.Point{X: x + w, Y: y + h},
-	}
-	return pt.In(dims)
+	return image.Pt(cx, cy).In(image.Rect(x, y, x+w, y+h))
 }
 
 func (e *Environment) GetGeomData(i interface{}) image.Rectangle {
-	data := image.Rectangle{}
+	rect := image.Rectangle{}
 	switch i.(type) {
 	case FoundationPile:
 		area := i.(FoundationPile)
-		data = image.Rectangle{
-			Min: image.Point{X: area.X, Y: area.Y},
-			Max: image.Point{X: area.X + area.W, Y: area.Y + area.H},
-		}
+		rect = image.Rect(area.X, area.Y, area.X+area.W, area.Y+area.H)
 	case StockPile:
 		area := i.(StockPile)
-		data = image.Rectangle{
-			Min: image.Point{X: area.X, Y: area.Y},
-			Max: image.Point{X: area.X + area.W, Y: area.Y + area.H},
-		}
+		rect = image.Rect(area.X, area.Y, area.X+area.W, area.Y+area.H)
 	case CardColumn:
 		area := i.(CardColumn)
-		data = image.Rectangle{
-			Min: image.Point{X: area.X, Y: area.Y},
-			Max: image.Point{X: area.X + area.W, Y: area.Y + area.H},
-		}
-	case Card:
-		area := i.(Card)
-		data = image.Rectangle{
-			Min: image.Point{X: area.X, Y: area.Y},
-			Max: image.Point{X: area.X + area.W, Y: area.Y + area.H},
-		}
+		rect = image.Rect(area.X, area.Y, area.X+area.W, area.Y+area.H)
 	}
-	return data
+	return rect
 }
 
 func (e *Environment) DrawPlayground(screen *ebiten.Image, th *Theme) {
@@ -91,50 +72,47 @@ func (e *Environment) DrawPlayground(screen *ebiten.Image, th *Theme) {
 	opBg := &ebiten.DrawImageOptions{}
 	opBg.GeoM.Scale(50, 50)
 	screen.DrawImage(e.BgImg, opBg)
-
 	cardTh := th.FrontFaceFrameData[th.Active]
 	envTh := th.EnvScaleValue[th.Active]
 
-	// Draw the Stock and Waste Slots
-	for i := 1; i <= 2; i++ {
-		var img *ebiten.Image
-		opCardStack := &ebiten.DrawImageOptions{}
-		opCardStack.GeoM.Scale(envTh[u.X], envTh[u.Y])
+	x := cardTh[u.FrW] + e.SpacerH
+	y := e.SpacerV
 
-		x := (cardTh[u.FrW] + e.SpacerH) * i
-		y := e.SpacerV
-		opCardStack.GeoM.Translate(float64(x), float64(y))
+	var img *ebiten.Image
 
-		if i == 2 {
-			img = e.EmptySlotImg
-		} else {
-			img = e.GreenSlotImg
-		}
-		screen.DrawImage(img, opCardStack)
+	// Draw the Stock Slot
+	opStockSlot := &ebiten.DrawImageOptions{}
+	opStockSlot.GeoM.Scale(envTh[u.X], envTh[u.Y])
+
+	if th.Active == u.PixelatedTheme {
+		opStockSlot.GeoM.Translate(float64(x)+3.5, float64(y)+3.5)
+	} else {
+		opStockSlot.GeoM.Translate(float64(x), float64(y))
 	}
+
+	if e.IsVegas {
+		e.DrawCount++
+	}
+
+	if e.IsVegas && e.DrawCount == 3 {
+		img = e.RedSlotImg
+	} else {
+		img = e.GreenSlotImg
+	}
+	screen.DrawImage(img, opStockSlot)
 
 	// Draw the Foundation Slots
 	for i := 0; i < 4; i++ {
-		opStackSlot := &ebiten.DrawImageOptions{}
-		opStackSlot.GeoM.Scale(envTh[u.X], envTh[u.Y])
+		opFoundationSlot := &ebiten.DrawImageOptions{}
+		opFoundationSlot.GeoM.Scale(envTh[u.X], envTh[u.Y])
 
-		// align Stacked Cards with the left columns of the Column slots
-		x := (cardTh[u.FrW] + e.SpacerH) * (i + 4)
-
-		opStackSlot.GeoM.Translate(float64(x), float64(e.SpacerV))
-		screen.DrawImage(e.EmptySlotImg, opStackSlot)
-	}
-
-	// Draw the Column Slots
-	for i := 1; i <= 7; i++ {
-		opColumnSlot := &ebiten.DrawImageOptions{}
-		opColumnSlot.GeoM.Scale(envTh[u.X], envTh[u.Y])
-
-		x := (cardTh[u.FrW] + e.SpacerH) * i
-		y := u.ScreenHeight / 3
-
-		opColumnSlot.GeoM.Translate(float64(x), float64(y))
-		screen.DrawImage(e.EmptySlotImg, opColumnSlot)
+		cx := x * (i + 4)
+		if th.Active == u.PixelatedTheme {
+			opFoundationSlot.GeoM.Translate(float64(cx)+3.5, float64(y)+3.5)
+		} else {
+			opFoundationSlot.GeoM.Translate(float64(cx), float64(y))
+		}
+		screen.DrawImage(e.EmptySlotImg, opFoundationSlot)
 	}
 }
 
@@ -185,7 +163,7 @@ func (e *Environment) UpdateEnv(th *Theme) {
 	e.StockPile.H = h
 
 	for s := range e.FoundationPiles {
-		sx := (frame.Dx() + e.SpacerH) * (s + 4)
+		sx := x * (s + 4)
 		e.FoundationPiles[s].X = sx
 		e.FoundationPiles[s].Y = y
 		e.FoundationPiles[s].W = w
@@ -196,7 +174,7 @@ func (e *Environment) UpdateEnv(th *Theme) {
 	cardIndex := 0
 	for i := range e.Columns {
 		// initiate the location of the Card Column placeholders
-		colx := (frame.Dx() + e.SpacerH) * (i + 1)
+		colx := x * (i + 1)
 		coly := u.ScreenHeight / 3
 		e.Columns[i].X = colx
 		e.Columns[i].Y = coly

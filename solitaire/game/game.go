@@ -50,6 +50,7 @@ func (g *Game) GenerateDeck(th *Theme) []*Card {
 	var colStart, colEnd int
 	deck := make([]*Card, 0, 52)
 	active := th.Active
+	cardSc := th.CardScaleValue[active]
 
 	// set which BackFace the cards have (FrOX, FRoY, FrW, FrH)
 	bf := th.GetBackFrameGeomData(active, u.StaticBack1)
@@ -57,7 +58,7 @@ func (g *Game) GenerateDeck(th *Theme) []*Card {
 	// set which FrontFace the cards have
 	frame := th.GetFrontFrameGeomData(active)
 
-	// this logic is needed due to the discrepancy of the sprite sheets:
+	// this logic is needed due to the discrepancy between sprite sheets:
 	// one Image starts with card Ace as the first Column value, while others start with card number or other value
 	switch active {
 	case u.PixelatedTheme:
@@ -89,10 +90,10 @@ func (g *Game) GenerateDeck(th *Theme) []*Card {
 				Suit:    suit,
 				Value:   CardRanks[Translation[active][i]],
 				Color:   color,
-				ScX:     th.CardScaleValue[active][u.X],
-				ScY:     th.CardScaleValue[active][u.Y],
-				W:       int(float64(w) * th.CardScaleValue[active][u.X]),
-				H:       int(float64(w) * th.CardScaleValue[active][u.Y]),
+				ScX:     cardSc[u.X],
+				ScY:     cardSc[u.Y],
+				W:       int(float64(w) * cardSc[u.X]),
+				H:       int(float64(h) * cardSc[u.Y]),
 			}
 
 			// append every customized card to the deck
@@ -109,12 +110,15 @@ func (g *Game) GenerateDeck(th *Theme) []*Card {
 func (g *Game) Draw(screen *ebiten.Image) {
 	cx, cy := ebiten.CursorPosition()
 
+	cardTh := g.FrontFaceFrameData[g.Active]
+	cardSc := g.Theme.CardScaleValue[g.Active]
+
 	if !g.IsGameOver() {
 		g.DrawPlayground(screen, g.Theme)
 
 		// Draw the Card Columns
 		for i := range g.Columns {
-			x := (g.FrontFaceFrameData[g.Active][u.FrW] + g.SpacerH) * (i + 1)
+			x := (cardTh[u.FrW] + g.SpacerH) * (i + 1)
 			for j := range g.Columns[i].Cards {
 
 				y := (u.ScreenHeight / 3) + j*u.CardsVSpacer
@@ -126,7 +130,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 				if j != len(g.Columns[i].Cards)-1 {
 					g.Columns[i].Cards[j].H = u.CardsVSpacer
 				} else {
-					g.Columns[i].Cards[j].H = int(float64(g.FrontFaceFrameData[g.Active][u.FrH]) * g.Theme.CardScaleValue[g.Active][u.Y])
+					g.Columns[i].Cards[j].H = int(float64(cardTh[u.FrH]) * cardSc[u.Y])
 				}
 				g.Columns[i].Cards[j].DrawColCard(screen, g.Columns[i].Cards, j, cx, cy)
 			}
@@ -137,18 +141,18 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			for i := range g.StockPile.Cards {
 				g.StockPile.Cards[i].X = g.StockPile.X
 				g.StockPile.Cards[i].Y = g.StockPile.Y
-				g.StockPile.Cards[i].H = int(float64(g.FrontFaceFrameData[g.Active][u.FrH]) * g.Theme.CardScaleValue[g.Active][u.Y])
+				g.StockPile.Cards[i].H = int(float64(cardTh[u.FrH]) * cardSc[u.Y])
 				g.StockPile.Cards[i].DrawCard(screen)
 			}
 		}
 
 		// Draw the Waste Pile
 		for i := range g.WastePile.Cards {
-			x := (g.FrontFaceFrameData[g.Active][u.FrW] + g.SpacerH) * 2
+			x := (cardTh[u.FrW] + g.SpacerH) * 2
 			y := g.SpacerV
 			g.WastePile.Cards[i].X = x
 			g.WastePile.Cards[i].Y = y
-			g.WastePile.Cards[i].H = int(float64(g.FrontFaceFrameData[g.Active][u.FrH]) * g.Theme.CardScaleValue[g.Active][u.Y])
+			g.WastePile.Cards[i].H = int(float64(cardTh[u.FrH]) * cardSc[u.Y])
 			g.WastePile.Cards[i].SetRevealedState(true)
 
 			// draw the prior card as revealed when the current card is dragged
@@ -162,12 +166,12 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 		// draw the Foundation Piles
 		for i := range g.FoundationPiles {
-			x := (g.FrontFaceFrameData[g.Active][u.FrW] + g.SpacerH) * (i + 4)
+			x := (cardTh[u.FrW] + g.SpacerH) * (i + 4)
 			for j := range g.FoundationPiles[i].Cards {
 				y := g.SpacerV
 				g.FoundationPiles[i].Cards[j].X = x
 				g.FoundationPiles[i].Cards[j].Y = y
-				g.FoundationPiles[i].Cards[j].H = int(float64(g.FrontFaceFrameData[g.Active][u.FrH]) * g.Theme.CardScaleValue[g.Active][u.Y])
+				g.FoundationPiles[i].Cards[j].H = int(float64(cardTh[u.FrH]) * cardSc[u.Y])
 
 				// draw the prior card as revealed when the current card is dragged
 				if j > 0 && g.FoundationPiles[i].Cards[j].GetDraggedState() {

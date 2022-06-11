@@ -17,10 +17,6 @@ type Theme struct {
 	CardScaleValue     map[string]map[string]float64
 	EnvScaleValue      map[string]map[string]float64
 
-	// LocMultiplier is used to properY compute image locations in case of a grid display.
-	// It is used onY when GenerateDeck runs, so the images won't be so spaced out between them.
-	LocMultiplier map[string]map[string]float64
-
 	// Active represents the current theme
 	Active string
 }
@@ -41,22 +37,17 @@ func NewTheme() *Theme {
 			u.ClassicTheme:   {u.FrOX: 0, u.FrOY: 0, u.FrW: 71, u.FrH: 96},
 		},
 
-		EmptySlotFrameData: map[string][]int{
-			u.PixelatedTheme: {852, 384, 35, 47, 0},
-			u.ClassicTheme:   {500, 1, 35, 47, 0},
-		},
-
-		// The Frame Dimensions of the available back faces of the current Theme.
+		// The Frame Dimensions of the available back faces
 		// Stored in the form of: FrOX, FrOY, FrW, FrH, FrC
 		BackFaceFrameData: map[string]map[string][]int{
 			u.PixelatedTheme: {
 				u.StaticBack1: []int{0, 0, 35, 47, 0},
 			},
 			u.ClassicTheme: {
-				u.StaticBack1:   []int{0, 384, 71, 96, 0},
-				u.StaticBack2:   []int{0, 480, 71, 96, 0},
-				u.DynamicCastle: []int{71, 480, 71, 96, 2},
-				u.DynamicBeach:  []int{213, 480, 71, 96, 3},
+				u.StaticBack1: []int{0, 384, 71, 96, 0},
+				//u.StaticBack2:   []int{0, 480, 71, 96, 0},
+				//u.DynamicCastle: []int{71, 480, 71, 96, 2},
+				//u.DynamicBeach:  []int{213, 480, 71, 96, 3},
 			},
 		},
 
@@ -68,8 +59,8 @@ func NewTheme() *Theme {
 
 		CardScaleValue: map[string]map[string]float64{
 			u.PixelatedTheme: {
-				u.X: 3,
-				u.Y: 3,
+				u.X: 3.1,
+				u.Y: 3.1,
 			},
 			u.ClassicTheme: {
 				u.X: 1.5,
