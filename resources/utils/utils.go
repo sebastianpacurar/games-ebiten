@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	ScreenWidth  = 1280
-	ScreenHeight = 860
+	ScreenWidth  = 640
+	ScreenHeight = 480
 
 	// X Y - used as aliases for Main Axis and Cross Axis
 	X = "x"
@@ -61,7 +61,7 @@ const (
 	DynamicBeach  = "DynamicBeach"
 	DynamicSleeve = "DynamicSleeve"
 
-	CardsVSpacer = 35
+	CardsVSpacer = 25
 )
 
 var ScreenDims = map[string]float64{MinX: 0, MaxX: ScreenWidth, MinY: 0, MaxY: ScreenHeight}
@@ -141,4 +141,22 @@ func IsAreaHovered(i interface{}) bool {
 		area = mi.GetGeomData()
 	}
 	return pt.In(area)
+}
+
+// GetFlexboxQuadrants - splits the screen in x quadrants and returns a rect for each of them (works only on X-Axis)
+func GetFlexboxQuadrants(cols int) map[int]image.Rectangle {
+	quads := make(map[int]image.Rectangle, 0)
+	unit := (ScreenWidth) / cols
+
+	for i := 0; i < cols; i++ {
+		minX := unit * i
+		maxX := unit * (i + 1)
+		quads[i] = image.Rect(minX, 0, maxX, ScreenHeight)
+	}
+	return quads
+}
+
+// CenterItem - centers the item within the given quadrant
+func CenterItem(width int, quad image.Rectangle) int {
+	return (quad.Min.X + quad.Dx()/2) - width/2
 }

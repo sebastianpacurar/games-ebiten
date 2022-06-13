@@ -24,8 +24,8 @@ func NewGame() *Game {
 	g := &Game{
 		Theme: th,
 		Environment: &Environment{
+			Quadrants:    make(map[int]image.Rectangle, 0),
 			SpacerV:      50,
-			SpacerH:      th.FrontFaceFrameData[th.Active][u.FrW] + 10,
 			BgImg:        classicImg.SubImage(image.Rect(700, 500, 750, 550)).(*ebiten.Image),
 			EmptySlotImg: classicImg.SubImage(image.Rect(852, 384, 852+71, 384+96)).(*ebiten.Image),
 
@@ -42,7 +42,7 @@ func NewGame() *Game {
 // BuildDeck - initiates the Piles and populates them with cards
 func (g *Game) BuildDeck(th *Theme) {
 	g.Deck = g.GenerateDeck(th)
-	g.UpdateEnv(th)
+	g.UpdateEnv()
 }
 
 // GenerateDeck - returns a []*Card{} in which all elements have the corresponding details and images
@@ -110,68 +110,40 @@ func (g *Game) GenerateDeck(th *Theme) []*Card {
 func (g *Game) Draw(screen *ebiten.Image) {
 	cx, cy := ebiten.CursorPosition()
 
-	cardTh := g.FrontFaceFrameData[g.Active]
-	cardSc := g.Theme.CardScaleValue[g.Active]
-
 	if !g.IsGameOver() {
 		g.DrawPlayground(screen, g.Theme)
 
-		// Draw the Card Columns
-		for i := range g.Columns {
-			x := (cardTh[u.FrW] + g.SpacerH) * (i + 1)
-			for j := range g.Columns[i].Cards {
-
-				y := (u.ScreenHeight / 3) + j*u.CardsVSpacer
-
-				g.Columns[i].Cards[j].X = x
-				g.Columns[i].Cards[j].Y = y
-
-				// draw the overlapped with the height of the space in which the card is visible
-				if j != len(g.Columns[i].Cards)-1 {
-					g.Columns[i].Cards[j].H = u.CardsVSpacer
-				} else {
-					g.Columns[i].Cards[j].H = int(float64(cardTh[u.FrH]) * cardSc[u.Y])
-				}
-				g.Columns[i].Cards[j].DrawColCard(screen, g.Columns[i].Cards, j, cx, cy)
-			}
-		}
-
 		// Draw the Stock Pile
 		if len(g.StockPile.Cards) > 0 {
-			for i := range g.StockPile.Cards {
-				g.StockPile.Cards[i].X = g.StockPile.X
-				g.StockPile.Cards[i].Y = g.StockPile.Y
-				g.StockPile.Cards[i].H = int(float64(cardTh[u.FrH]) * cardSc[u.Y])
-				g.StockPile.Cards[i].DrawCard(screen)
+			for _, c := range g.StockPile.Cards {
+				c.X = g.StockPile.X
+				c.Y = g.StockPile.Y
+				c.H = g.H
+				c.DrawCard(screen)
 			}
 		}
 
 		// Draw the Waste Pile
-		for i := range g.WastePile.Cards {
-			x := (cardTh[u.FrW] + g.SpacerH) * 2
-			y := g.SpacerV
-			g.WastePile.Cards[i].X = x
-			g.WastePile.Cards[i].Y = y
-			g.WastePile.Cards[i].H = int(float64(cardTh[u.FrH]) * cardSc[u.Y])
-			g.WastePile.Cards[i].SetRevealedState(true)
+		for i, c := range g.WastePile.Cards {
+			c.X = g.WastePile.X
+			c.Y = g.SpacerV
+			c.H = g.H
+			c.SetRevealedState(true)
 
 			// draw the prior card as revealed when the current card is dragged
 			if i > 0 && g.WastePile.Cards[i].GetDraggedState() {
 				g.WastePile.Cards[i-1].SetDraggedState(false)
 				g.WastePile.Cards[i-1].DrawCard(screen)
 			}
-
-			g.WastePile.Cards[i].DrawCard(screen)
+			c.DrawCard(screen)
 		}
 
 		// draw the Foundation Piles
 		for i := range g.FoundationPiles {
-			x := (cardTh[u.FrW] + g.SpacerH) * (i + 4)
 			for j := range g.FoundationPiles[i].Cards {
-				y := g.SpacerV
-				g.FoundationPiles[i].Cards[j].X = x
-				g.FoundationPiles[i].Cards[j].Y = y
-				g.FoundationPiles[i].Cards[j].H = int(float64(cardTh[u.FrH]) * cardSc[u.Y])
+				g.FoundationPiles[i].Cards[j].X = g.FoundationPiles[i].X
+				g.FoundationPiles[i].Cards[j].Y = g.SpacerV
+				g.FoundationPiles[i].Cards[j].H = g.H
 
 				// draw the prior card as revealed when the current card is dragged
 				if j > 0 && g.FoundationPiles[i].Cards[j].GetDraggedState() {
@@ -180,6 +152,22 @@ func (g *Game) Draw(screen *ebiten.Image) {
 				}
 
 				g.FoundationPiles[i].Cards[j].DrawCard(screen)
+			}
+		}
+
+		// Draw the Card Columns
+		for i := range g.Columns {
+			for j, card := range g.Columns[i].Cards {
+				card.X = g.Columns[i].X
+				card.Y = g.Columns[i].Y + (j * u.CardsVSpacer)
+
+				// draw the overlapped with the height of the space in which the card is visible
+				if j != len(g.Columns[i].Cards)-1 {
+					card.H = u.CardsVSpacer
+				} else {
+					card.H = g.H
+				}
+				card.DrawColCard(screen, g.Columns[i].Cards, j, cx, cy)
 			}
 		}
 
@@ -378,7 +366,7 @@ func (g *Game) Update() error {
 											last := len(g.Columns[i].Cards)
 											if last > 0 {
 												g.Columns[i].Cards[last-1].SetRevealedState(true)
-												g.Columns[i].Cards[last-1].H = g.CardFullH
+												g.Columns[i].Cards[last-1].H = g.H
 											}
 
 											// exit entirely to prevent redundant iterations
@@ -412,7 +400,7 @@ func (g *Game) Update() error {
 												last := len(g.Columns[i].Cards)
 												if last > 0 {
 													g.Columns[i].Cards[last-1].SetRevealedState(true)
-													g.Columns[i].Cards[last-1].H = g.CardFullH
+													g.Columns[i].Cards[last-1].H = g.H
 												}
 
 												// exit entirely to prevent redundant iterations
@@ -443,7 +431,7 @@ func (g *Game) Update() error {
 								// reveal the last card from the source column, and revert its height to original
 								if len(g.Columns[i].Cards) > 0 {
 									g.Columns[i].Cards[li-1].SetRevealedState(true)
-									g.Columns[i].Cards[li-1].H = g.CardFullH
+									g.Columns[i].Cards[li-1].H = g.H
 								}
 
 								// exit entirely to prevent redundant iterations
@@ -466,7 +454,7 @@ func (g *Game) Update() error {
 								// reveal the last card from the source column, and revert its height to original
 								if len(g.Columns[i].Cards) > 0 {
 									g.Columns[i].Cards[li-1].SetRevealedState(true)
-									g.Columns[i].Cards[li-1].H = g.CardFullH
+									g.Columns[i].Cards[li-1].H = g.H
 								}
 
 								DraggedCard = nil
@@ -542,8 +530,8 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 
 func (g *Game) GetIndexOfDraggedColCard(col int) int {
 	count := 0
-	for _, v := range g.Columns[col].Cards {
-		if v.GetDraggedState() {
+	for _, c := range g.Columns[col].Cards {
+		if c.GetDraggedState() {
 			break
 		}
 		count++

@@ -59,12 +59,12 @@ func NewTheme() *Theme {
 
 		CardScaleValue: map[string]map[string]float64{
 			u.PixelatedTheme: {
-				u.X: 3.1,
-				u.Y: 3.1,
+				u.X: 2,
+				u.Y: 2,
 			},
 			u.ClassicTheme: {
-				u.X: 1.5,
-				u.Y: 1.5,
+				u.X: 1,
+				u.Y: 1,
 			},
 			u.SimpleTheme: {
 				u.X: 1,
@@ -74,12 +74,12 @@ func NewTheme() *Theme {
 
 		EnvScaleValue: map[string]map[string]float64{
 			u.PixelatedTheme: {
-				u.X: 1.4,
-				u.Y: 1.4,
+				u.X: 0.9,
+				u.Y: 0.9,
 			},
 			u.ClassicTheme: {
-				u.X: 1.5,
-				u.Y: 1.5,
+				u.X: 1,
+				u.Y: 1,
 			},
 		},
 

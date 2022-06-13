@@ -8,6 +8,7 @@ import (
 
 type (
 	Environment struct {
+		Quadrants       map[int]image.Rectangle
 		Deck            []*Card
 		BgImg           *ebiten.Image
 		EmptySlotImg    *ebiten.Image
@@ -16,10 +17,10 @@ type (
 		WastePile
 		StockPile
 		SpacerV   int
-		SpacerH   int
-		CardFullH int
 		IsVegas   bool
 		DrawCount int
+		//W, H - stand for default width and height
+		W, H int
 	}
 
 	StockPile struct {
@@ -36,6 +37,7 @@ type (
 	}
 
 	WastePile struct {
+		X, Y  int
 		Cards []*Card
 	}
 
@@ -72,11 +74,7 @@ func (e *Environment) DrawPlayground(screen *ebiten.Image, th *Theme) {
 	opBg := &ebiten.DrawImageOptions{}
 	opBg.GeoM.Scale(50, 50)
 	screen.DrawImage(e.BgImg, opBg)
-	cardTh := th.FrontFaceFrameData[th.Active]
 	envTh := th.EnvScaleValue[th.Active]
-
-	x := cardTh[u.FrW] + e.SpacerH
-	y := e.SpacerV
 
 	var img *ebiten.Image
 
@@ -85,9 +83,9 @@ func (e *Environment) DrawPlayground(screen *ebiten.Image, th *Theme) {
 	opStockSlot.GeoM.Scale(envTh[u.X], envTh[u.Y])
 
 	if th.Active == u.PixelatedTheme {
-		opStockSlot.GeoM.Translate(float64(x)+3.5, float64(y)+3.5)
+		opStockSlot.GeoM.Translate(float64(u.CenterItem(e.W, e.Quadrants[0]))+3.5, float64(e.SpacerV)+3.5)
 	} else {
-		opStockSlot.GeoM.Translate(float64(x), float64(y))
+		opStockSlot.GeoM.Translate(float64(u.CenterItem(e.W, e.Quadrants[0])), float64(e.SpacerV))
 	}
 
 	if e.IsVegas {
@@ -106,11 +104,10 @@ func (e *Environment) DrawPlayground(screen *ebiten.Image, th *Theme) {
 		opFoundationSlot := &ebiten.DrawImageOptions{}
 		opFoundationSlot.GeoM.Scale(envTh[u.X], envTh[u.Y])
 
-		cx := x * (i + 4)
 		if th.Active == u.PixelatedTheme {
-			opFoundationSlot.GeoM.Translate(float64(cx)+3.5, float64(y)+3.5)
+			opFoundationSlot.GeoM.Translate(float64(u.CenterItem(e.W, e.Quadrants[3+i]))+3.5, float64(e.SpacerV)+3.5)
 		} else {
-			opFoundationSlot.GeoM.Translate(float64(cx), float64(y))
+			opFoundationSlot.GeoM.Translate(float64(u.CenterItem(e.W, e.Quadrants[3+i])), float64(e.SpacerV))
 		}
 		screen.DrawImage(e.EmptySlotImg, opFoundationSlot)
 	}
@@ -122,17 +119,11 @@ func (e *Environment) DrawEnding(screen *ebiten.Image) {
 	screen.DrawImage(e.BgImg, opBg)
 }
 
-// IsGameOver - if count of cards in FoundationPiles is 52, return true
-func (e *Environment) IsGameOver() bool {
-	total := 0
-	for _, store := range e.FoundationPiles {
-		total += len(store.Cards)
-	}
-	return total == 52
-}
+func (e *Environment) UpdateEnv() {
+	e.W = e.Deck[0].W
+	e.H = e.Deck[0].H
+	e.Quadrants = u.GetFlexboxQuadrants(7)
 
-func (e *Environment) UpdateEnv(th *Theme) {
-	c := e.Deck[0]
 	e.StockPile.Cards = make([]*Card, 0, 24)
 	e.WastePile.Cards = make([]*Card, 0, 24)
 	e.FoundationPiles = []FoundationPile{
@@ -150,36 +141,32 @@ func (e *Environment) UpdateEnv(th *Theme) {
 		{Cards: make([]*Card, 0, 6)},
 		{Cards: make([]*Card, 0, 7)},
 	}
-	frame := th.GetFrontFrameGeomData(th.Active)
-	x, y := frame.Dx()+e.SpacerH, e.SpacerV
-	w := c.W
-	h := c.H
+	e.WastePile.X = u.CenterItem(e.W, e.Quadrants[1])
 
-	e.CardFullH = h
+	e.StockPile.X = u.CenterItem(e.W, e.Quadrants[0])
+	e.StockPile.Y = e.SpacerV
+	e.StockPile.W = e.W
+	e.StockPile.H = e.H
 
-	e.StockPile.X = x
-	e.StockPile.Y = y
-	e.StockPile.W = w
-	e.StockPile.H = h
-
+	// starts from the fourth quadrant
 	for s := range e.FoundationPiles {
-		sx := x * (s + 4)
-		e.FoundationPiles[s].X = sx
-		e.FoundationPiles[s].Y = y
-		e.FoundationPiles[s].W = w
-		e.FoundationPiles[s].H = h
+		fx := u.CenterItem(e.W, e.Quadrants[3+s])
+		e.FoundationPiles[s].X = fx
+		e.FoundationPiles[s].Y = e.SpacerV
+		e.FoundationPiles[s].W = e.W
+		e.FoundationPiles[s].H = e.H
 	}
 
 	// fill every column array with its relative count of cards and save GeomData of columns placeholders
 	cardIndex := 0
 	for i := range e.Columns {
 		// initiate the location of the Card Column placeholders
-		colx := x * (i + 1)
-		coly := u.ScreenHeight / 3
+		colx := u.CenterItem(e.W, e.Quadrants[0+i])
+		coly := e.Quadrants[0+i].Max.Y / 3
 		e.Columns[i].X = colx
 		e.Columns[i].Y = coly
-		e.Columns[i].W = w
-		e.Columns[i].H = h
+		e.Columns[i].W = e.W
+		e.Columns[i].H = e.H
 
 		for j := 0; j <= i; j++ {
 			// keep only the last one revealed
@@ -196,4 +183,13 @@ func (e *Environment) UpdateEnv(th *Theme) {
 	for i := range e.Deck[cardIndex:] {
 		e.StockPile.Cards = append(e.StockPile.Cards, e.Deck[cardIndex:][i])
 	}
+}
+
+// IsGameOver - if count of cards in FoundationPiles is 52, return true
+func (e *Environment) IsGameOver() bool {
+	total := 0
+	for _, store := range e.FoundationPiles {
+		total += len(store.Cards)
+	}
+	return total == 52
 }
