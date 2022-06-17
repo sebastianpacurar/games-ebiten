@@ -45,23 +45,23 @@ var (
 )
 
 // Card - Implements CasinoCards interface
-// IsRevealed - if the card's frontFace is visible
-// IsDragged - holds the dragged state
+// RevealedState - if the card's frontFace is visible
+// DraggedState - holds the dragged state
 // ColNum - refers to what column the card is currently in if it's in any column
 // IsActive - every card below the dragged card (to keep the state of all dragged cards, and perform multi cards drag)
 type Card struct {
-	Img        *ebiten.Image
-	BackImg    *ebiten.Image
-	Suit       string
-	Color      string
-	Value      int
-	ColNum     int
-	X, Y, W, H int
-	ScX        float64
-	ScY        float64
-	IsRevealed bool
-	IsActive   bool
-	IsDragged  bool
+	Img           *ebiten.Image
+	BackImg       *ebiten.Image
+	Suit          string
+	Color         string
+	Value         int
+	ColNum        int
+	X, Y, W, H    int
+	ScX           float64
+	ScY           float64
+	RevealedState bool
+	IsActive      bool
+	DraggedState  bool
 }
 
 func (c *Card) DrawCard(screen *ebiten.Image) {
@@ -71,11 +71,11 @@ func (c *Card) DrawCard(screen *ebiten.Image) {
 	op.GeoM.Scale(c.ScX, c.ScY)
 	img := c.Img
 
-	if !c.GetRevealedState() {
+	if !c.IsRevealed() {
 		img = c.BackImg
 	}
 
-	if c.GetRevealedState() {
+	if c.IsRevealed() {
 		// drag only clicked revealed cards
 
 		if c.IsHovered(cx, cy) && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
@@ -83,7 +83,7 @@ func (c *Card) DrawCard(screen *ebiten.Image) {
 		}
 
 		// drag and set location
-		if inpututil.MouseButtonPressDuration(ebiten.MouseButtonLeft) > 2 && c.GetDraggedState() {
+		if inpututil.MouseButtonPressDuration(ebiten.MouseButtonLeft) > 3 && c.IsDragged() {
 			c.X = cx - c.W/2
 			c.Y = cy - c.H/2
 			DraggedCard = c
@@ -107,7 +107,7 @@ func (c *Card) DrawColCard(screen *ebiten.Image, cards []*Card, ci, cx, cy int) 
 	var img *ebiten.Image
 
 	// if card is revealed
-	if c.GetRevealedState() {
+	if c.IsRevealed() {
 		img = c.Img
 
 		// set the clicked card's drag status to true
@@ -116,7 +116,7 @@ func (c *Card) DrawColCard(screen *ebiten.Image, cards []*Card, ci, cx, cy int) 
 		}
 
 		// drag the stack of cards, and set the cards' IsActive state to true
-		if inpututil.MouseButtonPressDuration(ebiten.MouseButtonLeft) > 1 && c.GetDraggedState() {
+		if inpututil.MouseButtonPressDuration(ebiten.MouseButtonLeft) > 3 && c.IsDragged() {
 			DraggedCard = c
 			c.IsActive = true
 			c.X = cx - c.W/2
@@ -173,20 +173,20 @@ func (c *Card) DrawColCard(screen *ebiten.Image, cards []*Card, ci, cx, cy int) 
 	}
 }
 
-func (c *Card) GetDraggedState() bool {
-	return c.IsDragged
+func (c *Card) IsDragged() bool {
+	return c.DraggedState
 }
 
 func (c *Card) SetDraggedState(state bool) {
-	c.IsDragged = state
+	c.DraggedState = state
 }
 
-func (c *Card) GetRevealedState() bool {
-	return c.IsRevealed
+func (c *Card) IsRevealed() bool {
+	return c.RevealedState
 }
 
 func (c *Card) SetRevealedState(state bool) {
-	c.IsRevealed = state
+	c.RevealedState = state
 }
 
 // IsHovered - Returns true if the card is hovered

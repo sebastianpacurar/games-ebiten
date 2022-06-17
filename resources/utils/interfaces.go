@@ -9,9 +9,9 @@ type (
 	CasinoCards interface {
 		GetGeomData() image.Rectangle // GetGeomData - returns Min x,y and Max x,y
 		IsHovered(int, int) bool      // IsHovered - returns true if cursor is inside the shape
-		GetDraggedState() bool        // GetDraggedState - returns true if the image is dragged
+		IsDragged() bool              // IsDragged - returns true if the image is dragged
 		SetDraggedState(bool)         // SetDraggedState - sets the Dragged state to the given value
-		GetRevealedState() bool       // GetRevealedState - returns true if the image is revealed
+		IsRevealed() bool             // IsRevealed - returns true if the image is revealed
 		SetRevealedState(bool)        // SetRevealedState - sets the Revealed state to the given value
 		DrawCard(*ebiten.Image)
 	}
