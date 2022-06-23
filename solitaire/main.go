@@ -9,6 +9,7 @@ import (
 
 func main() {
 	ebiten.SetWindowSize(u.ScreenWidth, u.ScreenHeight)
+	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 	ebiten.SetWindowTitle("Klondike Solitaire")
 
 	if err := ebiten.RunGame(game.NewGame()); err != nil {

@@ -24,17 +24,15 @@ type (
 	}
 
 	InteractiveSprite interface {
-		GetLocations() (float64, float64) // GetLocations - returns (x, y)
-		GetSize() (float64, float64)      // GetSize - returns (w, h)
-		SetLocation(string, float64)      // SetLocation - updates X or Y, based on X or Y axis
-		SetDelta(string, float64)         // SetDelta - updates DX or DY, based on X or Y axis
+		GetGeomData() image.Rectangle // GetGeomData - returns Min x,y and Max x,y
+		SetLocation(string, int)      // SetLocation - updates X or Y, based on X or Y axis
+		SetDelta(string, int)         // SetDelta - updates VX or VY, based on X or Y axis
 		DrawInteractiveSprite(*ebiten.Image)
 	}
 
 	StaticSprite interface {
-		GetLocations() (float64, float64) // GetLocations - returns (X, Y)
-		GetSize() (float64, float64)      // GetSize - returns (width, height)
-		SetLocation(string, float64)      // SetLocation - updates X or Y, based on X or Y axis
+		GetGeomData() image.Rectangle // GetGeomData - returns Min x,y and Max x,y
+		SetLocation(string, int)      // SetLocation - updates X or Y, based on X or Y axis
 		DrawStaticSprite(*ebiten.Image)
 	}
 )

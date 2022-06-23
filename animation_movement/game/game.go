@@ -8,9 +8,6 @@ import (
 	_ "image/png"
 )
 
-// u.ScreenDims - represents the main screen edges
-var inset = float64(15)
-
 type Game struct {
 	Items   []*Item
 	Players []*Player
@@ -18,19 +15,19 @@ type Game struct {
 }
 
 func NewGame() *Game {
-	playerLocX := float64(u.ScreenWidth)/2 - PlayerFrameWidth/2
-	playerLocY := float64(u.ScreenHeight)/2 - PlayerFrameHeight/2
-	npcLocations := make(map[string][]float64)
+	playerLocX := u.ScreenWidth/2 - PlayerFrameWidth/2
+	playerLocY := u.ScreenHeight/2 - PlayerFrameHeight/2
+	npcLocations := make(map[string][]int)
 
-	// generate the random location (x, y) for every NPC (there is a 15 pixel inset for safety)
+	// generate the random location (x, y) for every NP
 	for i := 1; i <= 5; i++ {
 		npcTag := fmt.Sprintf("npc%d", i)
 		if _, ok := npcLocations[npcTag]; !ok {
-			x, y := u.GenerateRandomLocation(u.ScreenDims[u.MinX]+NPCFrameWidth, u.ScreenDims[u.MaxX]-(NPCFrameWidth+inset), u.ScreenDims[u.MinY]+NPCFrameHeight, u.ScreenDims[u.MaxY]-(NPCFrameHeight+inset))
-			npcLocations[npcTag] = []float64{x, y}
+			x, y := u.GenerateRandomPosition(0, 0, u.ScreenWidth-NPCFrameWidth, u.ScreenHeight-NPCFrameHeight)
+			npcLocations[npcTag] = []int{x, y}
 		}
 	}
-	ItemLocX, ItemLocY := u.GenerateRandomLocation(u.ScreenDims[u.MinX], u.ScreenDims[u.MaxX]-ItemFrameWidth, u.ScreenDims[u.MinY], u.ScreenDims[u.MaxY]-ItemFrameHeight)
+	ItemLocX, ItemLocY := u.GenerateRandomPosition(0, 0, u.ScreenWidth-ItemFrameWidth, u.ScreenHeight-ItemFrameHeight)
 
 	return &Game{
 		Players: []*Player{
@@ -115,21 +112,12 @@ func NewGame() *Game {
 }
 
 func (g *Game) Update() error {
-	for i := range g.Items {
-		item := g.Items[i]
-		item.HitBox = u.HitBox(item.X, item.Y, item.W, item.H)
+	for _, p := range g.Players {
+		p.HandleMovement(0, 0, u.ScreenWidth, u.ScreenWidth)
 	}
 
-	for i := range g.Players {
-		p := g.Players[i]
-		p.HitBox = u.HitBox(p.X, p.Y, p.W, p.H)
-		p.HandleMovement(u.ScreenDims[u.MinX], u.ScreenDims[u.MaxX], u.ScreenDims[u.MinY], u.ScreenDims[u.MaxY])
-	}
-
-	for i := range g.NPCs {
-		npc := g.NPCs[i]
-		npc.HitBox = u.HitBox(npc.X, npc.Y, npc.W, npc.H)
-		npc.Move(u.ScreenDims[u.MinX], u.ScreenDims[u.MaxX], u.ScreenDims[u.MinY], u.ScreenDims[u.MaxY])
+	for _, npc := range g.NPCs {
+		npc.Move(0, 0, u.ScreenWidth, u.ScreenWidth)
 	}
 
 	// player1 speed up
@@ -140,20 +128,16 @@ func (g *Game) Update() error {
 	}
 
 	// update the Item state if any NPC collides with Item shape
-	for i := range g.NPCs {
-		npc := g.NPCs[i]
-		item := g.Items[0]
-		if u.IsCollision(npc.HitBox[u.MinX], npc.HitBox[u.MinY], npc.W, npc.H, item.HitBox[u.MinX], item.HitBox[u.MinY], item.W, item.H) {
+	for _, npc := range g.NPCs {
+		if u.IsCollision(npc.GetGeomData(), g.Items[0].GetGeomData()) {
 			g.Items[0].UpdateItemState()
 		}
 	}
 
 	// update the Item state if the player and Item shape areas overlap
-	for i := range g.Players {
-		p := g.Players[i]
-		item := g.Items[0]
-		if u.IsCollision(p.HitBox[u.MinX], p.HitBox[u.MinY], p.W, p.H, item.HitBox[u.MinX], item.HitBox[u.MinY], item.W, item.H) {
-			item.UpdateItemState()
+	for _, p := range g.Players {
+		if u.IsCollision(p.GetGeomData(), g.Items[0].GetGeomData()) {
+			g.Items[0].UpdateItemState()
 		}
 	}
 

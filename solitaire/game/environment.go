@@ -319,9 +319,8 @@ func (e *Environment) HandleGameLogic(cx, cy int) {
 						if len(e.Columns[j].Cards) == 0 {
 							for _, c := range e.Columns[i].Cards {
 
-								if c.Value == CardRanks[u.King] {
+								if c.IsDragged() && c.Value == CardRanks[u.King] {
 									target := e.GetGeomData(e.Columns[j])
-
 									if u.IsCollision(source, target) &&
 										inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
 										e.MoveFromSrcToTarget(e.Columns, e.Columns, i, j)
@@ -338,13 +337,15 @@ func (e *Environment) HandleGameLogic(cx, cy int) {
 								target := e.Columns[j].Cards[lj].GetGeomData()
 
 								for _, c := range e.Columns[i].Cards {
-									if u.IsCollision(source, target) &&
-										inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) &&
-										c.Value == e.Columns[j].Cards[lj].Value-1 &&
-										c.Color != e.Columns[j].Cards[lj].Color {
-										e.MoveFromSrcToTarget(e.Columns, e.Columns, i, j)
-										DraggedCard = nil
-										return
+									if c.IsDragged() {
+										if u.IsCollision(source, target) &&
+											inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) &&
+											c.Value == e.Columns[j].Cards[lj].Value-1 &&
+											c.Color != e.Columns[j].Cards[lj].Color {
+											e.MoveFromSrcToTarget(e.Columns, e.Columns, i, j)
+											DraggedCard = nil
+											return
+										}
 									}
 
 								}

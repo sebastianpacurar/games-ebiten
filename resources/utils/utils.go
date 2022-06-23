@@ -11,18 +11,12 @@ import (
 )
 
 const (
-	ScreenWidth  = 640
+	ScreenWidth  = 840
 	ScreenHeight = 840
 
 	// X Y - used as aliases for Main Axis and Cross Axis
 	X = "x"
 	Y = "y"
-
-	// MinX MinY MaxX MaxY - represent the vertices points of an Image
-	MinX = "minX"
-	MinY = "minY"
-	MaxX = "maxX"
-	MaxY = "maxY"
 
 	// FrOX FrOY FrW FrH = minX, minY, maxX, maxY, for the area of an Image
 	FrOX = "FrameOX"
@@ -51,20 +45,11 @@ const (
 
 	ClassicTheme   = "classic"
 	PixelatedTheme = "8bit"
-	AbstractTheme  = "abstract"
-	SimpleTheme    = "simple"
 
-	StaticBack1   = "StaticBack1"
-	StaticBack2   = "StaticBack2"
-	DynamicRobot  = "DynamicRobot"
-	DynamicCastle = "DynamicCastle"
-	DynamicBeach  = "DynamicBeach"
-	DynamicSleeve = "DynamicSleeve"
+	StaticBack1 = "StaticBack1"
 
 	CardsVSpacer = 25
 )
-
-var ScreenDims = map[string]float64{MinX: 0, MaxX: ScreenWidth, MinY: 0, MaxY: ScreenHeight}
 
 func LoadSpriteImage(path string) image.Image {
 	file, err := ioutil.ReadFile(path)
@@ -78,11 +63,11 @@ func LoadSpriteImage(path string) image.Image {
 	return img
 }
 
-// GenerateRandomLocation - generate a random location for X and y
+// GenerateRandomPosition - generate a random location for X and y
 // (x is between 0 and ScreenWidth) and (y is between 0 and ScreenHeight)
-func GenerateRandomLocation(minX, maxX, minY, maxY float64) (float64, float64) {
+func GenerateRandomPosition(minX, minY, maxX, maxY int) (int, int) {
 	rand.Seed(time.Now().UnixNano())
-	return (rand.Float64() * (maxX - minX)) + minX, (rand.Float64() * (maxY - minY)) + minY
+	return rand.Intn(maxX-minX) + minX, rand.Intn(maxY-minY) + minY
 }
 
 // IsCollision - returns true if rectangle images overlap in any way
@@ -90,39 +75,28 @@ func IsCollision(src, target image.Rectangle) bool {
 	return target.Overlaps(src)
 }
 
-// HitBox - generate the shape's hitbox (minX, maxX, minY, maxY)
-func HitBox(x, y, w, h float64) map[string]float64 {
-	return map[string]float64{
-		MinX: x,
-		MaxX: x + w,
-		MinY: y,
-		MaxY: y + h,
-	}
-}
-
 // BoundaryValidation - prevents characters to move out of the view, in any of the 4 directions
-func BoundaryValidation(i interface{}, minX, maxX, minY, maxY float64) {
+func BoundaryValidation(i interface{}, minX, maxX, minY, maxY int) {
 	switch i.(type) {
 	case InteractiveSprite:
 		img := i.(InteractiveSprite)
 
-		locX, locY := img.GetLocations()
-		w, h := img.GetSize()
+		bounds := img.GetGeomData()
 
-		if locX <= minX {
+		if bounds.Min.X <= minX {
 			img.SetLocation(X, minX)
 			img.SetDelta(X, 0)
 		}
-		if locX >= maxX-w {
-			img.SetLocation(X, maxX-w)
+		if bounds.Min.X >= maxX-bounds.Dx() {
+			img.SetLocation(X, maxX-bounds.Dx())
 			img.SetDelta(X, 0)
 		}
-		if locY <= minY {
+		if bounds.Min.Y <= minY {
 			img.SetLocation(Y, minY)
 			img.SetDelta(Y, 0)
 		}
-		if locY >= maxY-h {
-			img.SetLocation(Y, maxY-h)
+		if bounds.Min.Y >= maxY-bounds.Dy() {
+			img.SetLocation(Y, maxY-bounds.Dy())
 			img.SetDelta(Y, 0)
 		}
 	}

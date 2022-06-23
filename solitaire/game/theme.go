@@ -46,8 +46,8 @@ func NewTheme() *Theme {
 			u.ClassicTheme: {
 				u.StaticBack1: []int{0, 384, 71, 96, 0},
 				//u.StaticBack2:   []int{0, 480, 71, 96, 0},
-				//u.DynamicCastle: []int{71, 480, 71, 96, 2},
-				//u.DynamicBeach:  []int{213, 480, 71, 96, 3},
+				//u.VYnamicCastle: []int{71, 480, 71, 96, 2},
+				//u.VYnamicBeach:  []int{213, 480, 71, 96, 3},
 			},
 		},
 
@@ -63,10 +63,6 @@ func NewTheme() *Theme {
 				u.Y: 2,
 			},
 			u.ClassicTheme: {
-				u.X: 1,
-				u.Y: 1,
-			},
-			u.SimpleTheme: {
 				u.X: 1,
 				u.Y: 1,
 			},

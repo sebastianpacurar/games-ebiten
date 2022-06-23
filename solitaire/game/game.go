@@ -83,7 +83,7 @@ func (g *Game) GenerateDeck(th *Theme) []*Card {
 			x, y := frame.Min.X+i*frame.Dx(), frame.Min.Y+si*frame.Dy()
 			w, h := frame.Dx(), frame.Dy()
 
-			// crete card dynamicalY, based on the Active Theme.
+			// crete card VYnamicalY, based on the Active Theme.
 			card := &Card{
 				Img:     th.Sources[active].SubImage(image.Rect(x, y, x+w, y+h)).(*ebiten.Image),
 				BackImg: th.Sources[active].SubImage(image.Rect(bf[0], bf[1], bf[2]+bf[0], bf[3]+bf[1])).(*ebiten.Image),
@@ -192,8 +192,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	} else {
 		g.DrawEnding(screen)
 	}
-	ebitenutil.DebugPrintAt(screen, "Press F2 to start new game", 10, u.ScreenHeight-35)
-	ebitenutil.DebugPrintAt(screen, "Press 1 or 2 to change Themes", 10, u.ScreenHeight-65)
+	ebitenutil.DebugPrintAt(screen, "Right Click to quick move to Foundations", 10, u.ScreenHeight-95)
+	ebitenutil.DebugPrintAt(screen, "Press F2 to start new game", 10, u.ScreenHeight-65)
+	ebitenutil.DebugPrintAt(screen, "Press 1 or 2 to change Themes", 10, u.ScreenHeight-35)
 }
 
 func (g *Game) Update() error {
