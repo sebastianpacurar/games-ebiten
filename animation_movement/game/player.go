@@ -15,7 +15,6 @@ const (
 	PlayerScY         = 3
 
 	Player1 = "player1"
-	Player2 = "player2"
 )
 
 // Player - game character which implements InteractiveSprite interface
@@ -30,13 +29,12 @@ type Player struct {
 	FrameNum   int
 	Direction  int
 	X, Y, W, H int
-	VX, VY     int
-	Speed      int
-	FrameInfo  map[string]int
+	VX, VY     float64
+	Speed      float64
 }
 
-func (p *Player) GetGeomData() image.Rectangle {
-	return image.Rect(p.X, p.Y, p.W, p.H)
+func (p *Player) HitBox() image.Rectangle {
+	return image.Rect(p.X, p.Y, p.X+p.W, p.Y+p.H)
 }
 
 func (p *Player) SetLocation(axis string, val int) {
@@ -47,7 +45,7 @@ func (p *Player) SetLocation(axis string, val int) {
 	}
 }
 
-func (p *Player) SetDelta(axis string, val int) {
+func (p *Player) SetDelta(axis string, val float64) {
 	if axis == u.X {
 		p.VX = val
 	} else if axis == u.Y {
@@ -134,8 +132,8 @@ func (p *Player) HandleMovement(minX, minY, maxX, maxY int) {
 	}
 
 	// update the position of the player
-	p.X += p.VX
-	p.Y += p.VY
+	p.X += int(p.VX)
+	p.Y += int(p.VY)
 
 	u.BoundaryValidation(p, minX, maxX, minY, maxY)
 }

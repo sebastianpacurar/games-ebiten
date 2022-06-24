@@ -54,7 +54,7 @@ func (e *Environment) IsStockPileHovered(cx, cy int) bool {
 	return image.Pt(cx, cy).In(image.Rect(x, y, x+w, y+h))
 }
 
-func (e *Environment) GetGeomData(i interface{}) image.Rectangle {
+func (e *Environment) HitBox(i interface{}) image.Rectangle {
 	rect := image.Rectangle{}
 	switch i.(type) {
 	case FoundationPile:
@@ -240,7 +240,7 @@ func (e *Environment) HandleGameLogic(cx, cy int) {
 		//
 		if len(e.WastePile.Cards) > 0 {
 			lc := len(e.WastePile.Cards) - 1
-			source := e.WastePile.Cards[lc].GetGeomData()
+			source := e.WastePile.Cards[lc].HitBox()
 
 			// set the prior card's state dragged to false, so it can stick to its location
 			if e.WastePile.Cards[lc].IsDragged() {
@@ -252,7 +252,7 @@ func (e *Environment) HandleGameLogic(cx, cy int) {
 				for j := range e.Columns {
 					if len(e.Columns[j].Cards) == 0 && e.WastePile.Cards[lc].Value == CardRanks[u.King] {
 						// K card
-						target := e.GetGeomData(e.Columns[j])
+						target := e.HitBox(e.Columns[j])
 
 						if u.IsCollision(source, target) && inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
 							e.MoveFromSrcToTarget(e.WastePile, e.Columns, lc, j)
@@ -263,7 +263,7 @@ func (e *Environment) HandleGameLogic(cx, cy int) {
 					} else if len(e.Columns[j].Cards) > 0 {
 						// Other Cards
 						lj := len(e.Columns[j].Cards) - 1 // lj = last card in the current context
-						target := e.Columns[j].Cards[lj].GetGeomData()
+						target := e.Columns[j].Cards[lj].HitBox()
 
 						if u.IsCollision(source, target) &&
 							e.WastePile.Cards[lc].Value == e.Columns[j].Cards[lj].Value-1 &&
@@ -278,7 +278,7 @@ func (e *Environment) HandleGameLogic(cx, cy int) {
 
 				// drop ON Foundation Pile
 				for j := range e.FoundationPiles {
-					target := e.GetGeomData(e.FoundationPiles[j])
+					target := e.HitBox(e.FoundationPiles[j])
 
 					if len(e.FoundationPiles[j].Cards) == 0 {
 						if e.WastePile.Cards[lc].Value == CardRanks[u.Ace] &&
@@ -310,7 +310,7 @@ func (e *Environment) HandleGameLogic(cx, cy int) {
 		for i := range e.Columns {
 			if len(e.Columns[i].Cards) > 0 {
 				li := len(e.Columns[i].Cards) - 1 // li = last card in the source column
-				source := e.Columns[i].Cards[li].GetGeomData()
+				source := e.Columns[i].Cards[li].HitBox()
 
 				// drop ON Column
 				for j := range e.Columns {
@@ -320,7 +320,7 @@ func (e *Environment) HandleGameLogic(cx, cy int) {
 							for _, c := range e.Columns[i].Cards {
 
 								if c.IsDragged() && c.Value == CardRanks[u.King] {
-									target := e.GetGeomData(e.Columns[j])
+									target := e.HitBox(e.Columns[j])
 									if u.IsCollision(source, target) &&
 										inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
 										e.MoveFromSrcToTarget(e.Columns, e.Columns, i, j)
@@ -334,7 +334,7 @@ func (e *Environment) HandleGameLogic(cx, cy int) {
 							// Other Cards
 							if len(e.Columns[j].Cards) > 0 {
 								lj := len(e.Columns[j].Cards) - 1 // lj = last card in the current context (target)
-								target := e.Columns[j].Cards[lj].GetGeomData()
+								target := e.Columns[j].Cards[lj].HitBox()
 
 								for _, c := range e.Columns[i].Cards {
 									if c.IsDragged() {
@@ -356,7 +356,7 @@ func (e *Environment) HandleGameLogic(cx, cy int) {
 
 				// drop ON Foundation Pile
 				for j := range e.FoundationPiles {
-					target := e.GetGeomData(e.FoundationPiles[j])
+					target := e.HitBox(e.FoundationPiles[j])
 
 					if len(e.FoundationPiles[j].Cards) == 0 {
 						if u.IsCollision(source, target) &&
@@ -389,13 +389,13 @@ func (e *Environment) HandleGameLogic(cx, cy int) {
 			if len(e.FoundationPiles[i].Cards) > 0 {
 				li := len(e.FoundationPiles[i].Cards) - 1 // li = last card in the current context
 				if e.FoundationPiles[i].Cards[li].IsDragged() {
-					source := e.FoundationPiles[i].Cards[li].GetGeomData()
+					source := e.FoundationPiles[i].Cards[li].HitBox()
 
 					// drop ON Column
 					for j := range e.Columns {
 						if len(e.Columns[j].Cards) > 0 {
 							lj := len(e.Columns[j].Cards) - 1 // lj = last card in the current context
-							target := e.Columns[j].Cards[lj].GetGeomData()
+							target := e.Columns[j].Cards[lj].HitBox()
 
 							if u.IsCollision(source, target) && inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) &&
 								e.FoundationPiles[i].Cards[li].Value == e.Columns[j].Cards[lj].Value-1 &&
@@ -411,7 +411,7 @@ func (e *Environment) HandleGameLogic(cx, cy int) {
 					// drop ON Foundation Pile
 					for j := range e.FoundationPiles {
 						if i != j {
-							target := e.GetGeomData(e.FoundationPiles[j])
+							target := e.HitBox(e.FoundationPiles[j])
 
 							if len(e.FoundationPiles[j].Cards) == 0 && u.IsCollision(source, target) &&
 								inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) &&

@@ -6,6 +6,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	_ "image/png"
+	"math"
 )
 
 type Game struct {
@@ -36,7 +37,7 @@ func NewGame() *Game {
 				Tag:       Player1,
 				W:         PlayerFrameWidth * PlayerScX,
 				H:         PlayerFrameHeight * PlayerScY,
-				Speed:     3,
+				Speed:     1,
 				Direction: 0,
 				X:         playerLocX,
 				Y:         playerLocY,
@@ -45,8 +46,8 @@ func NewGame() *Game {
 		Items: []*Item{
 			{
 				Img: ebiten.NewImageFromImage(u.LoadSpriteImage("resources/images/misc/food.png")),
-				W:   ItemFrameWidth * ItemScale,
-				H:   ItemFrameWidth * ItemScale,
+				W:   int(math.Floor(ItemFrameWidth) * ItemScale),
+				H:   int(math.Floor(ItemFrameHeight) * ItemScale),
 				X:   ItemLocX,
 				Y:   ItemLocY,
 			},
@@ -54,58 +55,36 @@ func NewGame() *Game {
 		NPCs: []*NPC{
 			{
 				Img:           ebiten.NewImageFromImage(u.LoadSpriteImage("resources/images/misc/character2.png")),
-				Name:          u.NPC1,
-				W:             NPCFrameWidth * NPCScX,
-				H:             NPCFrameHeight * NPCScY,
-				Speed:         3,
+				Name:          "npc1",
+				W:             int(math.Floor(NPCFrameWidth) * NPCScX),
+				H:             int(math.Floor(NPCFrameHeight) * NPCScY),
+				Speed:         4,
 				Direction:     2,
-				X:             npcLocations[u.NPC1][0],
-				Y:             npcLocations[u.NPC1][1],
+				X:             npcLocations["npc1"][0],
+				Y:             npcLocations["npc1"][1],
 				FrTimingLimit: 45,
 			},
 			{
 				Img:           ebiten.NewImageFromImage(u.LoadSpriteImage("resources/images/misc/character3.png")),
-				Name:          u.NPC2,
-				W:             NPCFrameWidth * NPCScX,
-				H:             NPCFrameHeight * NPCScY,
-				Speed:         3,
+				Name:          "npc2",
+				W:             int(math.Floor(NPCFrameWidth) * NPCScX),
+				H:             int(math.Floor(NPCFrameHeight) * NPCScY),
+				Speed:         4,
 				Direction:     2,
-				X:             npcLocations[u.NPC2][0],
-				Y:             npcLocations[u.NPC2][1],
-				FrTimingLimit: 25,
-			},
-			{
-				Img:           ebiten.NewImageFromImage(u.LoadSpriteImage("resources/images/misc/character4.png")),
-				Name:          u.NPC3,
-				W:             NPCFrameWidth * NPCScX,
-				H:             NPCFrameHeight * NPCScY,
-				Speed:         3,
-				Direction:     2,
-				X:             npcLocations[u.NPC3][0],
-				Y:             npcLocations[u.NPC3][1],
+				X:             npcLocations["npc2"][0],
+				Y:             npcLocations["npc2"][1],
 				FrTimingLimit: 45,
 			},
 			{
-				Img:           ebiten.NewImageFromImage(u.LoadSpriteImage("resources/images/misc/character5.png")),
-				Name:          u.NPC4,
-				W:             NPCFrameWidth * NPCScX,
-				H:             NPCFrameHeight * NPCScY,
-				Speed:         3,
+				Img:           ebiten.NewImageFromImage(u.LoadSpriteImage("resources/images/misc/character4.png")),
+				Name:          "npc3",
+				W:             int(math.Floor(NPCFrameWidth) * NPCScX),
+				H:             int(math.Floor(NPCFrameHeight) * NPCScY),
+				Speed:         4,
 				Direction:     2,
-				X:             npcLocations[u.NPC4][0],
-				Y:             npcLocations[u.NPC4][1],
-				FrTimingLimit: 30,
-			},
-			{
-				Img:           ebiten.NewImageFromImage(u.LoadSpriteImage("resources/images/misc/character6.png")),
-				Name:          u.NPC5,
-				W:             NPCFrameWidth * NPCScX,
-				H:             NPCFrameHeight * NPCScY,
-				Speed:         3,
-				Direction:     2,
-				X:             npcLocations[u.NPC5][0],
-				Y:             npcLocations[u.NPC5][1],
-				FrTimingLimit: 30,
+				X:             npcLocations["npc3"][0],
+				Y:             npcLocations["npc3"][1],
+				FrTimingLimit: 45,
 			},
 		},
 	}
@@ -113,11 +92,11 @@ func NewGame() *Game {
 
 func (g *Game) Update() error {
 	for _, p := range g.Players {
-		p.HandleMovement(0, 0, u.ScreenWidth, u.ScreenWidth)
+		p.HandleMovement(0, 0, u.ScreenWidth, u.ScreenHeight)
 	}
 
 	for _, npc := range g.NPCs {
-		npc.Move(0, 0, u.ScreenWidth, u.ScreenWidth)
+		npc.Move(0, 0, u.ScreenWidth, u.ScreenHeight)
 	}
 
 	// player1 speed up
@@ -129,14 +108,14 @@ func (g *Game) Update() error {
 
 	// update the Item state if any NPC collides with Item shape
 	for _, npc := range g.NPCs {
-		if u.IsCollision(npc.GetGeomData(), g.Items[0].GetGeomData()) {
+		if u.IsCollision(npc.HitBox(), g.Items[0].HitBox()) {
 			g.Items[0].UpdateItemState()
 		}
 	}
 
 	// update the Item state if the player and Item shape areas overlap
 	for _, p := range g.Players {
-		if u.IsCollision(p.GetGeomData(), g.Items[0].GetGeomData()) {
+		if u.IsCollision(p.HitBox(), g.Items[0].HitBox()) {
 			g.Items[0].UpdateItemState()
 		}
 	}
@@ -149,16 +128,16 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	op.GeoM.Scale(5, 4)
 	screen.DrawImage(ebiten.NewImageFromImage(u.LoadSpriteImage("resources/images/misc/bg-grass.png")), op)
 
-	for i := range g.Players {
-		g.Players[i].DrawInteractiveSprite(screen)
+	for _, p := range g.Players {
+		p.DrawInteractiveSprite(screen)
 	}
 
-	for i := range g.NPCs {
-		g.NPCs[i].DrawInteractiveSprite(screen)
+	for _, npc := range g.NPCs {
+		npc.DrawInteractiveSprite(screen)
 	}
 
-	for i := range g.Items {
-		g.Items[i].DrawStaticSprite(screen)
+	for _, i := range g.Items {
+		i.DrawStaticSprite(screen)
 	}
 
 	ebitenutil.DebugPrintAt(screen, "W Ace S D to move", 0, 0)

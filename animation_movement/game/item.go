@@ -11,7 +11,7 @@ const (
 	ItemFrameOY     = 0
 	ItemFrameWidth  = 79
 	ItemFrameHeight = 80
-	ItemScale       = 1
+	ItemScale       = 0.65
 )
 
 // Item - implements the StaticSprite interface
@@ -22,8 +22,8 @@ type Item struct {
 	X, Y, W, H int
 }
 
-func (i *Item) GetGeomData() image.Rectangle {
-	return image.Rect(i.X, i.Y, i.W, i.H)
+func (i *Item) HitBox() image.Rectangle {
+	return image.Rect(i.X, i.Y, i.X+i.W, i.Y+i.H)
 }
 
 func (i *Item) SetLocation(axis string, val int) {

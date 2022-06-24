@@ -191,9 +191,9 @@ func (c *Card) SetRevealedState(state bool) {
 
 // IsHovered - Returns true if the card is hovered
 func (c *Card) IsHovered(cx, cy int) bool {
-	return image.Pt(cx, cy).In(c.GetGeomData())
+	return image.Pt(cx, cy).In(c.HitBox())
 }
 
-func (c *Card) GetGeomData() image.Rectangle {
+func (c *Card) HitBox() image.Rectangle {
 	return image.Rect(c.X, c.Y, c.X+c.W, c.Y+c.H)
 }

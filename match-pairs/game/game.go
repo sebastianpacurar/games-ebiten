@@ -53,11 +53,11 @@ func (g *Game) Update() error {
 	for _, v := range g.IconPairs {
 		if u.IsAreaHovered(v) {
 			if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
-				if !v.IsRevealed {
-					v.IsRevealed = true
+				if !v.IsRevealed() {
+					v.SetRevealedState(true)
 					g.RevealedIDs = append(g.RevealedIDs, v.ID)
 				} else {
-					v.IsRevealed = false
+					v.SetRevealedState(false)
 					g.RevealedIDs = g.RemoveRevealedID(v.ID)
 				}
 			}
@@ -167,14 +167,14 @@ func (g *Game) HandleRevealLogic() {
 			// if the pair is a match, set all icons to removed and clear array
 			for _, ic := range g.IconPairs {
 				if firstId == ic.ID {
-					ic.IsRemoved = true
+					ic.SetRemovedState(true)
 				}
 			}
 			g.RevealedIDs = nil
 		} else {
 			// if the pair isn't a match, set all icons to hidden and clear array
 			for _, ic := range g.IconPairs {
-				ic.IsRevealed = false
+				ic.SetRevealedState(false)
 			}
 			g.RevealedIDs = nil
 		}

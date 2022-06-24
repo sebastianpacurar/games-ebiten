@@ -5,6 +5,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"image"
 	"math/rand"
+	"time"
 )
 
 const (
@@ -12,8 +13,8 @@ const (
 	NPCFrameOY     = 0
 	NPCFrameWidth  = 64
 	NPCFrameHeight = 64
-	NPCScX         = 2
-	NPCScY         = 2
+	NPCScX         = 1.8
+	NPCScY         = 1.8
 )
 
 // NPC - game character which implements InteractiveSprite interface
@@ -25,20 +26,16 @@ type NPC struct {
 	FrameNum      int
 	Direction     int
 	X, Y, W, H    int
-	VX, VY        int
-	Speed         int
+	VX, VY        float64
+	Speed         float64
 	IsMoving      bool
 	IsNearMargin  bool
 	FrTiming      int
 	FrTimingLimit int
 }
 
-func (npc *NPC) GetGeomData() image.Rectangle {
-	return image.Rect(npc.X, npc.Y, npc.W, npc.H)
-}
-
-func (npc *NPC) GetSize() (int, int) {
-	return npc.W, npc.H
+func (npc *NPC) HitBox() image.Rectangle {
+	return image.Rect(npc.X, npc.Y, npc.X+npc.W, npc.Y+npc.H)
 }
 
 func (npc *NPC) SetLocation(axis string, val int) {
@@ -49,7 +46,7 @@ func (npc *NPC) SetLocation(axis string, val int) {
 	}
 }
 
-func (npc *NPC) SetDelta(axis string, val int) {
+func (npc *NPC) SetDelta(axis string, val float64) {
 	if axis == u.X {
 		npc.VX = val
 	} else if axis == u.Y {
@@ -66,7 +63,7 @@ func (npc *NPC) DrawInteractiveSprite(screen *ebiten.Image) {
 	screen.DrawImage(npc.Img.SubImage(image.Rect(x, y, x+NPCFrameWidth, y+NPCFrameHeight)).(*ebiten.Image), opNPC)
 }
 
-func (npc *NPC) ValidateBoundaries(minX, maxX, minY, maxY int) {
+func (npc *NPC) ValidateBoundaries(minX, minY, maxX, maxY int) {
 	if npc.X <= minX || npc.X >= maxX-npc.W || npc.Y <= minY || npc.Y >= maxY-npc.H {
 		npc.IsNearMargin = true
 		npc.IsMoving = false
@@ -108,10 +105,10 @@ func (npc *NPC) Move(minX, maxX, minY, maxY int) {
 			case 3:
 				npc.Direction = 1
 			}
-			npc.FrTiming = 0
 			npc.IsMoving = true
 			npc.IsNearMargin = false
 		} else {
+			rand.Seed(time.Now().UnixNano())
 			npc.Direction = rand.Intn(4)
 		}
 	}
@@ -142,7 +139,6 @@ func (npc *NPC) Move(minX, maxX, minY, maxY int) {
 			if npc.FrameNum == 7 {
 				npc.FrameNum = 0
 			}
-
 			npc.VY = 3 * npc.Speed
 
 		// east
@@ -151,21 +147,12 @@ func (npc *NPC) Move(minX, maxX, minY, maxY int) {
 			if npc.FrameNum == 7 {
 				npc.FrameNum = 0
 			}
-
 			npc.VX = 3 * npc.Speed
 		}
 
-		npc.X += npc.VX
-		npc.Y += npc.VY
-
-		if npc.X <= minX || npc.X >= maxX-npc.W || npc.Y <= minY || npc.Y >= maxY-npc.H {
-			npc.IsNearMargin = true
-			npc.IsMoving = false
-
-			u.BoundaryValidation(npc, minX, maxX, minY, maxY)
-		} else {
-			npc.IsNearMargin = false
-		}
+		npc.X += int(npc.VX)
+		npc.Y += int(npc.VY)
+		npc.ValidateBoundaries(minX, maxX, minY, maxY)
 	} else {
 		npc.FrameNum = 0
 		npc.VX = 0

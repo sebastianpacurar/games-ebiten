@@ -24,12 +24,6 @@ const (
 	FrW  = "FrameW"
 	FrH  = "FrameH"
 
-	NPC1 = "npc1"
-	NPC2 = "npc2"
-	NPC3 = "npc3"
-	NPC4 = "npc4"
-	NPC5 = "npc5"
-
 	Hearts   = "Hearts"
 	Clubs    = "Clubs"
 	Diamonds = "Diamonds"
@@ -80,8 +74,7 @@ func BoundaryValidation(i interface{}, minX, maxX, minY, maxY int) {
 	switch i.(type) {
 	case InteractiveSprite:
 		img := i.(InteractiveSprite)
-
-		bounds := img.GetGeomData()
+		bounds := img.HitBox()
 
 		if bounds.Min.X <= minX {
 			img.SetLocation(X, minX)
@@ -109,10 +102,10 @@ func IsAreaHovered(i interface{}) bool {
 	switch i.(type) {
 	case CasinoCards:
 		c := i.(CasinoCards)
-		area = c.GetGeomData()
+		area = c.HitBox()
 	case MatchIcons:
 		mi := i.(MatchIcons)
-		area = mi.GetGeomData()
+		area = mi.HitBox()
 	}
 	return pt.In(area)
 }
