@@ -1,4 +1,4 @@
-package game
+package card_games
 
 import (
 	u "games-ebiten/resources/utils"
