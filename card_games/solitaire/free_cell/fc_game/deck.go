@@ -1,6 +1,7 @@
-package card_games
+package fc_game
 
 import (
+	"games-ebiten/card_games/data"
 	u "games-ebiten/resources/utils"
 	"github.com/hajimehoshi/ebiten/v2"
 	"image"
@@ -9,9 +10,10 @@ import (
 )
 
 // GenerateDeck - returns a []*Card{} in which all elements have the corresponding details and images
-func GenerateDeck(th *Theme) []*Card {
+func GenerateDeck(th *data.Theme) []*Card {
 	var colStart, colEnd int
 	deck := make([]*Card, 0, 52)
+
 	active := th.Active
 	cardSc := th.CardScaleValue[active]
 
@@ -46,12 +48,12 @@ func GenerateDeck(th *Theme) []*Card {
 			x, y := frame.Min.X+i*frame.Dx(), frame.Min.Y+si*frame.Dy()
 			w, h := frame.Dx(), frame.Dy()
 
-			// crete card VYnamicalY, based on the Active Theme.
+			// crete card Dynamically, based on the Active Theme.
 			card := &Card{
 				Img:     th.Sources[active].SubImage(image.Rect(x, y, x+w, y+h)).(*ebiten.Image),
 				BackImg: th.Sources[active].SubImage(image.Rect(bf[0], bf[1], bf[2]+bf[0], bf[3]+bf[1])).(*ebiten.Image),
 				Suit:    suit,
-				Value:   CardRanks[Translation[active][i]],
+				Value:   data.CardRanks[data.Translation[active][i]],
 				Color:   color,
 				ScX:     cardSc[u.X],
 				ScY:     cardSc[u.Y],

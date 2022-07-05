@@ -1,7 +1,7 @@
 package main
 
 import (
-	"games-ebiten/card_games/solitaire/free_cell/game"
+	"games-ebiten/card_games/solitaire/free_cell/fc_game"
 	u "games-ebiten/resources/utils"
 	"github.com/hajimehoshi/ebiten/v2"
 	"log"
@@ -12,7 +12,7 @@ func main() {
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 	ebiten.SetWindowTitle("FreeCell Solitaire")
 
-	if err := ebiten.RunGame(game.NewGame()); err != nil {
+	if err := ebiten.RunGame(fc_game.NewGame()); err != nil {
 		log.Fatal(err)
 	}
 }

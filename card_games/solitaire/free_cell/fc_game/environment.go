@@ -1,7 +1,7 @@
-package game
+package fc_game
 
 import (
-	cg "games-ebiten/card_games"
+	"games-ebiten/card_games/data"
 	u "games-ebiten/resources/utils"
 	"github.com/hajimehoshi/ebiten/v2"
 	"image"
@@ -10,7 +10,7 @@ import (
 type (
 	Environment struct {
 		Quadrants       map[int]image.Rectangle
-		Deck            []*cg.Card
+		Deck            []*Card
 		BgImg           *ebiten.Image
 		EmptySlotImg    *ebiten.Image
 		Columns         []CardColumn
@@ -22,17 +22,18 @@ type (
 
 	FoundationPile struct {
 		X, Y, W, H int
-		Cards      []*cg.Card
+		Cards      []*Card
 	}
 
 	FreeCell struct {
 		X, Y, W, H int
-		Cards      []*cg.Card
+		Cards      []*Card
 	}
 
 	CardColumn struct {
 		X, Y, W, H int
-		Cards      []*cg.Card
+		Cards      []*Card
+		IsOpen     bool
 	}
 )
 
@@ -42,26 +43,26 @@ func (e *Environment) UpdateEnv() {
 	e.Quadrants = u.GetFlexboxQuadrants(8)
 
 	e.FoundationPiles = []FoundationPile{
-		{Cards: make([]*cg.Card, 0, 13)},
-		{Cards: make([]*cg.Card, 0, 13)},
-		{Cards: make([]*cg.Card, 0, 13)},
-		{Cards: make([]*cg.Card, 0, 13)},
+		{Cards: make([]*Card, 0, 13)},
+		{Cards: make([]*Card, 0, 13)},
+		{Cards: make([]*Card, 0, 13)},
+		{Cards: make([]*Card, 0, 13)},
 	}
 	e.FreeCells = []FreeCell{
-		{Cards: make([]*cg.Card, 0, 13)},
-		{Cards: make([]*cg.Card, 0, 13)},
-		{Cards: make([]*cg.Card, 0, 13)},
-		{Cards: make([]*cg.Card, 0, 13)},
+		{Cards: make([]*Card, 0, 1)},
+		{Cards: make([]*Card, 0, 1)},
+		{Cards: make([]*Card, 0, 1)},
+		{Cards: make([]*Card, 0, 1)},
 	}
 	e.Columns = []CardColumn{
-		{Cards: make([]*cg.Card, 0)},
-		{Cards: make([]*cg.Card, 0)},
-		{Cards: make([]*cg.Card, 0)},
-		{Cards: make([]*cg.Card, 0)},
-		{Cards: make([]*cg.Card, 0)},
-		{Cards: make([]*cg.Card, 0)},
-		{Cards: make([]*cg.Card, 0)},
-		{Cards: make([]*cg.Card, 0)},
+		{Cards: make([]*Card, 0)},
+		{Cards: make([]*Card, 0)},
+		{Cards: make([]*Card, 0)},
+		{Cards: make([]*Card, 0)},
+		{Cards: make([]*Card, 0)},
+		{Cards: make([]*Card, 0)},
+		{Cards: make([]*Card, 0)},
+		{Cards: make([]*Card, 0)},
 	}
 
 	// start from the first quadrant
@@ -95,7 +96,7 @@ func (e *Environment) UpdateEnv() {
 				e.Columns[i].W = e.W
 				e.Columns[i].H = e.H
 				e.Deck[cardIndex].ColNum = i + 1
-				e.Deck[cardIndex].SetRevealedState(true)
+				e.Deck[cardIndex].SetDraggableState(true)
 				e.Columns[i].Cards = append(e.Columns[i].Cards, e.Deck[cardIndex])
 				cardIndex++
 			} else {
@@ -118,7 +119,7 @@ func (e *Environment) HitBox(i interface{}) image.Rectangle {
 	return rect
 }
 
-func (e *Environment) DrawPlayground(screen *ebiten.Image, th *cg.Theme) {
+func (e *Environment) DrawPlayground(screen *ebiten.Image, th *data.Theme) {
 	// Draw the BG Image
 	opBg := &ebiten.DrawImageOptions{}
 	opBg.GeoM.Scale(50, 50)
@@ -181,7 +182,6 @@ func (e *Environment) MoveFromSrcToTarget(src, target interface{}, i, j int) {
 			// reveal the last card from the source column, and revert its height to original
 			last := len(e.Columns[i].Cards)
 			if last > 0 {
-				e.Columns[i].Cards[last-1].SetRevealedState(true)
 				e.Columns[i].Cards[last-1].H = e.H
 			}
 
@@ -193,7 +193,6 @@ func (e *Environment) MoveFromSrcToTarget(src, target interface{}, i, j int) {
 
 			// reveal the last card from the source column, and revert its height to original
 			if len(e.Columns[i].Cards) > 0 {
-				e.Columns[i].Cards[li-1].SetRevealedState(true)
 				e.Columns[i].Cards[li-1].H = e.H
 			}
 		}

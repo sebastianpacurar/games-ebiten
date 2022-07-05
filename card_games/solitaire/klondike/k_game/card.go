@@ -1,47 +1,12 @@
-package card_games
+package k_game
 
 import (
+	"games-ebiten/card_games/data"
 	u "games-ebiten/resources/utils"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"image"
 	_ "image/png"
-)
-
-// Translation - used for acquiring the right card index while getting the card SubImage from the Image
-// DraggedCard - used to force the hovered card to overlap other images, while dragged
-// CardRanks - smallest is "Ace"(0), while highest is "King"(12)
-var (
-	DraggedCard interface{}
-	Translation = map[string]map[int]string{
-		u.PixelatedTheme: {
-			1: "2", 2: "3", 3: "4", 4: "5", 5: "6", 6: "7",
-			7: "8", 8: "9", 9: "10", 10: "J", 11: "Q", 12: "K", 13: "A",
-		},
-		u.ClassicTheme: {
-			0: "A", 1: "2", 2: "3", 3: "4", 4: "5", 5: "6", 6: "7",
-			7: "8", 8: "9", 9: "10", 10: "J", 11: "Q", 12: "K",
-		},
-		//u.AbstractTheme: {
-		//	0: "2", 1: "3", 2: "4", 3: "5", 4: "6", 5: "7",
-		//	6: "8", 7: "9", 8: "10", 9: "Jack", 10: "Queen", 11: "King", 12: "Ace",
-		//},
-	}
-	CardRanks = map[string]int{
-		u.Ace:   0,
-		"2":     1,
-		"3":     2,
-		"4":     3,
-		"5":     4,
-		"6":     5,
-		"7":     6,
-		"8":     7,
-		"9":     8,
-		"10":    9,
-		u.Jack:  10,
-		u.Queen: 11,
-		u.King:  12,
-	}
 )
 
 // Card - Implements CasinoCards interface
@@ -86,12 +51,12 @@ func (c *Card) DrawCard(screen *ebiten.Image) {
 		if inpututil.MouseButtonPressDuration(ebiten.MouseButtonLeft) > 3 && c.IsDragged() {
 			c.X = cx - c.W/2
 			c.Y = cy - c.H/2
-			DraggedCard = c
+			data.DraggedCard = c
 		}
 
 		if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
 			c.SetDraggedState(false)
-			DraggedCard = nil
+			data.DraggedCard = nil
 		}
 	}
 
@@ -117,7 +82,7 @@ func (c *Card) DrawColCard(screen *ebiten.Image, cards []*Card, ci, cx, cy int) 
 
 		// drag the stack of cards, and set the cards' IsActive state to true
 		if inpututil.MouseButtonPressDuration(ebiten.MouseButtonLeft) > 3 && c.IsDragged() {
-			DraggedCard = c
+			data.DraggedCard = c
 			c.IsActive = true
 			c.X = cx - c.W/2
 			c.Y = cy - c.H/2
@@ -153,7 +118,7 @@ func (c *Card) DrawColCard(screen *ebiten.Image, cards []*Card, ci, cx, cy int) 
 		if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
 			c.SetDraggedState(false)
 			c.IsActive = false
-			DraggedCard = nil
+			data.DraggedCard = nil
 		}
 	} else {
 		// if card is not revealed, draw back face image

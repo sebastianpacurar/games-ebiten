@@ -1,7 +1,7 @@
-package game
+package k_game
 
 import (
-	cg "games-ebiten/card_games"
+	data2 "games-ebiten/card_games/data"
 	u "games-ebiten/resources/utils"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -11,14 +11,14 @@ import (
 
 type (
 	Game struct {
-		*cg.Theme
+		*data2.Theme
 		*Environment
 	}
 )
 
 func NewGame() *Game {
 	classicImg := ebiten.NewImageFromImage(u.LoadSpriteImage("resources/images/cards/classic-solitaire.png"))
-	th := cg.NewTheme()
+	th := data2.NewTheme()
 
 	g := &Game{
 		Theme: th,
@@ -39,8 +39,8 @@ func NewGame() *Game {
 }
 
 // BuildDeck - initiates the Piles and populates them with cards
-func (g *Game) BuildDeck(th *cg.Theme) {
-	g.Deck = cg.GenerateDeck(th)
+func (g *Game) BuildDeck(th *data2.Theme) {
+	g.Deck = GenerateDeck(th)
 	g.UpdateEnv()
 }
 
@@ -110,10 +110,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 		// force card or stack of cards image(s) persistence over other cards
 		// practically draw the dragged card again. or draw the entire stack again, at the end
-		if cg.DraggedCard != nil {
-			switch cg.DraggedCard.(type) {
-			case *cg.Card:
-				c := cg.DraggedCard.(*cg.Card)
+		if data2.DraggedCard != nil {
+			switch data2.DraggedCard.(type) {
+			case *Card:
+				c := data2.DraggedCard.(*Card)
 				if c.ColNum == 0 {
 					opc := &ebiten.DrawImageOptions{}
 					opc.GeoM.Scale(c.ScX, c.ScY)
@@ -130,7 +130,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		g.DrawEnding(screen)
 	}
 	ebitenutil.DebugPrintAt(screen, "Right Click to quick move to Foundations", 10, u.ScreenHeight-95)
-	ebitenutil.DebugPrintAt(screen, "Press F2 to start new game", 10, u.ScreenHeight-65)
+	ebitenutil.DebugPrintAt(screen, "Press F2 to start new Game", 10, u.ScreenHeight-65)
 	ebitenutil.DebugPrintAt(screen, "Press 1 or 2 to change Themes", 10, u.ScreenHeight-35)
 }
 
