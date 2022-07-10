@@ -1,7 +1,7 @@
 package k_game
 
 import (
-	data2 "games-ebiten/card_games/data"
+	"games-ebiten/card_games/data"
 	u "games-ebiten/resources/utils"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -11,14 +11,14 @@ import (
 
 type (
 	Game struct {
-		*data2.Theme
+		*data.Theme
 		*Environment
 	}
 )
 
 func NewGame() *Game {
 	classicImg := ebiten.NewImageFromImage(u.LoadSpriteImage("resources/images/cards/classic-solitaire.png"))
-	th := data2.NewTheme()
+	th := data.NewTheme()
 
 	g := &Game{
 		Theme: th,
@@ -39,7 +39,7 @@ func NewGame() *Game {
 }
 
 // BuildDeck - initiates the Piles and populates them with cards
-func (g *Game) BuildDeck(th *data2.Theme) {
+func (g *Game) BuildDeck(th *data.Theme) {
 	g.Deck = GenerateDeck(th)
 	g.UpdateEnv()
 }
@@ -110,10 +110,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 		// force card or stack of cards image(s) persistence over other cards
 		// practically draw the dragged card again. or draw the entire stack again, at the end
-		if data2.DraggedCard != nil {
-			switch data2.DraggedCard.(type) {
+		if data.DraggedCard != nil {
+			switch data.DraggedCard.(type) {
 			case *Card:
-				c := data2.DraggedCard.(*Card)
+				c := data.DraggedCard.(*Card)
 				if c.ColNum == 0 {
 					opc := &ebiten.DrawImageOptions{}
 					opc.GeoM.Scale(c.ScX, c.ScY)

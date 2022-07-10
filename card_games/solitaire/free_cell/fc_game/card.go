@@ -10,7 +10,7 @@ import (
 )
 
 // Card - Implements CasinoCards interface
-// RevealedState - if the card's frontFace is visible
+// DraggableState - refers to a Column card or stack of cards, which can be dragged
 // DraggedState - holds the dragged state
 // ColNum - refers to what column the card is currently in if it's in any column
 // IsActive - every card below the dragged card (to keep the state of all dragged cards, and perform multi cards drag)
@@ -34,30 +34,25 @@ func (c *Card) DrawCard(screen *ebiten.Image) {
 
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Scale(c.ScX, c.ScY)
-	img := c.Img
 
-	if c.IsDraggable() {
-		// drag only clicked revealed cards
+	if c.IsHovered(cx, cy) && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		c.SetDraggedState(true)
+	}
 
-		if c.IsHovered(cx, cy) && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
-			c.SetDraggedState(true)
-		}
+	// drag and set location
+	if inpututil.MouseButtonPressDuration(ebiten.MouseButtonLeft) > 3 && c.IsDragged() {
+		c.X = cx - c.W/2
+		c.Y = cy - c.H/2
+		data.DraggedCard = c
+	}
 
-		// drag and set location
-		if inpututil.MouseButtonPressDuration(ebiten.MouseButtonLeft) > 3 && c.IsDragged() {
-			c.X = cx - c.W/2
-			c.Y = cy - c.H/2
-			data.DraggedCard = c
-		}
-
-		if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
-			c.SetDraggedState(false)
-			data.DraggedCard = nil
-		}
+	if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
+		c.SetDraggedState(false)
+		data.DraggedCard = nil
 	}
 
 	op.GeoM.Translate(float64(c.X), float64(c.Y))
-	screen.DrawImage(img, op)
+	screen.DrawImage(c.Img, op)
 }
 
 // DrawColCard - handles the drag multiple revealed cards functionality
@@ -67,7 +62,7 @@ func (c *Card) DrawCard(screen *ebiten.Image) {
 func (c *Card) DrawColCard(screen *ebiten.Image, cards []*Card, ci, cx, cy int) {
 
 	// set the clicked card's drag status to true
-	if c.IsHovered(cx, cy) && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+	if c.IsHovered(cx, cy) && c.IsDraggable() && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 		c.SetDraggedState(true)
 	}
 
@@ -112,7 +107,7 @@ func (c *Card) DrawColCard(screen *ebiten.Image, cards []*Card, ci, cx, cy int) 
 		data.DraggedCard = nil
 	}
 
-	// draw the revealed cards above the DraggedCard
+	// draw the cards below the Dragged Card
 	if !c.IsActive {
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Scale(c.ScX, c.ScY)

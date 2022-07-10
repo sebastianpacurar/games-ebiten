@@ -4,6 +4,7 @@ import (
 	"games-ebiten/card_games/data"
 	u "games-ebiten/resources/utils"
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"image"
 )
 
@@ -96,7 +97,6 @@ func (e *Environment) UpdateEnv() {
 				e.Columns[i].W = e.W
 				e.Columns[i].H = e.H
 				e.Deck[cardIndex].ColNum = i + 1
-				e.Deck[cardIndex].SetDraggableState(true)
 				e.Columns[i].Cards = append(e.Columns[i].Cards, e.Deck[cardIndex])
 				cardIndex++
 			} else {
@@ -104,6 +104,7 @@ func (e *Environment) UpdateEnv() {
 			}
 		}
 	}
+	e.SetColDraggableCards()
 }
 
 func (e *Environment) HitBox(i interface{}) image.Rectangle {
@@ -114,6 +115,9 @@ func (e *Environment) HitBox(i interface{}) image.Rectangle {
 		rect = image.Rect(area.X, area.Y, area.X+area.W, area.Y+area.H)
 	case CardColumn:
 		area := i.(CardColumn)
+		rect = image.Rect(area.X, area.Y, area.X+area.W, area.Y+area.H)
+	case FreeCell:
+		area := i.(FreeCell)
 		rect = image.Rect(area.X, area.Y, area.X+area.W, area.Y+area.H)
 	}
 	return rect
@@ -153,6 +157,187 @@ func (e *Environment) DrawPlayground(screen *ebiten.Image, th *data.Theme) {
 	}
 }
 
+// HandleGameLogic - contains Drag and Drop functionality and cards' state updates
+func (e *Environment) HandleGameLogic() {
+	if data.DraggedCard != nil {
+		//
+		// drag FROM Column
+		//
+		for i := range e.Columns {
+			if len(e.Columns[i].Cards) > 0 {
+				li := len(e.Columns[i].Cards) - 1 // li = last card in the source column
+				source := e.Columns[i].Cards[li].HitBox()
+
+				// drop ON Free Cell
+				for j := range e.FreeCells {
+					target := e.HitBox(e.FreeCells[j])
+					if u.IsCollision(source, target) {
+						if len(e.FreeCells[j].Cards) == 0 &&
+							inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
+							e.MoveFromSrcToTarget(e.Columns, e.FreeCells, i, j)
+							data.DraggedCard = nil
+							return
+						}
+					}
+				}
+
+				// drop ON Column
+				for j := range e.Columns {
+					if j != i {
+						// K card
+						if len(e.Columns[j].Cards) == 0 {
+							for _, c := range e.Columns[i].Cards {
+
+								if c.IsDragged() && c.Value == data.CardRanks[u.King] {
+									target := e.HitBox(e.Columns[j])
+									if u.IsCollision(source, target) &&
+										inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
+										e.MoveFromSrcToTarget(e.Columns, e.Columns, i, j)
+										data.DraggedCard = nil
+										return
+									}
+								}
+							}
+
+						} else {
+							// Other Cards
+							if len(e.Columns[j].Cards) > 0 {
+								lj := len(e.Columns[j].Cards) - 1 // lj = last card in the current context (target)
+								target := e.Columns[j].Cards[lj].HitBox()
+
+								for _, c := range e.Columns[i].Cards {
+									if c.IsDragged() {
+										if u.IsCollision(source, target) &&
+											inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) &&
+											c.Value == e.Columns[j].Cards[lj].Value-1 &&
+											c.Color != e.Columns[j].Cards[lj].Color {
+											e.MoveFromSrcToTarget(e.Columns, e.Columns, i, j)
+											data.DraggedCard = nil
+											return
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+
+				// drop ON Foundation Pile
+				for j := range e.FoundationPiles {
+					target := e.HitBox(e.FoundationPiles[j])
+
+					if len(e.FoundationPiles[j].Cards) == 0 {
+						if u.IsCollision(source, target) &&
+							inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) &&
+							e.Columns[i].Cards[li].Value == data.CardRanks[u.Ace] {
+							e.MoveFromSrcToTarget(e.Columns, e.FoundationPiles, i, j)
+							data.DraggedCard = nil
+							return
+						}
+					} else {
+						lj := len(e.FoundationPiles[j].Cards) - 1
+						if u.IsCollision(source, target) &&
+							inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) &&
+							e.Columns[i].Cards[li].Value > data.CardRanks[u.Ace] &&
+							e.Columns[i].Cards[li].Value == e.FoundationPiles[j].Cards[lj].Value+1 &&
+							e.Columns[i].Cards[li].Suit == e.FoundationPiles[j].Cards[lj].Suit {
+							e.MoveFromSrcToTarget(e.Columns, e.FoundationPiles, i, j)
+							data.DraggedCard = nil
+							return
+						}
+					}
+				}
+			}
+		}
+
+		//
+		// drag FROM Free Cell
+		//
+		for i := range e.FreeCells {
+			if len(e.FreeCells[i].Cards) == 1 {
+				source := e.FreeCells[i].Cards[0].HitBox()
+				// drop ON Column
+				for j := range e.Columns {
+					lj := len(e.Columns[j].Cards) - 1
+					target := e.Columns[j].Cards[lj].HitBox()
+
+					if u.IsCollision(source, target) {
+						if e.FreeCells[i].Cards[0].Value+1 == e.Columns[j].Cards[lj].Value &&
+							e.FreeCells[i].Cards[0].Color != e.Columns[j].Cards[lj].Color &&
+							inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
+							e.MoveFromSrcToTarget(e.FreeCells, e.Columns, i, j)
+							data.DraggedCard = nil
+							return
+						}
+					}
+				}
+			}
+		}
+
+		//
+		// drag FROM Foundation Pile
+		//
+		for i := range e.FoundationPiles {
+			if len(e.FoundationPiles[i].Cards) > 0 {
+				li := len(e.FoundationPiles[i].Cards) - 1 // li = last card in the current context
+				if e.FoundationPiles[i].Cards[li].IsDragged() {
+					source := e.FoundationPiles[i].Cards[li].HitBox()
+
+					// drop ON Column
+					for j := range e.Columns {
+						if len(e.Columns[j].Cards) > 0 {
+							lj := len(e.Columns[j].Cards) - 1 // lj = last card in the current context
+							target := e.Columns[j].Cards[lj].HitBox()
+
+							if u.IsCollision(source, target) && inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) &&
+								e.FoundationPiles[i].Cards[li].Value == e.Columns[j].Cards[lj].Value-1 &&
+								e.Columns[j].Cards[lj].Color != e.FoundationPiles[i].Cards[li].Color {
+								e.MoveFromSrcToTarget(e.FoundationPiles, e.Columns, i, j)
+								data.DraggedCard = nil
+								return
+							}
+
+						}
+					}
+
+					// drop ON Foundation Pile
+					for j := range e.FoundationPiles {
+						if i != j {
+							target := e.HitBox(e.FoundationPiles[j])
+
+							if len(e.FoundationPiles[j].Cards) == 0 && u.IsCollision(source, target) &&
+								inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) &&
+								e.FoundationPiles[i].Cards[li].Value == data.CardRanks[u.Ace] {
+								e.MoveFromSrcToTarget(e.FoundationPiles, e.FoundationPiles, i, j)
+								data.DraggedCard = nil
+								return
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+// SetColDraggableCards - Sets which cards are in the proper order to be dragged as stack
+func (e *Environment) SetColDraggableCards() {
+	for _, col := range e.Columns {
+		lc := len(col.Cards) - 1
+
+		// the last card will always be draggable
+		col.Cards[lc].SetDraggableState(true)
+
+		for j := lc - 1; j >= 0; j-- {
+			if col.Cards[j].Color != col.Cards[j+1].Color && col.Cards[j].Value-1 == col.Cards[j+1].Value {
+				col.Cards[j].SetDraggableState(true)
+			} else {
+				col.Cards[j].SetDraggableState(false)
+			}
+		}
+	}
+}
+
 // MoveFromSrcToTarget - contains the logic behind moving cards from a specific Pile to another specific Pile
 func (e *Environment) MoveFromSrcToTarget(src, target interface{}, i, j int) {
 	switch src.(type) {
@@ -179,22 +364,26 @@ func (e *Environment) MoveFromSrcToTarget(src, target interface{}, i, j int) {
 				card.ColNum = j + 1
 			}
 
-			// reveal the last card from the source column, and revert its height to original
+			// revert last card's height to original
 			last := len(e.Columns[i].Cards)
 			if last > 0 {
 				e.Columns[i].Cards[last-1].H = e.H
 			}
+			e.SetColDraggableCards()
 
 		// move TO Foundation Pile
 		case []FoundationPile:
 			e.Columns[i].Cards[li].ColNum = 0
 			e.FoundationPiles[j].Cards = append(e.FoundationPiles[j].Cards, e.Columns[i].Cards[li])
 			e.Columns[i].Cards = e.Columns[i].Cards[:li]
+			e.SetColDraggableCards()
 
-			// reveal the last card from the source column, and revert its height to original
-			if len(e.Columns[i].Cards) > 0 {
-				e.Columns[i].Cards[li-1].H = e.H
-			}
+		// move TO Free Cell
+		case []FreeCell:
+			e.Columns[i].Cards[li].ColNum = 0
+			e.FreeCells[j].Cards = append(e.FreeCells[j].Cards, e.Columns[i].Cards[li])
+			e.Columns[i].Cards = e.Columns[i].Cards[:li]
+			e.SetColDraggableCards()
 		}
 
 	// move FROM Foundation Pile
@@ -207,11 +396,29 @@ func (e *Environment) MoveFromSrcToTarget(src, target interface{}, i, j int) {
 			e.FoundationPiles[i].Cards[li].ColNum = j + 1
 			e.Columns[j].Cards = append(e.Columns[j].Cards, e.FoundationPiles[i].Cards[li])
 			e.FoundationPiles[i].Cards = e.FoundationPiles[i].Cards[:li]
+			e.SetColDraggableCards()
 
 		// move TO Foundation Pile
 		case []FoundationPile:
 			e.FoundationPiles[j].Cards = append(e.FoundationPiles[j].Cards, e.FoundationPiles[i].Cards[li])
 			e.FoundationPiles[i].Cards = e.FoundationPiles[i].Cards[:li]
+		}
+
+	// move FROM Free Cell
+	case []FreeCell:
+		switch target.(type) {
+
+		// Move TO Column
+		case []CardColumn:
+			e.FreeCells[i].Cards[0].ColNum = j + 1
+			e.Columns[j].Cards = append(e.Columns[j].Cards, e.FreeCells[i].Cards[0])
+			e.FreeCells[i].Cards = nil
+			e.SetColDraggableCards()
+
+		// Move TO Foundations Pile
+		case []FoundationPile:
+			e.FoundationPiles[j].Cards = append(e.FoundationPiles[j].Cards, e.FreeCells[i].Cards[0])
+			e.FreeCells[i].Cards = nil
 		}
 	}
 }
