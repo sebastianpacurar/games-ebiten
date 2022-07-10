@@ -3,6 +3,9 @@ package utils
 import (
 	"bytes"
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/examples/resources/fonts"
+	"golang.org/x/image/font"
+	"golang.org/x/image/font/opentype"
 	"image"
 	"io/ioutil"
 	"log"
@@ -44,6 +47,23 @@ const (
 
 	CardsVSpacer = 25
 )
+
+var FontFace font.Face
+
+func InitFonts() {
+	tt, err := opentype.Parse(fonts.MPlus1pRegular_ttf)
+	if err != nil {
+		log.Fatal(err)
+	}
+	FontFace, err = opentype.NewFace(tt, &opentype.FaceOptions{
+		Size:    16,
+		DPI:     72,
+		Hinting: font.HintingFull,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+}
 
 func LoadSpriteImage(path string) image.Image {
 	file, err := ioutil.ReadFile(path)

@@ -256,7 +256,7 @@ func (e *Environment) HandleGameLogic(cx, cy int) {
 						target := e.HitBox(e.Columns[j])
 
 						if u.IsCollision(source, target) && inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
-							e.MoveFromSrcToTarget(e.WastePile, e.Columns, lc, j)
+							e.MoveFromSrcToTarget(e.WastePile, e.Columns, lc, j, ebiten.MouseButtonLeft)
 							data.DraggedCard = nil
 							return
 
@@ -270,7 +270,7 @@ func (e *Environment) HandleGameLogic(cx, cy int) {
 							e.WastePile.Cards[lc].Value == e.Columns[j].Cards[lj].Value-1 &&
 							e.WastePile.Cards[lc].Color != e.Columns[j].Cards[lj].Color &&
 							inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
-							e.MoveFromSrcToTarget(e.WastePile, e.Columns, lc, j)
+							e.MoveFromSrcToTarget(e.WastePile, e.Columns, lc, j, ebiten.MouseButtonLeft)
 							data.DraggedCard = nil
 							return
 						}
@@ -284,7 +284,7 @@ func (e *Environment) HandleGameLogic(cx, cy int) {
 					if len(e.FoundationPiles[j].Cards) == 0 {
 						if e.WastePile.Cards[lc].Value == data.CardRanks[u.Ace] &&
 							u.IsCollision(source, target) && inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
-							e.MoveFromSrcToTarget(e.WastePile, e.FoundationPiles, lc, j)
+							e.MoveFromSrcToTarget(e.WastePile, e.FoundationPiles, lc, j, ebiten.MouseButtonLeft)
 							data.DraggedCard = nil
 							return
 						}
@@ -296,7 +296,7 @@ func (e *Environment) HandleGameLogic(cx, cy int) {
 							e.WastePile.Cards[lc].Value == e.FoundationPiles[j].Cards[lj].Value+1 &&
 							e.WastePile.Cards[lc].Suit == e.FoundationPiles[j].Cards[lj].Suit &&
 							inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
-							e.MoveFromSrcToTarget(e.WastePile, e.FoundationPiles, lc, j)
+							e.MoveFromSrcToTarget(e.WastePile, e.FoundationPiles, lc, j, ebiten.MouseButtonLeft)
 							data.DraggedCard = nil
 							return
 						}
@@ -324,7 +324,7 @@ func (e *Environment) HandleGameLogic(cx, cy int) {
 									target := e.HitBox(e.Columns[j])
 									if u.IsCollision(source, target) &&
 										inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
-										e.MoveFromSrcToTarget(e.Columns, e.Columns, i, j)
+										e.MoveFromSrcToTarget(e.Columns, e.Columns, i, j, ebiten.MouseButtonLeft)
 										data.DraggedCard = nil
 										return
 									}
@@ -343,7 +343,7 @@ func (e *Environment) HandleGameLogic(cx, cy int) {
 											inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) &&
 											c.Value == e.Columns[j].Cards[lj].Value-1 &&
 											c.Color != e.Columns[j].Cards[lj].Color {
-											e.MoveFromSrcToTarget(e.Columns, e.Columns, i, j)
+											e.MoveFromSrcToTarget(e.Columns, e.Columns, i, j, ebiten.MouseButtonLeft)
 											data.DraggedCard = nil
 											return
 										}
@@ -363,7 +363,7 @@ func (e *Environment) HandleGameLogic(cx, cy int) {
 						if u.IsCollision(source, target) &&
 							inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) &&
 							e.Columns[i].Cards[li].Value == data.CardRanks[u.Ace] {
-							e.MoveFromSrcToTarget(e.Columns, e.FoundationPiles, i, j)
+							e.MoveFromSrcToTarget(e.Columns, e.FoundationPiles, i, j, ebiten.MouseButtonLeft)
 							data.DraggedCard = nil
 							return
 						}
@@ -374,7 +374,7 @@ func (e *Environment) HandleGameLogic(cx, cy int) {
 							e.Columns[i].Cards[li].Value > data.CardRanks[u.Ace] &&
 							e.Columns[i].Cards[li].Value == e.FoundationPiles[j].Cards[lj].Value+1 &&
 							e.Columns[i].Cards[li].Suit == e.FoundationPiles[j].Cards[lj].Suit {
-							e.MoveFromSrcToTarget(e.Columns, e.FoundationPiles, i, j)
+							e.MoveFromSrcToTarget(e.Columns, e.FoundationPiles, i, j, ebiten.MouseButtonLeft)
 							data.DraggedCard = nil
 							return
 						}
@@ -401,7 +401,7 @@ func (e *Environment) HandleGameLogic(cx, cy int) {
 							if u.IsCollision(source, target) && inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) &&
 								e.FoundationPiles[i].Cards[li].Value == e.Columns[j].Cards[lj].Value-1 &&
 								e.Columns[j].Cards[lj].Color != e.FoundationPiles[i].Cards[li].Color {
-								e.MoveFromSrcToTarget(e.FoundationPiles, e.Columns, i, j)
+								e.MoveFromSrcToTarget(e.FoundationPiles, e.Columns, i, j, ebiten.MouseButtonLeft)
 								data.DraggedCard = nil
 								return
 							}
@@ -417,7 +417,7 @@ func (e *Environment) HandleGameLogic(cx, cy int) {
 							if len(e.FoundationPiles[j].Cards) == 0 && u.IsCollision(source, target) &&
 								inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) &&
 								e.FoundationPiles[i].Cards[li].Value == data.CardRanks[u.Ace] {
-								e.MoveFromSrcToTarget(e.FoundationPiles, e.FoundationPiles, i, j)
+								e.MoveFromSrcToTarget(e.FoundationPiles, e.FoundationPiles, i, j, ebiten.MouseButtonLeft)
 								data.DraggedCard = nil
 								return
 							}
@@ -430,7 +430,7 @@ func (e *Environment) HandleGameLogic(cx, cy int) {
 }
 
 // MoveFromSrcToTarget - contains the logic behind moving cards from a specific Pile to another specific Pile
-func (e *Environment) MoveFromSrcToTarget(src, target interface{}, i, j int) {
+func (e *Environment) MoveFromSrcToTarget(src, target interface{}, i, j int, btn ebiten.MouseButton) {
 	switch src.(type) {
 
 	// move FROM Column
@@ -465,7 +465,7 @@ func (e *Environment) MoveFromSrcToTarget(src, target interface{}, i, j int) {
 
 		// move TO Foundation Pile
 		case []FoundationPile:
-			if draggedIndex == len(e.Columns[i].Cards)-1 {
+			if draggedIndex == len(e.Columns[i].Cards)-1 || btn == ebiten.MouseButtonRight {
 				e.Columns[i].Cards[li].ColNum = 0
 				e.FoundationPiles[j].Cards = append(e.FoundationPiles[j].Cards, e.Columns[i].Cards[li])
 				e.Columns[i].Cards = e.Columns[i].Cards[:li]
@@ -523,14 +523,14 @@ func (e *Environment) RightClickToFoundations(cx, cy int) {
 			card := e.WastePile.Cards[lw]
 			for j := range e.FoundationPiles {
 				if len(e.FoundationPiles[j].Cards) == 0 && card.Value == data.CardRanks[u.Ace] {
-					e.MoveFromSrcToTarget(e.WastePile, e.FoundationPiles, lw, j)
+					e.MoveFromSrcToTarget(e.WastePile, e.FoundationPiles, lw, j, ebiten.MouseButtonRight)
 					return
 				} else if len(e.FoundationPiles[j].Cards) > 0 {
 					lf := len(e.FoundationPiles[j].Cards) - 1
 					fpCard := e.FoundationPiles[j].Cards[lf]
 
 					if fpCard.Value == card.Value-1 && fpCard.Suit == card.Suit {
-						e.MoveFromSrcToTarget(e.WastePile, e.FoundationPiles, lw, j)
+						e.MoveFromSrcToTarget(e.WastePile, e.FoundationPiles, lw, j, ebiten.MouseButtonRight)
 						return
 					}
 				}
@@ -546,14 +546,14 @@ func (e *Environment) RightClickToFoundations(cx, cy int) {
 			if card.IsHovered(cx, cy) && inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonRight) {
 				for j := range e.FoundationPiles {
 					if len(e.FoundationPiles[j].Cards) == 0 && card.Value == data.CardRanks[u.Ace] {
-						e.MoveFromSrcToTarget(e.Columns, e.FoundationPiles, i, j)
+						e.MoveFromSrcToTarget(e.Columns, e.FoundationPiles, i, j, ebiten.MouseButtonRight)
 						return
 					} else if len(e.FoundationPiles[j].Cards) > 0 {
 						lf := len(e.FoundationPiles[j].Cards) - 1
 						fpCard := e.FoundationPiles[j].Cards[lf]
 
 						if fpCard.Value == card.Value-1 && fpCard.Suit == card.Suit {
-							e.MoveFromSrcToTarget(e.Columns, e.FoundationPiles, i, j)
+							e.MoveFromSrcToTarget(e.Columns, e.FoundationPiles, i, j, ebiten.MouseButtonRight)
 							return
 						}
 					}

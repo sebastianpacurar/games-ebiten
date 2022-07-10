@@ -7,10 +7,13 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/hajimehoshi/ebiten/v2/text"
+	"image"
 	"image/color"
 )
 
 // Router - responsible with the game states. used to navigate between games
+// active - refers to the current game
 type Router struct {
 	active interface{}
 	fcGame free_cell.Game
@@ -20,10 +23,45 @@ type Router struct {
 
 // Menu - global menu which overlaps all game screens.
 type Menu struct {
+	X, Y, W, H   int
 	containerImg *ebiten.Image
+	MenuItems    []*MenuItem
 }
 
-type MenuItem struct{}
+// MenuItem - consists of a rectangle formed from the MenuItem's name
+type MenuItem struct {
+	name    string
+	bounds  image.Rectangle
+	options []*Option
+}
+
+// Option - serves as the selected or available MenuItem option
+type Option struct {
+	name   string
+	active bool
+}
+
+// NewMenuItems - construct the layout based on the text's size
+func NewMenuItems() []*MenuItem {
+	return []*MenuItem{
+		{
+			name: "Games",
+			options: []*Option{
+				{name: "Free Cell", active: true},
+				{name: "Klondike", active: false},
+			},
+			bounds: text.BoundString(u.FontFace, "Game"),
+		},
+		{
+			name: "Themes",
+			options: []*Option{
+				{name: "Classic", active: true},
+				{name: "8 bit", active: false},
+			},
+			bounds: text.BoundString(u.FontFace, "Themes"),
+		},
+	}
+}
 
 func NewRouter() *Router {
 	r := &Router{
@@ -36,9 +74,17 @@ func NewRouter() *Router {
 }
 
 func NewMenu() *Menu {
-	m := &Menu{}
-	m.containerImg = ebiten.NewImage(u.ScreenWidth, 25)
+	menuItems := NewMenuItems()
+	m := &Menu{
+		X:         menuItems[0].bounds.Min.X,
+		Y:         menuItems[0].bounds.Min.Y,
+		W:         u.ScreenWidth,
+		H:         menuItems[0].bounds.Dy() * 3,
+		MenuItems: make([]*MenuItem, 0),
+	}
+	m.containerImg = ebiten.NewImage(m.W, m.H)
 	m.containerImg.Fill(color.NRGBA{R: 255, G: 255, B: 255, A: 255})
+	m.MenuItems = menuItems
 
 	return m
 }
@@ -83,9 +129,19 @@ func (r *Router) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return u.ScreenWidth, u.ScreenHeight
 }
 
+// DrawMenu - draws the menu bar along with the MenuItem elements
 func (r *Router) DrawMenu(screen *ebiten.Image) {
 	opm := &ebiten.DrawImageOptions{}
-	opm.GeoM.Translate(0, 0)
+	opm.GeoM.Translate(float64(r.menu.X), float64(r.menu.Y))
 	screen.DrawImage(r.menu.containerImg, opm)
 
+	r.DrawMenuItems(screen)
+}
+
+func (r *Router) DrawMenuItems(screen *ebiten.Image) {
+	pos := 0
+	for _, mi := range r.menu.MenuItems {
+		text.Draw(screen, mi.name, u.FontFace, 10+pos, mi.bounds.Dy()+6, color.NRGBA{R: 0, G: 0, B: 0, A: 255})
+		pos += mi.bounds.Dx() + 20
+	}
 }

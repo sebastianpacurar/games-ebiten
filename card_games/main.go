@@ -1,18 +1,30 @@
 package main
 
 import (
-	c "games-ebiten/card_games/router"
+	r "games-ebiten/card_games/router"
 	u "games-ebiten/resources/utils"
 	"github.com/hajimehoshi/ebiten/v2"
 	"log"
+	"math/rand"
+	"time"
 )
+
+// init - applies MPlus1pRegular_ttf font
+func init() {
+	u.InitFonts()
+}
+
+// generate random seed
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
 
 func main() {
 	ebiten.SetWindowSize(u.ScreenWidth, u.ScreenHeight)
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
-	ebiten.SetWindowTitle("FreeCell Solitaire")
+	ebiten.SetWindowTitle("Card Games")
 
-	if err := ebiten.RunGame(c.NewRouter()); err != nil {
+	if err := ebiten.RunGame(r.NewRouter()); err != nil {
 		log.Fatal(err)
 	}
 }
