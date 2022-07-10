@@ -1,4 +1,4 @@
-package k_game
+package klondike
 
 import (
 	"games-ebiten/card_games/data"
@@ -130,7 +130,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		g.DrawEnding(screen)
 	}
 	ebitenutil.DebugPrintAt(screen, "Right Click to quick move to Foundations", 10, u.ScreenHeight-95)
-	ebitenutil.DebugPrintAt(screen, "Press F2 to start new Game", 10, u.ScreenHeight-65)
+	ebitenutil.DebugPrintAt(screen, "Press F2 to deal New Game", 10, u.ScreenHeight-65)
 	ebitenutil.DebugPrintAt(screen, "Press 1 or 2 to change Themes", 10, u.ScreenHeight-35)
 }
 

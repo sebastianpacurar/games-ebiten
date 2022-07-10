@@ -1,4 +1,4 @@
-package k_game
+package klondike
 
 import (
 	"games-ebiten/card_games/data"
@@ -436,17 +436,18 @@ func (e *Environment) MoveFromSrcToTarget(src, target interface{}, i, j int) {
 	// move FROM Column
 	case []CardColumn:
 		li := len(e.Columns[i].Cards) - 1
-		switch target.(type) {
 
+		draggedIndex := 0
+		for _, card := range e.Columns[i].Cards {
+			if card.IsDragged() {
+				break
+			}
+			draggedIndex++
+		}
+
+		switch target.(type) {
 		// move TO Column
 		case []CardColumn:
-			draggedIndex := 0
-			for _, card := range e.Columns[i].Cards {
-				if card.IsDragged() {
-					break
-				}
-				draggedIndex++
-			}
 
 			e.Columns[j].Cards = append(e.Columns[j].Cards, e.Columns[i].Cards[draggedIndex:]...)
 			e.Columns[i].Cards = e.Columns[i].Cards[:draggedIndex]
@@ -464,14 +465,16 @@ func (e *Environment) MoveFromSrcToTarget(src, target interface{}, i, j int) {
 
 		// move TO Foundation Pile
 		case []FoundationPile:
-			e.Columns[i].Cards[li].ColNum = 0
-			e.FoundationPiles[j].Cards = append(e.FoundationPiles[j].Cards, e.Columns[i].Cards[li])
-			e.Columns[i].Cards = e.Columns[i].Cards[:li]
+			if draggedIndex == len(e.Columns[i].Cards)-1 {
+				e.Columns[i].Cards[li].ColNum = 0
+				e.FoundationPiles[j].Cards = append(e.FoundationPiles[j].Cards, e.Columns[i].Cards[li])
+				e.Columns[i].Cards = e.Columns[i].Cards[:li]
 
-			// reveal the last card from the source column, and revert its height to original
-			if len(e.Columns[i].Cards) > 0 {
-				e.Columns[i].Cards[li-1].SetRevealedState(true)
-				e.Columns[i].Cards[li-1].H = e.H
+				// reveal the last card from the source column, and revert its height to original
+				if len(e.Columns[i].Cards) > 0 {
+					e.Columns[i].Cards[li-1].SetRevealedState(true)
+					e.Columns[i].Cards[li-1].H = e.H
+				}
 			}
 		}
 

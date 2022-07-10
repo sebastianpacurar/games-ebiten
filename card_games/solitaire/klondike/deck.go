@@ -1,4 +1,4 @@
-package fc_game
+package klondike
 
 import (
 	"games-ebiten/card_games/data"

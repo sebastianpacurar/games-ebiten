@@ -1,4 +1,4 @@
-package fc_game
+package free_cell
 
 import (
 	"games-ebiten/card_games/data"

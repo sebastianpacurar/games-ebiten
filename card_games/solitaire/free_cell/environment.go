@@ -1,4 +1,4 @@
-package fc_game
+package free_cell
 
 import (
 	"games-ebiten/card_games/data"
@@ -271,6 +271,32 @@ func (e *Environment) HandleGameLogic() {
 						}
 					}
 				}
+
+				// drop ON Foundation Pile
+				for j := range e.FoundationPiles {
+					target := e.HitBox(e.FoundationPiles[j])
+
+					if len(e.FoundationPiles[j].Cards) == 0 {
+						if u.IsCollision(source, target) &&
+							inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) &&
+							e.FreeCells[i].Cards[0].Value == data.CardRanks[u.Ace] {
+							e.MoveFromSrcToTarget(e.FreeCells, e.FoundationPiles, i, j)
+							data.DraggedCard = nil
+							return
+						}
+					} else {
+						lj := len(e.FoundationPiles[j].Cards) - 1
+						if u.IsCollision(source, target) &&
+							inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) &&
+							e.FreeCells[i].Cards[0].Value > data.CardRanks[u.Ace] &&
+							e.FreeCells[i].Cards[0].Value == e.FoundationPiles[j].Cards[lj].Value+1 &&
+							e.FreeCells[i].Cards[0].Suit == e.FoundationPiles[j].Cards[lj].Suit {
+							e.MoveFromSrcToTarget(e.Columns, e.FoundationPiles, i, j)
+							data.DraggedCard = nil
+							return
+						}
+					}
+				}
 			}
 		}
 
@@ -345,18 +371,17 @@ func (e *Environment) MoveFromSrcToTarget(src, target interface{}, i, j int) {
 	// move FROM Column
 	case []CardColumn:
 		li := len(e.Columns[i].Cards) - 1
+		draggedIndex := 0
+		for _, card := range e.Columns[i].Cards {
+			if card.IsDragged() {
+				break
+			}
+			draggedIndex++
+		}
 		switch target.(type) {
 
 		// move TO Column
 		case []CardColumn:
-			draggedIndex := 0
-			for _, card := range e.Columns[i].Cards {
-				if card.IsDragged() {
-					break
-				}
-				draggedIndex++
-			}
-
 			e.Columns[j].Cards = append(e.Columns[j].Cards, e.Columns[i].Cards[draggedIndex:]...)
 			e.Columns[i].Cards = e.Columns[i].Cards[:draggedIndex]
 
@@ -373,17 +398,21 @@ func (e *Environment) MoveFromSrcToTarget(src, target interface{}, i, j int) {
 
 		// move TO Foundation Pile
 		case []FoundationPile:
-			e.Columns[i].Cards[li].ColNum = 0
-			e.FoundationPiles[j].Cards = append(e.FoundationPiles[j].Cards, e.Columns[i].Cards[li])
-			e.Columns[i].Cards = e.Columns[i].Cards[:li]
-			e.SetColDraggableCards()
+			if draggedIndex == len(e.Columns[i].Cards)-1 {
+				e.Columns[i].Cards[li].ColNum = 0
+				e.FoundationPiles[j].Cards = append(e.FoundationPiles[j].Cards, e.Columns[i].Cards[li])
+				e.Columns[i].Cards = e.Columns[i].Cards[:li]
+				e.SetColDraggableCards()
+			}
 
 		// move TO Free Cell
 		case []FreeCell:
-			e.Columns[i].Cards[li].ColNum = 0
-			e.FreeCells[j].Cards = append(e.FreeCells[j].Cards, e.Columns[i].Cards[li])
-			e.Columns[i].Cards = e.Columns[i].Cards[:li]
-			e.SetColDraggableCards()
+			if draggedIndex == len(e.Columns[i].Cards)-1 {
+				e.Columns[i].Cards[li].ColNum = 0
+				e.FreeCells[j].Cards = append(e.FreeCells[j].Cards, e.Columns[i].Cards[li])
+				e.Columns[i].Cards = e.Columns[i].Cards[:li]
+				e.SetColDraggableCards()
+			}
 		}
 
 	// move FROM Foundation Pile

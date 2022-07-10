@@ -1,4 +1,4 @@
-package fc_game
+package free_cell
 
 import (
 	"games-ebiten/card_games/data"
@@ -103,14 +103,14 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			}
 		}
 	}
-	ebitenutil.DebugPrintAt(screen, "Right Click to quick move to Foundations", 10, u.ScreenHeight-95)
-	ebitenutil.DebugPrintAt(screen, "Press F2 to start new game", 10, u.ScreenHeight-65)
+
+	//TODO: to implement quick moves from all piles in one go
+	//ebitenutil.DebugPrintAt(screen, "Right Click to quick move to Foundations", 10, u.ScreenHeight-95)
+	ebitenutil.DebugPrintAt(screen, "Press F2 to deal New Game", 10, u.ScreenHeight-65)
 	ebitenutil.DebugPrintAt(screen, "Press 1 or 2 to change Themes", 10, u.ScreenHeight-35)
 }
 
 func (g *Game) Update() error {
-	//cx, cy := ebiten.CursorPosition()
-
 	switch {
 	case inpututil.IsKeyJustReleased(ebiten.Key1):
 		g.Active = u.ClassicTheme
@@ -123,7 +123,6 @@ func (g *Game) Update() error {
 	}
 
 	g.HandleGameLogic()
-
 	return nil
 }
 

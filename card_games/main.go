@@ -1,7 +1,7 @@
 package main
 
 import (
-	"games-ebiten/card_games/solitaire/klondike/k_game"
+	c "games-ebiten/card_games/router"
 	u "games-ebiten/resources/utils"
 	"github.com/hajimehoshi/ebiten/v2"
 	"log"
@@ -10,9 +10,9 @@ import (
 func main() {
 	ebiten.SetWindowSize(u.ScreenWidth, u.ScreenHeight)
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
-	ebiten.SetWindowTitle("Klondike Solitaire")
+	ebiten.SetWindowTitle("FreeCell Solitaire")
 
-	if err := ebiten.RunGame(k_game.NewGame()); err != nil {
+	if err := ebiten.RunGame(c.NewRouter()); err != nil {
 		log.Fatal(err)
 	}
 }

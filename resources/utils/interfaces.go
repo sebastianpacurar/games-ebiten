@@ -14,16 +14,6 @@ type (
 		DrawCard(*ebiten.Image)
 	}
 
-	SolitaireCard interface {
-		IsRevealed() bool      // IsRevealed - returns true if the image is revealed
-		SetRevealedState(bool) // SetRevealedState - sets the Revealed state to the given value
-	}
-
-	FreeCellCard interface {
-		IsDraggable() bool      // IsDraggable - returns true if the card from column is draggable
-		SetDraggableState(bool) // SetDraggableState - sets the Draggable state to the given value
-	}
-
 	MatchIcons interface {
 		HitBox() image.Rectangle // HitBox - returns Min x,y and Max x,y
 		IsRevealed() bool        // IsRevealed - returns true if an icon is revealed
