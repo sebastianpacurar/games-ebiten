@@ -258,16 +258,46 @@ func (e *Environment) HandleGameLogic() {
 				source := e.FreeCells[i].Cards[0].HitBox()
 				// drop ON Column
 				for j := range e.Columns {
-					lj := len(e.Columns[j].Cards) - 1
-					target := e.Columns[j].Cards[lj].HitBox()
 
-					if u.IsCollision(source, target) {
-						if e.FreeCells[i].Cards[0].Value+1 == e.Columns[j].Cards[lj].Value &&
-							e.FreeCells[i].Cards[0].Color != e.Columns[j].Cards[lj].Color &&
-							inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
-							e.MoveFromSrcToTarget(e.FreeCells, e.Columns, i, j, ebiten.MouseButtonLeft)
-							data.DraggedCard = nil
-							return
+					// K card
+					if len(e.Columns[j].Cards) == 0 {
+						if e.FreeCells[i].Cards[0].Value == data.CardRanks[u.King] {
+							target := e.HitBox(e.Columns[j])
+							if u.IsCollision(source, target) &&
+								inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
+								e.MoveFromSrcToTarget(e.FreeCells, e.Columns, i, j, ebiten.MouseButtonLeft)
+								data.DraggedCard = nil
+								return
+							}
+						}
+					} else {
+						// Other cases
+						lj := len(e.Columns[j].Cards) - 1
+						target := e.Columns[j].Cards[lj].HitBox()
+
+						if u.IsCollision(source, target) {
+							if e.FreeCells[i].Cards[0].Value+1 == e.Columns[j].Cards[lj].Value &&
+								e.FreeCells[i].Cards[0].Color != e.Columns[j].Cards[lj].Color &&
+								inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
+								e.MoveFromSrcToTarget(e.FreeCells, e.Columns, i, j, ebiten.MouseButtonLeft)
+								data.DraggedCard = nil
+								return
+							}
+						}
+					}
+				}
+
+				// drop ON Free Cell
+				for j := range e.FreeCells {
+					if i != j {
+						target := e.HitBox(e.FreeCells[j])
+						if u.IsCollision(source, target) {
+							if len(e.FreeCells[j].Cards) == 0 &&
+								inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
+								e.MoveFromSrcToTarget(e.FreeCells, e.FreeCells, i, j, ebiten.MouseButtonLeft)
+								data.DraggedCard = nil
+								return
+							}
 						}
 					}
 				}
@@ -350,26 +380,30 @@ func (e *Environment) HandleGameLogic() {
 func (e *Environment) SetColDraggableCards() {
 	for _, col := range e.Columns {
 		lc := len(col.Cards) - 1
-		// if the first undraggable card is found
-		isFoundAt := -1
+		if lc >= 0 {
+			// if the first undraggable card is found
+			isFoundAt := -1
 
-		// the last card will always be draggable
-		col.Cards[lc].SetDraggableState(true)
+			// the last card will always be draggable
+			col.Cards[lc].SetDraggableState(true)
 
-		for i := lc - 1; i >= 0; i-- {
-			if isFoundAt < 0 {
-				if col.Cards[i].Color != col.Cards[i+1].Color && col.Cards[i].Value-1 == col.Cards[i+1].Value {
-					col.Cards[i].SetDraggableState(true)
-				} else {
-					isFoundAt = i
-					break
+			for i := lc - 1; i >= 0; i-- {
+				if isFoundAt < 0 {
+					if col.Cards[i].Color != col.Cards[i+1].Color && col.Cards[i].Value-1 == col.Cards[i+1].Value {
+						col.Cards[i].SetDraggableState(true)
+					} else {
+						isFoundAt = i
+						break
+					}
 				}
 			}
-		}
 
-		// after the index of first unmatch is found, set all the cards' DraggableState, until that index, to false
-		for _, card := range col.Cards[:isFoundAt] {
-			card.SetDraggableState(false)
+			// after the index of first unmatch is found, set all the cards' DraggableState, until that index, to false
+			if isFoundAt >= 0 {
+				for _, card := range col.Cards[:isFoundAt] {
+					card.SetDraggableState(false)
+				}
+			}
 		}
 	}
 }
@@ -447,14 +481,18 @@ func (e *Environment) MoveFromSrcToTarget(src, target interface{}, i, j int, btn
 	case []FreeCell:
 		switch target.(type) {
 
-		// Move TO Column
+		// move TO Column
 		case []CardColumn:
 			e.FreeCells[i].Cards[0].ColNum = j + 1
 			e.Columns[j].Cards = append(e.Columns[j].Cards, e.FreeCells[i].Cards[0])
 			e.FreeCells[i].Cards = nil
 			e.SetColDraggableCards()
 
-		// Move TO Foundations Pile
+		case []FreeCell:
+			e.FreeCells[j].Cards = append(e.FreeCells[j].Cards, e.FreeCells[i].Cards[0])
+			e.FreeCells[i].Cards = nil
+
+		// move TO Foundations Pile
 		case []FoundationPile:
 			e.FoundationPiles[j].Cards = append(e.FoundationPiles[j].Cards, e.FreeCells[i].Cards[0])
 			e.FreeCells[i].Cards = nil
