@@ -1,15 +1,16 @@
 package klondike
 
 import (
-	"games-ebiten/data"
-	u "games-ebiten/utils"
+	d "games-ebiten/data"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"image"
 	_ "image/png"
 )
 
-// Card - Implements CasinoCards interface
+var CardsVSpacer = 25
+
+// Card
 // RevealedState - if the card's frontFace is visible
 // DraggedState - holds the dragged state
 // ColNum - refers to what column the card is currently in if it's in any column
@@ -51,12 +52,12 @@ func (c *Card) DrawCard(screen *ebiten.Image) {
 		if inpututil.MouseButtonPressDuration(ebiten.MouseButtonLeft) > 3 && c.IsDragged() {
 			c.X = cx - c.W/2
 			c.Y = cy - c.H/2
-			data.DraggedCard = c
+			d.DraggedCard = c
 		}
 
 		if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
 			c.SetDraggedState(false)
-			data.DraggedCard = nil
+			d.DraggedCard = nil
 		}
 	}
 
@@ -82,14 +83,14 @@ func (c *Card) DrawColCard(screen *ebiten.Image, cards []*Card, ci, cx, cy int) 
 
 		// drag the stack of cards, and set the cards' IsActive state to true
 		if inpututil.MouseButtonPressDuration(ebiten.MouseButtonLeft) > 3 && c.IsDragged() {
-			data.DraggedCard = c
+			d.DraggedCard = c
 			c.IsActive = true
 			c.X = cx - c.W/2
 			c.Y = cy - c.H/2
 
 			// if not the last card then height is 35, and c.Y is 35/2
 			if len(cards[ci:]) > 1 && c != cards[len(cards[ci:])-1] {
-				c.H = u.CardsVSpacer
+				c.H = CardsVSpacer
 				c.Y = cy
 			}
 
@@ -102,10 +103,10 @@ func (c *Card) DrawColCard(screen *ebiten.Image, cards []*Card, ci, cx, cy int) 
 			// draw the rest of the cards
 			for i, card := range cards[ci+1:] {
 				if i != len(cards[ci+1:])-1 {
-					card.H = u.CardsVSpacer
+					card.H = CardsVSpacer
 				}
 				card.X = cx - card.W/2
-				card.Y = cy + ((i + 1) * u.CardsVSpacer)
+				card.Y = cy + ((i + 1) * CardsVSpacer)
 				card.IsActive = true
 				opc := &ebiten.DrawImageOptions{}
 				opc.GeoM.Scale(card.ScX, card.ScY)
@@ -118,7 +119,7 @@ func (c *Card) DrawColCard(screen *ebiten.Image, cards []*Card, ci, cx, cy int) 
 		if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
 			c.SetDraggedState(false)
 			c.IsActive = false
-			data.DraggedCard = nil
+			d.DraggedCard = nil
 		}
 	} else {
 		// if card is not revealed, draw back face image

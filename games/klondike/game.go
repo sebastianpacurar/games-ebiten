@@ -1,8 +1,7 @@
 package klondike
 
 import (
-	data "games-ebiten/data"
-	u "games-ebiten/utils"
+	d "games-ebiten/data"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -11,14 +10,14 @@ import (
 
 type (
 	Game struct {
-		*data.Theme
+		*d.Theme
 		*Environment
 	}
 )
 
 func NewGame() *Game {
-	classicImg := ebiten.NewImageFromImage(u.LoadSpriteImage("assets/classic-solitaire.png"))
-	th := data.NewTheme()
+	classicImg := ebiten.NewImageFromImage(d.LoadSpriteImage("assets/classic-solitaire.png"))
+	th := d.NewTheme()
 
 	g := &Game{
 		Theme: th,
@@ -39,7 +38,7 @@ func NewGame() *Game {
 }
 
 // BuildDeck - initiates the Piles and populates them with cards
-func (g *Game) BuildDeck(th *data.Theme) {
+func (g *Game) BuildDeck(th *d.Theme) {
 	g.Deck = GenerateDeck(th)
 	g.UpdateEnv()
 }
@@ -96,11 +95,11 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		for i := range g.Columns {
 			for j, card := range g.Columns[i].Cards {
 				card.X = g.Columns[i].X
-				card.Y = g.Columns[i].Y + (j * u.CardsVSpacer)
+				card.Y = g.Columns[i].Y + (j * CardsVSpacer)
 
 				// draw the overlapped with the height of the space in which the card is visible
 				if j != len(g.Columns[i].Cards)-1 {
-					card.H = u.CardsVSpacer
+					card.H = CardsVSpacer
 				} else {
 					card.H = g.H
 				}
@@ -110,10 +109,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 		// force card or stack of cards image(s) persistence over other cards
 		// practically draw the dragged card again. or draw the entire stack again, at the end
-		if data.DraggedCard != nil {
-			switch data.DraggedCard.(type) {
+		if d.DraggedCard != nil {
+			switch d.DraggedCard.(type) {
 			case *Card:
-				c := data.DraggedCard.(*Card)
+				c := d.DraggedCard.(*Card)
 				if c.ColNum == 0 {
 					opc := &ebiten.DrawImageOptions{}
 					opc.GeoM.Scale(c.ScX, c.ScY)
@@ -129,9 +128,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	} else {
 		g.DrawEnding(screen)
 	}
-	ebitenutil.DebugPrintAt(screen, "Right Click to quick move to Foundations", 10, u.ScreenHeight-95)
-	ebitenutil.DebugPrintAt(screen, "Press F2 to deal New Game", 10, u.ScreenHeight-65)
-	ebitenutil.DebugPrintAt(screen, "Press 1 or 2 to change Themes", 10, u.ScreenHeight-35)
+	ebitenutil.DebugPrintAt(screen, "Right Click to quick move to Foundations", 10, d.ScreenHeight-95)
+	ebitenutil.DebugPrintAt(screen, "Press F2 to deal New Game", 10, d.ScreenHeight-65)
+	ebitenutil.DebugPrintAt(screen, "Press 1 or 2 to change Themes", 10, d.ScreenHeight-35)
 }
 
 func (g *Game) Update() error {
@@ -139,10 +138,10 @@ func (g *Game) Update() error {
 
 	switch {
 	case inpututil.IsKeyJustReleased(ebiten.Key1):
-		g.Active = u.ClassicTheme
+		g.Active = d.ClassicTheme
 		g.BuildDeck(g.Theme)
 	case inpututil.IsKeyJustReleased(ebiten.Key2):
-		g.Active = u.PixelatedTheme
+		g.Active = d.PixelatedTheme
 		g.BuildDeck(g.Theme)
 	case inpututil.IsKeyJustReleased(ebiten.KeyF2):
 		g.BuildDeck(g.Theme)
@@ -156,5 +155,5 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
-	return u.ScreenWidth, u.ScreenHeight
+	return d.ScreenWidth, d.ScreenHeight
 }

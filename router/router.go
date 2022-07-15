@@ -1,9 +1,9 @@
 package router
 
 import (
+	d "games-ebiten/data"
 	"games-ebiten/games/free_cell"
 	"games-ebiten/games/klondike"
-	u "games-ebiten/utils"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -41,7 +41,7 @@ func (r *Router) Draw(screen *ebiten.Image) {
 
 	r.DrawMenu(screen)
 
-	ebitenutil.DebugPrintAt(screen, "Press K for classic version and F for Free Cell", 10, u.ScreenHeight-135)
+	ebitenutil.DebugPrintAt(screen, "Press K for classic version and F for Free Cell", 10, d.ScreenHeight-135)
 }
 
 func (r *Router) Update() error {
@@ -87,5 +87,5 @@ func (r *Router) Update() error {
 }
 
 func (r *Router) Layout(outsideWidth, outsideHeight int) (int, int) {
-	return u.ScreenWidth, u.ScreenHeight
+	return d.ScreenWidth, d.ScreenHeight
 }

@@ -1,8 +1,8 @@
 package main
 
 import (
+	u "games-ebiten/data"
 	r "games-ebiten/router"
-	u "games-ebiten/utils"
 	"github.com/hajimehoshi/ebiten/v2"
 	"log"
 	"math/rand"

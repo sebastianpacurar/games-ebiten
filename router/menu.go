@@ -1,7 +1,7 @@
 package router
 
 import (
-	u "games-ebiten/utils"
+	u "games-ebiten/data"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text"
 	"image"
@@ -11,6 +11,7 @@ import (
 const (
 	Padding     = 10
 	ItemPadding = 15
+	Border      = 1
 )
 
 // Menu - global menu which overlaps all game screens.
@@ -29,6 +30,7 @@ type MenuItem struct {
 	TxtBounds  image.Rectangle
 	TxtColor   color.NRGBA
 	Options    []*Option
+	dropArea   image.Rectangle
 }
 
 // Option - serves as the selected or available MenuItem option
@@ -36,6 +38,7 @@ type Option struct {
 	X, Y, W, H int
 	TxtBounds  image.Rectangle
 	Img        *ebiten.Image
+	OptColor   color.NRGBA
 	Name       string
 	Active     bool
 }
@@ -67,7 +70,7 @@ func NewMenu() *Menu {
 		H: mis[0].TxtBounds.Dy() + Padding*2,
 	}
 	m.ContainerImage = ebiten.NewImage(m.W, m.H)
-	m.ContainerImage.Fill(color.NRGBA{R: 255, G: 255, B: 255, A: 255})
+	m.ContainerImage.Fill(u.White)
 
 	m.MenuItems = mis
 
@@ -82,17 +85,23 @@ func NewMenu() *Menu {
 		mi.W = mi.TxtBounds.Dx()
 		mi.H = m.H
 
-		mi.TxtColor = color.NRGBA{R: 0, G: 0, B: 0, A: 255}
+		mi.TxtColor = u.Black
 		mi.Img = ebiten.NewImage(mi.W, mi.H)
 
 		// set item option HitBox
 		for j, op := range mi.Options {
 			op.X = mi.X
-			op.Y = mi.H * (j + 1)
+			op.Y = mi.H*(j+1) + Border
 			op.W = mi.W * 2
 			op.H = mi.H
 
+			mi.dropArea.Min.X = mi.X
+			mi.dropArea.Min.Y = mi.H + Border
+			mi.dropArea.Max.X = mi.W * 2
+			mi.dropArea.Max.Y += op.Y
+
 			op.Img = ebiten.NewImage(op.W, op.H)
+			op.Img.Fill(u.White)
 		}
 	}
 
@@ -100,12 +109,12 @@ func NewMenu() *Menu {
 }
 
 // DrawMenu - draws the menu bar along with the MenuItem elements
-func (r *Router) DrawMenu(screen *ebiten.Image) {
+func (m *Menu) DrawMenu(screen *ebiten.Image) {
 	opm := &ebiten.DrawImageOptions{}
-	opm.GeoM.Translate(float64(r.Menu.X), float64(r.Menu.Y))
-	screen.DrawImage(r.Menu.ContainerImage, opm)
+	opm.GeoM.Translate(float64(m.X), float64(m.Y))
+	screen.DrawImage(m.ContainerImage, opm)
 
-	r.DrawMenuItems(screen)
+	m.DrawMenuItems(screen)
 }
 
 func (m *Menu) DrawMenuItems(screen *ebiten.Image) {
@@ -122,16 +131,25 @@ func (m *Menu) DrawMenuItems(screen *ebiten.Image) {
 		// TODO: finish, and add borders
 		// draw the MenuItem dropdown
 		if mi.IsDropped {
+			x, y := float64(mi.dropArea.Min.X), float64(mi.dropArea.Min.Y)
+			border := ebiten.NewImage(mi.dropArea.Dx(), mi.dropArea.Dy())
+
+			// draw border
+			opb := &ebiten.DrawImageOptions{}
+			opb.GeoM.Translate(x, y)
+			border.Fill(u.Black)
+			screen.DrawImage(border, opb)
+
 			for oi, opt := range mi.Options {
 				opo := &ebiten.DrawImageOptions{}
 				opo.GeoM.Translate(float64(opt.X), float64(opt.Y))
-				opt.Img.Fill(color.NRGBA{R: 255, G: 255, B: 255, A: 255})
+				opt.Img.Fill(u.White)
 
 				txtX := opt.X + Padding
-				txtY := (opt.TxtBounds.Dy() + ItemPadding) * (oi + 2)
+				txtY := (opt.TxtBounds.Dy()+ItemPadding)*(oi+2) + Border
 
 				screen.DrawImage(opt.Img, opo)
-				text.Draw(screen, opt.Name, u.FontFace, txtX, txtY, color.NRGBA{R: 0, G: 0, B: 0, A: 255})
+				text.Draw(screen, opt.Name, u.FontFace, txtX, txtY, u.Black)
 			}
 		}
 	}

@@ -1,4 +1,4 @@
-package utils
+package data
 
 import (
 	"bytes"
@@ -6,6 +6,7 @@ import (
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/opentype"
 	"image"
+	"image/color"
 	"io/ioutil"
 	"log"
 )
@@ -34,18 +35,21 @@ const (
 	Queen = "Q"
 	King  = "K"
 
-	Red   = "Red"
-	Black = "Black"
+	RED   = "Black"
+	BLACK = "Red"
 
 	ClassicTheme   = "classic"
 	PixelatedTheme = "8bit"
 
 	StaticBack1 = "StaticBack1"
-
-	CardsVSpacer = 25
 )
 
-var FontFace font.Face
+var (
+	DraggedCard interface{}
+	FontFace    font.Face
+	Black       = color.NRGBA{R: 0, G: 0, B: 0, A: 255}
+	White       = color.NRGBA{R: 255, G: 255, B: 255, A: 255}
+)
 
 func InitFonts() {
 	tt, err := opentype.Parse(fonts.MPlus1pRegular_ttf)

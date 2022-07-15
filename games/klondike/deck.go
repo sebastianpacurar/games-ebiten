@@ -1,22 +1,21 @@
 package klondike
 
 import (
-	"games-ebiten/data"
-	u "games-ebiten/utils"
+	d "games-ebiten/data"
 	"github.com/hajimehoshi/ebiten/v2"
 	"image"
 	"math/rand"
 )
 
 // GenerateDeck - returns a []*Card{} in which all elements have the corresponding details and images
-func GenerateDeck(th *data.Theme) []*Card {
+func GenerateDeck(th *d.Theme) []*Card {
 	var colStart, colEnd int
 	deck := make([]*Card, 0, 52)
 
 	cardSc := th.CardScaleValue[th.Active]
 
 	// set which BackFace the cards have (FrOX, FRoY, FrW, FrH)
-	bf := th.GetBackFrameGeomData(th.Active, u.StaticBack1)
+	bf := th.GetBackFrameGeomData(th.Active, d.StaticBack1)
 
 	// set which FrontFace the cards have
 	frame := th.GetFrontFrameGeomData(th.Active)
@@ -24,10 +23,10 @@ func GenerateDeck(th *data.Theme) []*Card {
 	// this logic is needed due to the discrepancy between sprite sheets:
 	// one Image starts with card Ace as the first Column value, while others start with card number or other value
 	switch th.Active {
-	case u.PixelatedTheme:
+	case d.PixelatedTheme:
 		colStart = 1
 		colEnd = 14
-	case u.ClassicTheme:
+	case d.ClassicTheme:
 		colStart = 0
 		colEnd = 13
 	}
@@ -36,10 +35,10 @@ func GenerateDeck(th *data.Theme) []*Card {
 	for si, suit := range th.SuitsOrder[th.Active] {
 		color := ""
 		switch suit {
-		case u.Hearts, u.Diamonds:
-			color = u.Red
-		case u.Spades, u.Clubs:
-			color = u.Black
+		case d.Hearts, d.Diamonds:
+			color = d.RED
+		case d.Spades, d.Clubs:
+			color = d.BLACK
 		}
 
 		for i := colStart; i < colEnd; i++ {
@@ -51,12 +50,12 @@ func GenerateDeck(th *data.Theme) []*Card {
 				Img:     th.Sources[th.Active].SubImage(image.Rect(x, y, x+w, y+h)).(*ebiten.Image),
 				BackImg: th.Sources[th.Active].SubImage(image.Rect(bf[0], bf[1], bf[2]+bf[0], bf[3]+bf[1])).(*ebiten.Image),
 				Suit:    suit,
-				Value:   data.CardRanks[data.Translation[th.Active][i]],
+				Value:   d.CardRanks[d.Translation[th.Active][i]],
 				Color:   color,
-				ScX:     cardSc[u.X],
-				ScY:     cardSc[u.Y],
-				W:       int(float64(w) * cardSc[u.X]),
-				H:       int(float64(h) * cardSc[u.Y]),
+				ScX:     cardSc[d.X],
+				ScY:     cardSc[d.Y],
+				W:       int(float64(w) * cardSc[d.X]),
+				H:       int(float64(h) * cardSc[d.Y]),
 			}
 
 			// append every customized card to the deck
