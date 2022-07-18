@@ -1,7 +1,7 @@
 package free_cell
 
 import (
-	d "games-ebiten/resources"
+	res "games-ebiten/resources"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"image"
@@ -36,20 +36,20 @@ func (c *Card) DrawCard(screen *ebiten.Image) {
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Scale(c.ScX, c.ScY)
 
-	if c.IsHovered(cx, cy) && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
-		c.SetDraggedState(true)
+	if c.Hovered(cx, cy) && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		c.SetDragged(true)
 	}
 
 	// drag and set location
-	if inpututil.MouseButtonPressDuration(ebiten.MouseButtonLeft) > 3 && c.IsDragged() {
+	if inpututil.MouseButtonPressDuration(ebiten.MouseButtonLeft) > 3 && c.Dragged() {
 		c.X = cx - c.W/2
 		c.Y = cy - c.H/2
-		d.DraggedCard = c
+		res.DraggedCard = c
 	}
 
 	if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
-		c.SetDraggedState(false)
-		d.DraggedCard = nil
+		c.SetDragged(false)
+		res.DraggedCard = nil
 	}
 
 	op.GeoM.Translate(float64(c.X), float64(c.Y))
@@ -63,13 +63,13 @@ func (c *Card) DrawCard(screen *ebiten.Image) {
 func (c *Card) DrawColCard(screen *ebiten.Image, cards []*Card, ci, cx, cy int) {
 
 	// set the clicked card's drag status to true
-	if c.IsHovered(cx, cy) && c.IsDraggable() && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
-		c.SetDraggedState(true)
+	if c.Hovered(cx, cy) && c.IsDraggable() && inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		c.SetDragged(true)
 	}
 
 	// drag the stack of cards, and set the cards' IsActive state to true
-	if inpututil.MouseButtonPressDuration(ebiten.MouseButtonLeft) > 3 && c.IsDragged() {
-		d.DraggedCard = c
+	if inpututil.MouseButtonPressDuration(ebiten.MouseButtonLeft) > 3 && c.Dragged() {
+		res.DraggedCard = c
 		c.IsActive = true
 		c.X = cx - c.W/2
 		c.Y = cy - c.H/2
@@ -103,9 +103,9 @@ func (c *Card) DrawColCard(screen *ebiten.Image, cards []*Card, ci, cx, cy int) 
 
 	// upon release, set dragged and active states to false
 	if inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
-		c.SetDraggedState(false)
+		c.SetDragged(false)
 		c.IsActive = false
-		d.DraggedCard = nil
+		res.DraggedCard = nil
 	}
 
 	// draw the cards below the Dragged Card
@@ -117,11 +117,11 @@ func (c *Card) DrawColCard(screen *ebiten.Image, cards []*Card, ci, cx, cy int) 
 	}
 }
 
-func (c *Card) IsDragged() bool {
+func (c *Card) Dragged() bool {
 	return c.DraggedState
 }
 
-func (c *Card) SetDraggedState(state bool) {
+func (c *Card) SetDragged(state bool) {
 	c.DraggedState = state
 }
 
@@ -134,7 +134,7 @@ func (c *Card) SetDraggableState(state bool) {
 }
 
 // IsHovered - Returns true if the card is hovered
-func (c *Card) IsHovered(cx, cy int) bool {
+func (c *Card) Hovered(cx, cy int) bool {
 	return image.Pt(cx, cy).In(c.HitBox())
 }
 

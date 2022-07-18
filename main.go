@@ -1,7 +1,7 @@
 package main
 
 import (
-	u "games-ebiten/resources"
+	res "games-ebiten/resources"
 	r "games-ebiten/router"
 	"github.com/hajimehoshi/ebiten/v2"
 	"log"
@@ -11,7 +11,7 @@ import (
 
 // init - applies MPlus1pRegular_ttf font
 func init() {
-	u.InitFonts()
+	res.InitFonts()
 }
 
 // generate random seed
@@ -20,9 +20,9 @@ func init() {
 }
 
 func main() {
-	ebiten.SetWindowSize(u.ScreenWidth, u.ScreenHeight)
+	ebiten.SetWindowSize(res.ScreenWidth, res.ScreenHeight)
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
-	ebiten.SetWindowTitle("Card Games")
+	ebiten.SetWindowTitle("Games")
 
 	if err := ebiten.RunGame(r.NewRouter()); err != nil {
 		log.Fatal(err)

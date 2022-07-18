@@ -2,7 +2,7 @@ package animation_movement
 
 import (
 	"fmt"
-	u "games-ebiten/resources"
+	res "games-ebiten/resources"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	_ "image/png"
@@ -16,24 +16,24 @@ type Game struct {
 }
 
 func NewGame() *Game {
-	playerLocX := u.ScreenWidth/2 - PlayerFrameWidth/2
-	playerLocY := u.ScreenHeight/2 - PlayerFrameHeight/2
+	playerLocX := res.ScreenWidth/2 - PlayerFrameWidth/2
+	playerLocY := res.ScreenHeight/2 - PlayerFrameHeight/2
 	npcLocations := make(map[string][]int)
 
 	// generate the random location (x, y) for every NP
 	for i := 1; i <= 5; i++ {
 		npcTag := fmt.Sprintf("npc%d", i)
 		if _, ok := npcLocations[npcTag]; !ok {
-			x, y := u.GenerateRandomPosition(0, 0, u.ScreenWidth-NPCFrameWidth, u.ScreenHeight-NPCFrameHeight)
+			x, y := res.GenerateRandomPosition(0, 0, res.ScreenWidth-NPCFrameWidth, res.ScreenHeight-NPCFrameHeight)
 			npcLocations[npcTag] = []int{x, y}
 		}
 	}
-	ItemLocX, ItemLocY := u.GenerateRandomPosition(0, 0, u.ScreenWidth-ItemFrameWidth, u.ScreenHeight-ItemFrameHeight)
+	ItemLocX, ItemLocY := res.GenerateRandomPosition(0, 0, res.ScreenWidth-ItemFrameWidth, res.ScreenHeight-ItemFrameHeight)
 
 	return &Game{
 		Players: []*Player{
 			{
-				Img:       ebiten.NewImageFromImage(u.LoadSpriteImage("resources/assets/misc/character1.png")),
+				Img:       ebiten.NewImageFromImage(res.LoadSpriteImage("resources/assets/misc/character1.png")),
 				Tag:       Player1,
 				W:         PlayerFrameWidth * PlayerScX,
 				H:         PlayerFrameHeight * PlayerScY,
@@ -45,7 +45,7 @@ func NewGame() *Game {
 		},
 		Items: []*Item{
 			{
-				Img: ebiten.NewImageFromImage(u.LoadSpriteImage("resources/assets/misc/food.png")),
+				Img: ebiten.NewImageFromImage(res.LoadSpriteImage("resources/assets/misc/food.png")),
 				W:   int(math.Floor(ItemFrameWidth) * ItemScale),
 				H:   int(math.Floor(ItemFrameHeight) * ItemScale),
 				X:   ItemLocX,
@@ -54,7 +54,7 @@ func NewGame() *Game {
 		},
 		NPCs: []*NPC{
 			{
-				Img:           ebiten.NewImageFromImage(u.LoadSpriteImage("resources/assets/misc/character2.png")),
+				Img:           ebiten.NewImageFromImage(res.LoadSpriteImage("resources/assets/misc/character2.png")),
 				Name:          "npc1",
 				W:             int(math.Floor(NPCFrameWidth) * NPCScX),
 				H:             int(math.Floor(NPCFrameHeight) * NPCScY),
@@ -65,7 +65,7 @@ func NewGame() *Game {
 				FrTimingLimit: 45,
 			},
 			{
-				Img:           ebiten.NewImageFromImage(u.LoadSpriteImage("resources/assets/misc/character3.png")),
+				Img:           ebiten.NewImageFromImage(res.LoadSpriteImage("resources/assets/misc/character3.png")),
 				Name:          "npc2",
 				W:             int(math.Floor(NPCFrameWidth) * NPCScX),
 				H:             int(math.Floor(NPCFrameHeight) * NPCScY),
@@ -76,7 +76,7 @@ func NewGame() *Game {
 				FrTimingLimit: 45,
 			},
 			{
-				Img:           ebiten.NewImageFromImage(u.LoadSpriteImage("resources/assets/misc/character4.png")),
+				Img:           ebiten.NewImageFromImage(res.LoadSpriteImage("resources/assets/misc/character4.png")),
 				Name:          "npc3",
 				W:             int(math.Floor(NPCFrameWidth) * NPCScX),
 				H:             int(math.Floor(NPCFrameHeight) * NPCScY),
@@ -92,11 +92,11 @@ func NewGame() *Game {
 
 func (g *Game) Update() error {
 	for _, p := range g.Players {
-		p.HandleMovement(0, 0, u.ScreenWidth, u.ScreenHeight)
+		p.HandleMovement(0, 0, res.ScreenWidth, res.ScreenHeight)
 	}
 
 	for _, npc := range g.NPCs {
-		npc.Move(0, 0, u.ScreenWidth, u.ScreenHeight)
+		npc.Move(0, 0, res.ScreenWidth, res.ScreenHeight)
 	}
 
 	// player1 speed up
@@ -108,14 +108,14 @@ func (g *Game) Update() error {
 
 	// update the Item state if any NPC collides with Item shape
 	for _, npc := range g.NPCs {
-		if u.IsCollision(npc.HitBox(), g.Items[0].HitBox()) {
+		if res.IsCollision(npc.HitBox(), g.Items[0].HitBox()) {
 			g.Items[0].UpdateItemState()
 		}
 	}
 
 	// update the Item state if the player and Item shape areas overlap
 	for _, p := range g.Players {
-		if u.IsCollision(p.HitBox(), g.Items[0].HitBox()) {
+		if res.IsCollision(p.HitBox(), g.Items[0].HitBox()) {
 			g.Items[0].UpdateItemState()
 		}
 	}
@@ -126,7 +126,7 @@ func (g *Game) Update() error {
 func (g *Game) Draw(screen *ebiten.Image) {
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Scale(5, 4)
-	screen.DrawImage(ebiten.NewImageFromImage(u.LoadSpriteImage("resources/assets/misc/bg-grass.png")), op)
+	screen.DrawImage(ebiten.NewImageFromImage(res.LoadSpriteImage("resources/assets/misc/bg-grass.png")), op)
 
 	for _, p := range g.Players {
 		p.DrawInteractiveSprite(screen)
@@ -140,10 +140,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		i.DrawStaticSprite(screen)
 	}
 
-	ebitenutil.DebugPrintAt(screen, "W A S D to move", 0, 0)
-	ebitenutil.DebugPrintAt(screen, "LEFT SHIFT to speed up", 0, 25)
+	ebitenutil.DebugPrintAt(screen, "W A S D to move", res.ScreenWidth/1.5, res.ScreenHeight-65)
+	ebitenutil.DebugPrintAt(screen, "LEFT SHIFT to speed up", res.ScreenWidth/1.5, res.ScreenHeight-35)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
-	return u.ScreenWidth, u.ScreenHeight
+	return res.ScreenWidth, res.ScreenHeight
 }

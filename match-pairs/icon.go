@@ -18,18 +18,18 @@ func (ic *Icon) DrawIcon(screen *ebiten.Image) {
 	img := ic.Img
 
 	// if the image is hidden
-	if !ic.IsRevealed() {
+	if !ic.Revealed() {
 		img = ebiten.NewImage(img.Size())
 		img.Fill(color.NRGBA{R: 120, G: 175, B: 175, A: 255})
 	}
-	if ic.IsRemoved() {
+	if ic.Removed() {
 		img = ebiten.NewImage(img.Size())
 		img.Fill(color.NRGBA{R: 240, G: 240, B: 240, A: 255})
 	}
 
 	// sprite image
 	opi := &ebiten.DrawImageOptions{}
-	if !ic.IsRemoved() {
+	if !ic.Removed() {
 		opi.GeoM.Scale(ScX, ScY)
 		opi.GeoM.Translate(float64(ic.X), float64(ic.Y))
 	} else {
@@ -40,19 +40,19 @@ func (ic *Icon) DrawIcon(screen *ebiten.Image) {
 	screen.DrawImage(img, opi)
 }
 
-func (ic *Icon) IsRevealed() bool {
+func (ic *Icon) Revealed() bool {
 	return ic.RevealedState
 }
 
-func (ic *Icon) IsRemoved() bool {
+func (ic *Icon) Removed() bool {
 	return ic.RemovedState
 }
 
-func (ic *Icon) SetRevealedState(val bool) {
+func (ic *Icon) SetRevealed(val bool) {
 	ic.RevealedState = val
 }
 
-func (ic *Icon) SetRemovedState(val bool) {
+func (ic *Icon) SetRemoved(val bool) {
 	ic.RemovedState = val
 }
 

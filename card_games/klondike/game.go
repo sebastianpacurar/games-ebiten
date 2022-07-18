@@ -1,8 +1,8 @@
 package klondike
 
 import (
-	d "games-ebiten/card_games"
-	"games-ebiten/resources"
+	data "games-ebiten/card_games"
+	res "games-ebiten/resources"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -11,14 +11,14 @@ import (
 
 type (
 	Game struct {
-		*d.Theme
+		*data.Theme
 		*Environment
 	}
 )
 
 func NewGame() *Game {
-	classicImg := ebiten.NewImageFromImage(resources.LoadSpriteImage("resources/assets/cards/classic-solitaire.png"))
-	th := d.NewTheme()
+	classicImg := ebiten.NewImageFromImage(res.LoadSpriteImage("resources/assets/cards/classic-solitaire.png"))
+	th := data.NewTheme()
 
 	g := &Game{
 		Theme: th,
@@ -39,7 +39,7 @@ func NewGame() *Game {
 }
 
 // BuildDeck - initiates the Piles and populates them with cards
-func (g *Game) BuildDeck(th *d.Theme) {
+func (g *Game) BuildDeck(th *data.Theme) {
 	g.Deck = GenerateDeck(th)
 	g.UpdateEnv()
 }
@@ -68,8 +68,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			c.SetRevealedState(true)
 
 			// draw the prior card as revealed when the current card is dragged
-			if i > 0 && g.WastePile.Cards[i].IsDragged() {
-				g.WastePile.Cards[i-1].SetDraggedState(false)
+			if i > 0 && g.WastePile.Cards[i].Dragged() {
+				g.WastePile.Cards[i-1].SetDragged(false)
 				g.WastePile.Cards[i-1].DrawCard(screen)
 			}
 			c.DrawCard(screen)
@@ -83,8 +83,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 				g.FoundationPiles[i].Cards[j].H = g.H
 
 				// draw the prior card as revealed when the current card is dragged
-				if j > 0 && g.FoundationPiles[i].Cards[j].IsDragged() {
-					g.FoundationPiles[i].Cards[j-1].SetDraggedState(false)
+				if j > 0 && g.FoundationPiles[i].Cards[j].Dragged() {
+					g.FoundationPiles[i].Cards[j-1].SetDragged(false)
 					g.FoundationPiles[i].Cards[j-1].DrawCard(screen)
 				}
 
@@ -110,10 +110,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 		// force card or stack of cards image(s) persistence over other cards
 		// practically draw the dragged card again. or draw the entire stack again, at the end
-		if resources.DraggedCard != nil {
-			switch resources.DraggedCard.(type) {
+		if res.DraggedCard != nil {
+			switch res.DraggedCard.(type) {
 			case *Card:
-				c := resources.DraggedCard.(*Card)
+				c := res.DraggedCard.(*Card)
 				if c.ColNum == 0 {
 					opc := &ebiten.DrawImageOptions{}
 					opc.GeoM.Scale(c.ScX, c.ScY)
@@ -129,9 +129,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	} else {
 		g.DrawEnding(screen)
 	}
-	ebitenutil.DebugPrintAt(screen, "Right Click to quick move to Foundations", resources.ScreenWidth/2, resources.ScreenHeight-95)
-	ebitenutil.DebugPrintAt(screen, "Press R to deal New Game", resources.ScreenWidth/2, resources.ScreenHeight-65)
-	ebitenutil.DebugPrintAt(screen, "Press Q or W to change Themes", resources.ScreenWidth/2, resources.ScreenHeight-35)
+	ebitenutil.DebugPrintAt(screen, "Right Click to quick move to Foundations", res.ScreenWidth/1.5, res.ScreenHeight-95)
+	ebitenutil.DebugPrintAt(screen, "Press R to deal New Game", res.ScreenWidth/1.5, res.ScreenHeight-65)
+	ebitenutil.DebugPrintAt(screen, "Press Q or W to change Themes", res.ScreenWidth/1.5, res.ScreenHeight-35)
 
 }
 
@@ -140,10 +140,10 @@ func (g *Game) Update() error {
 
 	switch {
 	case inpututil.IsKeyJustReleased(ebiten.KeyQ):
-		g.Active = resources.ClassicTheme
+		g.Active = res.ClassicTheme
 		g.BuildDeck(g.Theme)
 	case inpututil.IsKeyJustReleased(ebiten.KeyW):
-		g.Active = resources.PixelatedTheme
+		g.Active = res.PixelatedTheme
 		g.BuildDeck(g.Theme)
 	case inpututil.IsKeyJustReleased(ebiten.KeyR):
 		g.BuildDeck(g.Theme)
@@ -157,5 +157,5 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
-	return resources.ScreenWidth, resources.ScreenHeight
+	return res.ScreenWidth, res.ScreenHeight
 }

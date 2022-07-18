@@ -1,11 +1,10 @@
 package animation_movement
 
 import (
-	u "games-ebiten/resources"
+	res "games-ebiten/resources"
 	"github.com/hajimehoshi/ebiten/v2"
 	"image"
 	"math/rand"
-	"time"
 )
 
 const (
@@ -39,17 +38,17 @@ func (npc *NPC) HitBox() image.Rectangle {
 }
 
 func (npc *NPC) SetLocation(axis string, val int) {
-	if axis == u.X {
+	if axis == res.X {
 		npc.X = val
-	} else if axis == u.Y {
+	} else if axis == res.Y {
 		npc.Y = val
 	}
 }
 
 func (npc *NPC) SetDelta(axis string, val float64) {
-	if axis == u.X {
+	if axis == res.X {
 		npc.VX = val
-	} else if axis == u.Y {
+	} else if axis == res.Y {
 		npc.VY = val
 	}
 }
@@ -108,7 +107,6 @@ func (npc *NPC) Move(minX, maxX, minY, maxY int) {
 			npc.IsMoving = true
 			npc.IsNearMargin = false
 		} else {
-			rand.Seed(time.Now().UnixNano())
 			npc.Direction = rand.Intn(4)
 		}
 	}

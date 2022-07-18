@@ -1,7 +1,7 @@
 package animation_movement
 
 import (
-	u "games-ebiten/resources"
+	res "games-ebiten/resources"
 	"github.com/hajimehoshi/ebiten/v2"
 	"image"
 )
@@ -27,9 +27,9 @@ func (i *Item) HitBox() image.Rectangle {
 }
 
 func (i *Item) SetLocation(axis string, val int) {
-	if axis == u.X {
+	if axis == res.X {
 		i.X = val
-	} else if axis == u.Y {
+	} else if axis == res.Y {
 		i.Y = val
 	}
 }
@@ -45,7 +45,7 @@ func (i *Item) DrawStaticSprite(screen *ebiten.Image) {
 
 // UpdateItemState - mainly used to update location and sub image after every collision with the player or NPCs
 func (i *Item) UpdateItemState() {
-	i.X, i.Y = u.GenerateRandomPosition(0, 0, u.ScreenWidth-ItemFrameWidth, u.ScreenHeight-ItemFrameHeight)
+	i.X, i.Y = res.GenerateRandomPosition(0, 0, res.ScreenWidth-ItemFrameWidth, res.ScreenHeight-ItemFrameHeight)
 	i.ImgCount++
 
 	if i.RowCount == 2 && i.ImgCount == 6 {

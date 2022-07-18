@@ -1,7 +1,7 @@
 package animation_movement
 
 import (
-	u "games-ebiten/resources"
+	res "games-ebiten/resources"
 	"github.com/hajimehoshi/ebiten/v2"
 	"image"
 )
@@ -38,17 +38,17 @@ func (p *Player) HitBox() image.Rectangle {
 }
 
 func (p *Player) SetLocation(axis string, val int) {
-	if axis == u.X {
+	if axis == res.X {
 		p.X = val
-	} else if axis == u.Y {
+	} else if axis == res.Y {
 		p.Y = val
 	}
 }
 
 func (p *Player) SetDelta(axis string, val float64) {
-	if axis == u.X {
+	if axis == res.X {
 		p.VX = val
-	} else if axis == u.Y {
+	} else if axis == res.Y {
 		p.VY = val
 	}
 }
@@ -135,5 +135,5 @@ func (p *Player) HandleMovement(minX, minY, maxX, maxY int) {
 	p.X += int(p.VX)
 	p.Y += int(p.VY)
 
-	u.BoundaryValidation(p, minX, maxX, minY, maxY)
+	res.BoundaryValidation(p, minX, maxX, minY, maxY)
 }

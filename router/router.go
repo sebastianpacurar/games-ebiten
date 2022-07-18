@@ -7,6 +7,7 @@ import (
 	"games-ebiten/match-pairs"
 	res "games-ebiten/resources"
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"image"
 )
@@ -14,24 +15,15 @@ import (
 // Router - responsible with the game states. used to navigate between games
 // Active - refers to the current game
 type Router struct {
-	Active       interface{}
-	freeCell     free_cell.Game
-	klondike     klondike.Game
-	matchPairs   match_pairs.Game
-	animMovement animation_movement.Game
+	Active interface{}
 	*Menu
 }
 
 func NewRouter() *Router {
-	r := &Router{
-		Menu:         NewMenu(),
-		freeCell:     *free_cell.NewGame(),
-		klondike:     *klondike.NewGame(),
-		matchPairs:   *match_pairs.NewGame(),
-		animMovement: *animation_movement.NewGame(),
+	return &Router{
+		Menu:   NewMenu(),
+		Active: *free_cell.NewGame(),
 	}
-	r.Active = r.freeCell
-	return r
 }
 
 func (r *Router) Draw(screen *ebiten.Image) {
@@ -43,6 +35,7 @@ func (r *Router) Draw(screen *ebiten.Image) {
 		g := r.Active.(klondike.Game)
 		g.Draw(screen)
 	case match_pairs.Game:
+		ebiten.SetMaxTPS(60)
 		g := r.Active.(match_pairs.Game)
 		g.Draw(screen)
 	case animation_movement.Game:
@@ -51,6 +44,10 @@ func (r *Router) Draw(screen *ebiten.Image) {
 	}
 
 	r.DrawMenu(screen)
+	ebitenutil.DebugPrintAt(screen, "Press 1 - Free Cell", 10, res.ScreenHeight-125)
+	ebitenutil.DebugPrintAt(screen, "Press 2 - Klondike Solitaire", 10, res.ScreenHeight-95)
+	ebitenutil.DebugPrintAt(screen, "Press 3 - Match Pairs (currently broken)", 10, res.ScreenHeight-65)
+	ebitenutil.DebugPrintAt(screen, "Press 4 - Animation Movement", 10, res.ScreenHeight-35)
 }
 
 func (r *Router) Update() error {
@@ -59,13 +56,17 @@ func (r *Router) Update() error {
 
 	switch {
 	case inpututil.IsKeyJustReleased(ebiten.Key1):
-		r.Active = r.freeCell
+		ebiten.SetMaxTPS(60)
+		r.Active = *free_cell.NewGame()
 	case inpututil.IsKeyJustReleased(ebiten.Key2):
-		r.Active = r.klondike
+		ebiten.SetMaxTPS(60)
+		r.Active = *klondike.NewGame()
 	case inpututil.IsKeyJustReleased(ebiten.Key3):
-		r.Active = r.matchPairs
+		ebiten.SetMaxTPS(60)
+		r.Active = *match_pairs.NewGame()
 	case inpututil.IsKeyJustReleased(ebiten.Key4):
-		r.Active = r.animMovement
+		ebiten.SetMaxTPS(40)
+		r.Active = *animation_movement.NewGame()
 	}
 
 	switch r.Active.(type) {

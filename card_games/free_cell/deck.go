@@ -1,22 +1,22 @@
 package free_cell
 
 import (
-	d "games-ebiten/card_games"
-	"games-ebiten/resources"
+	data "games-ebiten/card_games"
+	res "games-ebiten/resources"
 	"github.com/hajimehoshi/ebiten/v2"
 	"image"
 	"math/rand"
 )
 
 // GenerateDeck - returns a []*Card{} in which all elements have the corresponding details and images
-func GenerateDeck(th *d.Theme) []*Card {
+func GenerateDeck(th *data.Theme) []*Card {
 	var colStart, colEnd int
 	deck := make([]*Card, 0, 52)
 
 	cardSc := th.CardScaleValue[th.Active]
 
 	// set which BackFace the cards have (FrOX, FRoY, FrW, FrH)
-	bf := th.GetBackFrameGeomData(th.Active, resources.StaticBack1)
+	bf := th.GetBackFrameGeomData(th.Active, res.StaticBack1)
 
 	// set which FrontFace the cards have
 	frame := th.GetFrontFrameGeomData(th.Active)
@@ -24,10 +24,10 @@ func GenerateDeck(th *d.Theme) []*Card {
 	// this logic is needed due to the discrepancy between sprite sheets:
 	// one Image starts with card Ace as the first Column value, while others start with card number or other value
 	switch th.Active {
-	case resources.PixelatedTheme:
+	case res.PixelatedTheme:
 		colStart = 1
 		colEnd = 14
-	case resources.ClassicTheme:
+	case res.ClassicTheme:
 		colStart = 0
 		colEnd = 13
 	}
@@ -36,10 +36,10 @@ func GenerateDeck(th *d.Theme) []*Card {
 	for si, suit := range th.SuitsOrder[th.Active] {
 		color := ""
 		switch suit {
-		case resources.Hearts, resources.Diamonds:
-			color = resources.RED
-		case resources.Spades, resources.Clubs:
-			color = resources.BLACK
+		case res.Hearts, res.Diamonds:
+			color = res.RED
+		case res.Spades, res.Clubs:
+			color = res.BLACK
 		}
 
 		for i := colStart; i < colEnd; i++ {
@@ -51,12 +51,12 @@ func GenerateDeck(th *d.Theme) []*Card {
 				Img:     th.Sources[th.Active].SubImage(image.Rect(x, y, x+w, y+h)).(*ebiten.Image),
 				BackImg: th.Sources[th.Active].SubImage(image.Rect(bf[0], bf[1], bf[2]+bf[0], bf[3]+bf[1])).(*ebiten.Image),
 				Suit:    suit,
-				Value:   d.CardRanks[d.Translation[th.Active][i]],
+				Value:   data.CardRanks[data.Translation[th.Active][i]],
 				Color:   color,
-				ScX:     cardSc[resources.X],
-				ScY:     cardSc[resources.Y],
-				W:       int(float64(w) * cardSc[resources.X]),
-				H:       int(float64(h) * cardSc[resources.Y]),
+				ScX:     cardSc[res.X],
+				ScY:     cardSc[res.Y],
+				W:       int(float64(w) * cardSc[res.X]),
+				H:       int(float64(h) * cardSc[res.Y]),
 			}
 
 			// append every customized card to the deck

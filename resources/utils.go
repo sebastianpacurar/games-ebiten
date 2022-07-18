@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	ScreenWidth  = 840
+	ScreenWidth  = 960
 	ScreenHeight = 840
 
 	// X Y - used as aliases for Main Axis and Cross Axis

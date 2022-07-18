@@ -1,7 +1,7 @@
 package router
 
 import (
-	u "games-ebiten/resources"
+	res "games-ebiten/resources"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text"
 	"image"
@@ -48,29 +48,29 @@ func NewMenu() *Menu {
 		{
 			Name: "Games",
 			Options: []*Option{
-				{Name: "Free Cell", Active: true, TxtBounds: text.BoundString(u.FontFace, "Free Cell")},
-				{Name: "Klondike", Active: false, TxtBounds: text.BoundString(u.FontFace, "Klondike")},
+				{Name: "Free Cell", Active: true, TxtBounds: text.BoundString(res.FontFace, "Free Cell")},
+				{Name: "Klondike", Active: false, TxtBounds: text.BoundString(res.FontFace, "Klondike")},
 			},
-			TxtBounds: text.BoundString(u.FontFace, "Game"),
+			TxtBounds: text.BoundString(res.FontFace, "Game"),
 		},
 		{
 			Name: "Themes",
 			Options: []*Option{
-				{Name: "Classic", Active: true, TxtBounds: text.BoundString(u.FontFace, "Classic")},
-				{Name: "8 bit", Active: false, TxtBounds: text.BoundString(u.FontFace, "8 bit")},
+				{Name: "Classic", Active: true, TxtBounds: text.BoundString(res.FontFace, "Classic")},
+				{Name: "8 bit", Active: false, TxtBounds: text.BoundString(res.FontFace, "8 bit")},
 			},
-			TxtBounds: text.BoundString(u.FontFace, "Themes"),
+			TxtBounds: text.BoundString(res.FontFace, "Themes"),
 		},
 	}
 
 	m := &Menu{
 		X: 0,
 		Y: 0,
-		W: u.ScreenWidth,
+		W: res.ScreenWidth,
 		H: mis[0].TxtBounds.Dy() + Padding*2,
 	}
 	m.ContainerImage = ebiten.NewImage(m.W, m.H)
-	m.ContainerImage.Fill(u.White)
+	m.ContainerImage.Fill(res.White)
 
 	m.MenuItems = mis
 
@@ -85,7 +85,7 @@ func NewMenu() *Menu {
 		mi.W = mi.TxtBounds.Dx()
 		mi.H = m.H
 
-		mi.TxtColor = u.Black
+		mi.TxtColor = res.Black
 		mi.Img = ebiten.NewImage(mi.W, mi.H)
 
 		// set item option HitBox
@@ -101,7 +101,7 @@ func NewMenu() *Menu {
 			mi.dropArea.Max.Y += op.Y
 
 			op.Img = ebiten.NewImage(op.W, op.H)
-			op.Img.Fill(u.White)
+			op.Img.Fill(res.White)
 		}
 	}
 
@@ -126,7 +126,7 @@ func (m *Menu) DrawMenuItems(screen *ebiten.Image) {
 		opc.GeoM.Translate(float64(mi.X), float64(mi.Y))
 		screen.DrawImage(mi.Img, opc)
 
-		text.Draw(screen, mi.Name, u.FontFace, mi.X, mi.TxtBounds.Dy()+Padding, mi.TxtColor)
+		text.Draw(screen, mi.Name, res.FontFace, mi.X, mi.TxtBounds.Dy()+Padding, mi.TxtColor)
 
 		// TODO: finish, and add borders
 		// draw the MenuItem dropdown
@@ -137,19 +137,19 @@ func (m *Menu) DrawMenuItems(screen *ebiten.Image) {
 			// draw border
 			opb := &ebiten.DrawImageOptions{}
 			opb.GeoM.Translate(x, y)
-			border.Fill(u.Black)
+			border.Fill(res.Black)
 			screen.DrawImage(border, opb)
 
 			for oi, opt := range mi.Options {
 				opo := &ebiten.DrawImageOptions{}
 				opo.GeoM.Translate(float64(opt.X), float64(opt.Y))
-				opt.Img.Fill(u.White)
+				opt.Img.Fill(res.White)
 
 				txtX := opt.X + Padding
 				txtY := (opt.TxtBounds.Dy()+ItemPadding)*(oi+2) + Border
 
 				screen.DrawImage(opt.Img, opo)
-				text.Draw(screen, opt.Name, u.FontFace, txtX, txtY, u.Black)
+				text.Draw(screen, opt.Name, res.FontFace, txtX, txtY, res.Black)
 			}
 		}
 	}

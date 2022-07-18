@@ -1,7 +1,7 @@
 package match_pairs
 
 import (
-	u "games-ebiten/resources"
+	res "games-ebiten/resources"
 	"github.com/google/uuid"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -9,11 +9,10 @@ import (
 	_ "image/jpeg"
 	"math/rand"
 	"strings"
-	"time"
 )
 
 var (
-	iconsSprite = ebiten.NewImageFromImage(u.LoadSpriteImage("resources/assets/misc/icons.jpeg"))
+	iconsSprite = ebiten.NewImageFromImage(res.LoadSpriteImage("resources/assets/misc/icons.jpeg"))
 	SpacingV    = 25
 	SpacingH    = 50
 	FrOX        = 19
@@ -51,13 +50,13 @@ func (g *Game) Update() error {
 	g.HandleRevealLogic()
 
 	for _, v := range g.IconPairs {
-		if u.IsAreaHovered(v) {
+		if res.IsAreaHovered(v) {
 			if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
-				if !v.IsRevealed() {
-					v.SetRevealedState(true)
+				if !v.Revealed() {
+					v.SetRevealed(true)
 					g.RevealedIDs = append(g.RevealedIDs, v.ID)
 				} else {
-					v.SetRevealedState(false)
+					v.SetRevealed(false)
 					g.RevealedIDs = g.RemoveRevealedID(v.ID)
 				}
 			}
@@ -74,7 +73,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
-	return u.ScreenWidth, u.ScreenHeight
+	return res.ScreenWidth, res.ScreenHeight
 }
 
 // GeneratePairs - generates the given pairs. if smaller than 2 or bigger than 3, then default to 2
@@ -111,7 +110,6 @@ func (g *Game) GeneratePairs(p int) {
 	}
 
 	//shuffle g.IconPairs array
-	rand.Seed(time.Now().UnixNano())
 	rand.Shuffle(len(g.IconPairs), func(i, j int) {
 		g.IconPairs[i], g.IconPairs[j] = g.IconPairs[j], g.IconPairs[i]
 	})
@@ -167,14 +165,14 @@ func (g *Game) HandleRevealLogic() {
 			// if the pair is a match, set all icons to removed and clear array
 			for _, ic := range g.IconPairs {
 				if firstId == ic.ID {
-					ic.SetRemovedState(true)
+					ic.SetRemoved(true)
 				}
 			}
 			g.RevealedIDs = nil
 		} else {
 			// if the pair isn't a match, set all icons to hidden and clear array
 			for _, ic := range g.IconPairs {
-				ic.SetRevealedState(false)
+				ic.SetRevealed(false)
 			}
 			g.RevealedIDs = nil
 		}

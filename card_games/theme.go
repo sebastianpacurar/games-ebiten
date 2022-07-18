@@ -64,9 +64,9 @@ func NewTheme() *Theme {
 			},
 			resources.ClassicTheme: {
 				resources.StaticBack1: []int{0, 384, 71, 96, 0},
-				//u.StaticBack2:   []int{0, 480, 71, 96, 0},
-				//u.VYnamicCastle: []int{71, 480, 71, 96, 2},
-				//u.VYnamicBeach:  []int{213, 480, 71, 96, 3},
+				//res.StaticBack2:   []int{0, 480, 71, 96, 0},
+				//res.VYnamicCastle: []int{71, 480, 71, 96, 2},
+				//res.VYnamicBeach:  []int{213, 480, 71, 96, 3},
 			},
 		},
 
