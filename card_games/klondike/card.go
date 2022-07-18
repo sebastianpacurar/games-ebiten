@@ -1,7 +1,7 @@
 package klondike
 
 import (
-	d "games-ebiten/data"
+	d "games-ebiten/resources"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"image"

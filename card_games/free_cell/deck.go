@@ -1,7 +1,8 @@
 package free_cell
 
 import (
-	d "games-ebiten/data"
+	d "games-ebiten/card_games"
+	"games-ebiten/resources"
 	"github.com/hajimehoshi/ebiten/v2"
 	"image"
 	"math/rand"
@@ -15,7 +16,7 @@ func GenerateDeck(th *d.Theme) []*Card {
 	cardSc := th.CardScaleValue[th.Active]
 
 	// set which BackFace the cards have (FrOX, FRoY, FrW, FrH)
-	bf := th.GetBackFrameGeomData(th.Active, d.StaticBack1)
+	bf := th.GetBackFrameGeomData(th.Active, resources.StaticBack1)
 
 	// set which FrontFace the cards have
 	frame := th.GetFrontFrameGeomData(th.Active)
@@ -23,10 +24,10 @@ func GenerateDeck(th *d.Theme) []*Card {
 	// this logic is needed due to the discrepancy between sprite sheets:
 	// one Image starts with card Ace as the first Column value, while others start with card number or other value
 	switch th.Active {
-	case d.PixelatedTheme:
+	case resources.PixelatedTheme:
 		colStart = 1
 		colEnd = 14
-	case d.ClassicTheme:
+	case resources.ClassicTheme:
 		colStart = 0
 		colEnd = 13
 	}
@@ -35,10 +36,10 @@ func GenerateDeck(th *d.Theme) []*Card {
 	for si, suit := range th.SuitsOrder[th.Active] {
 		color := ""
 		switch suit {
-		case d.Hearts, d.Diamonds:
-			color = d.RED
-		case d.Spades, d.Clubs:
-			color = d.BLACK
+		case resources.Hearts, resources.Diamonds:
+			color = resources.RED
+		case resources.Spades, resources.Clubs:
+			color = resources.BLACK
 		}
 
 		for i := colStart; i < colEnd; i++ {
@@ -52,10 +53,10 @@ func GenerateDeck(th *d.Theme) []*Card {
 				Suit:    suit,
 				Value:   d.CardRanks[d.Translation[th.Active][i]],
 				Color:   color,
-				ScX:     cardSc[d.X],
-				ScY:     cardSc[d.Y],
-				W:       int(float64(w) * cardSc[d.X]),
-				H:       int(float64(h) * cardSc[d.Y]),
+				ScX:     cardSc[resources.X],
+				ScY:     cardSc[resources.Y],
+				W:       int(float64(w) * cardSc[resources.X]),
+				H:       int(float64(h) * cardSc[resources.Y]),
 			}
 
 			// append every customized card to the deck

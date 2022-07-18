@@ -1,11 +1,12 @@
 package router
 
 import (
-	d "games-ebiten/data"
-	"games-ebiten/games/free_cell"
-	"games-ebiten/games/klondike"
+	"games-ebiten/animation_movement"
+	"games-ebiten/card_games/free_cell"
+	"games-ebiten/card_games/klondike"
+	"games-ebiten/match-pairs"
+	res "games-ebiten/resources"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"image"
 )
@@ -13,19 +14,23 @@ import (
 // Router - responsible with the game states. used to navigate between games
 // Active - refers to the current game
 type Router struct {
-	Active interface{}
-	fcGame free_cell.Game
-	kGame  klondike.Game
+	Active       interface{}
+	freeCell     free_cell.Game
+	klondike     klondike.Game
+	matchPairs   match_pairs.Game
+	animMovement animation_movement.Game
 	*Menu
 }
 
 func NewRouter() *Router {
 	r := &Router{
-		Menu:   NewMenu(),
-		fcGame: *free_cell.NewGame(),
-		kGame:  *klondike.NewGame(),
+		Menu:         NewMenu(),
+		freeCell:     *free_cell.NewGame(),
+		klondike:     *klondike.NewGame(),
+		matchPairs:   *match_pairs.NewGame(),
+		animMovement: *animation_movement.NewGame(),
 	}
-	r.Active = r.fcGame
+	r.Active = r.freeCell
 	return r
 }
 
@@ -37,11 +42,15 @@ func (r *Router) Draw(screen *ebiten.Image) {
 	case klondike.Game:
 		g := r.Active.(klondike.Game)
 		g.Draw(screen)
+	case match_pairs.Game:
+		g := r.Active.(match_pairs.Game)
+		g.Draw(screen)
+	case animation_movement.Game:
+		g := r.Active.(animation_movement.Game)
+		g.Draw(screen)
 	}
 
 	r.DrawMenu(screen)
-
-	ebitenutil.DebugPrintAt(screen, "Press K for classic version and F for Free Cell", 10, d.ScreenHeight-135)
 }
 
 func (r *Router) Update() error {
@@ -49,10 +58,14 @@ func (r *Router) Update() error {
 	cx, cy := ebiten.CursorPosition()
 
 	switch {
-	case inpututil.IsKeyJustReleased(ebiten.KeyF):
-		r.Active = r.fcGame
-	case inpututil.IsKeyJustReleased(ebiten.KeyK):
-		r.Active = r.kGame
+	case inpututil.IsKeyJustReleased(ebiten.Key1):
+		r.Active = r.freeCell
+	case inpututil.IsKeyJustReleased(ebiten.Key2):
+		r.Active = r.klondike
+	case inpututil.IsKeyJustReleased(ebiten.Key3):
+		r.Active = r.matchPairs
+	case inpututil.IsKeyJustReleased(ebiten.Key4):
+		r.Active = r.animMovement
 	}
 
 	switch r.Active.(type) {
@@ -61,6 +74,12 @@ func (r *Router) Update() error {
 		err = g.Update()
 	case klondike.Game:
 		g := r.Active.(klondike.Game)
+		err = g.Update()
+	case match_pairs.Game:
+		g := r.Active.(match_pairs.Game)
+		err = g.Update()
+	case animation_movement.Game:
+		g := r.Active.(animation_movement.Game)
 		err = g.Update()
 	}
 
@@ -87,5 +106,5 @@ func (r *Router) Update() error {
 }
 
 func (r *Router) Layout(outsideWidth, outsideHeight int) (int, int) {
-	return d.ScreenWidth, d.ScreenHeight
+	return res.ScreenWidth, res.ScreenHeight
 }

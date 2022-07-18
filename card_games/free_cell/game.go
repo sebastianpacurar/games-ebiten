@@ -1,7 +1,8 @@
 package free_cell
 
 import (
-	d "games-ebiten/data"
+	d "games-ebiten/card_games"
+	"games-ebiten/resources"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -16,7 +17,7 @@ type (
 )
 
 func NewGame() *Game {
-	classicImg := ebiten.NewImageFromImage(d.LoadSpriteImage("assets/classic-solitaire.png"))
+	classicImg := ebiten.NewImageFromImage(resources.LoadSpriteImage("resources/assets/cards/classic-solitaire.png"))
 	th := d.NewTheme()
 	g := &Game{
 		Theme: th,
@@ -87,10 +88,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	// force card or stack of cards image(s) persistence over other cards
 	// practically draw the dragged card again. or draw the entire stack again, at the end
-	if d.DraggedCard != nil {
-		switch d.DraggedCard.(type) {
+	if resources.DraggedCard != nil {
+		switch resources.DraggedCard.(type) {
 		case *Card:
-			c := d.DraggedCard.(*Card)
+			c := resources.DraggedCard.(*Card)
 			if c.ColNum == 0 {
 				opc := &ebiten.DrawImageOptions{}
 				opc.GeoM.Scale(c.ScX, c.ScY)
@@ -104,21 +105,19 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		}
 	}
 
-	//TODO: to implement quick moves from all piles in one go
-	//ebitenutil.DebugPrintAt(screen, "Right Click to quick move to Foundations", 10, u.ScreenHeight-95)
-	ebitenutil.DebugPrintAt(screen, "Press F2 to deal New Game", 10, d.ScreenHeight-65)
-	ebitenutil.DebugPrintAt(screen, "Press 1 or 2 to change Themes", 10, d.ScreenHeight-35)
+	ebitenutil.DebugPrintAt(screen, "Press R to deal New Game", resources.ScreenWidth/2, resources.ScreenHeight-65)
+	ebitenutil.DebugPrintAt(screen, "Press Q or W to change Themes", resources.ScreenWidth/2, resources.ScreenHeight-35)
 }
 
 func (g *Game) Update() error {
 	switch {
-	case inpututil.IsKeyJustReleased(ebiten.Key1):
-		g.Active = d.ClassicTheme
+	case inpututil.IsKeyJustReleased(ebiten.KeyQ):
+		g.Active = resources.ClassicTheme
 		g.BuildDeck(g.Theme)
-	case inpututil.IsKeyJustReleased(ebiten.Key2):
-		g.Active = d.PixelatedTheme
+	case inpututil.IsKeyJustReleased(ebiten.KeyW):
+		g.Active = resources.PixelatedTheme
 		g.BuildDeck(g.Theme)
-	case inpututil.IsKeyJustReleased(ebiten.KeyF2):
+	case inpututil.IsKeyJustReleased(ebiten.KeyR):
 		g.BuildDeck(g.Theme)
 	}
 
@@ -127,5 +126,5 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
-	return d.ScreenWidth, d.ScreenHeight
+	return resources.ScreenWidth, resources.ScreenHeight
 }

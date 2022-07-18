@@ -1,7 +1,7 @@
 package main
 
 import (
-	u "games-ebiten/data"
+	u "games-ebiten/resources"
 	r "games-ebiten/router"
 	"github.com/hajimehoshi/ebiten/v2"
 	"log"

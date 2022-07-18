@@ -1,7 +1,7 @@
 package router
 
 import (
-	u "games-ebiten/data"
+	u "games-ebiten/resources"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text"
 	"image"
