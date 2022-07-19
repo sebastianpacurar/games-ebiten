@@ -34,7 +34,7 @@ func (i *Item) SetLocation(axis string, val int) {
 	}
 }
 
-func (i *Item) DrawStaticSprite(screen *ebiten.Image) {
+func (i *Item) DrawSprite(screen *ebiten.Image) {
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Scale(ItemScale, ItemScale)
 	op.GeoM.Translate(float64(i.X), float64(i.Y))

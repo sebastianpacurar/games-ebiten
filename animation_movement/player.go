@@ -53,7 +53,7 @@ func (p *Player) SetDelta(axis string, val float64) {
 	}
 }
 
-func (p *Player) DrawInteractiveSprite(screen *ebiten.Image) {
+func (p *Player) DrawSprite(screen *ebiten.Image) {
 	opPlayer := &ebiten.DrawImageOptions{}
 	opPlayer.GeoM.Scale(PlayerScX, PlayerScY)
 	opPlayer.GeoM.Translate(float64(p.X), float64(p.Y))

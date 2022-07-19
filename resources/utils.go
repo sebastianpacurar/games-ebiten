@@ -47,10 +47,13 @@ const (
 )
 
 var (
+	ActiveGame  interface{}
 	DraggedCard interface{}
 	FontFace    font.Face
+	MainMenuH   int
 	Black       = color.NRGBA{R: 0, G: 0, B: 0, A: 255}
 	White       = color.NRGBA{R: 255, G: 255, B: 255, A: 255}
+	Green       = color.NRGBA{R: 0, G: 255, B: 0, A: 255}
 )
 
 func InitFonts() {
@@ -94,8 +97,8 @@ func IsCollision(src, target image.Rectangle) bool {
 // BoundaryValidation - prevents characters to move out of the view, in any of the 4 directions
 func BoundaryValidation(i interface{}, minX, maxX, minY, maxY int) {
 	switch i.(type) {
-	case InteractiveSprite:
-		img := i.(InteractiveSprite)
+	case Sprite:
+		img := i.(Sprite)
 		bounds := img.HitBox()
 
 		if bounds.Min.X <= minX {
@@ -119,17 +122,12 @@ func BoundaryValidation(i interface{}, minX, maxX, minY, maxY int) {
 
 // IsAreaHovered - Returns true if the cursor overlaps the target interface
 func IsAreaHovered(i interface{}) bool {
-	pt := image.Pt(ebiten.CursorPosition())
-	var area image.Rectangle
+	isHovered := false
 	switch i.(type) {
-	case CasinoCards:
-		c := i.(CasinoCards)
-		area = c.HitBox()
-	case MatchIcons:
-		mi := i.(MatchIcons)
-		area = mi.HitBox()
+	case Hoverable:
+		isHovered = i.(Hoverable).Hovered(ebiten.CursorPosition())
 	}
-	return pt.In(area)
+	return isHovered
 }
 
 // GetFlexboxQuadrants - splits the screen in x quadrants and returns a rect for each of them (works only on X-Axis)

@@ -60,3 +60,7 @@ func (ic *Icon) SetRemoved(val bool) {
 func (ic *Icon) HitBox() image.Rectangle {
 	return image.Rect(ic.X, ic.Y, ic.X+ic.W, ic.Y+ic.H)
 }
+
+func (ic *Icon) Hovered(cx, cy int) bool {
+	return image.Pt(cx, cy).In(ic.HitBox())
+}

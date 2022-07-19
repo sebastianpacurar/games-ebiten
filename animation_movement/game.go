@@ -16,6 +16,7 @@ type Game struct {
 }
 
 func NewGame() *Game {
+	ebiten.SetMaxTPS(40)
 	playerLocX := res.ScreenWidth/2 - PlayerFrameWidth/2
 	playerLocY := res.ScreenHeight/2 - PlayerFrameHeight/2
 	npcLocations := make(map[string][]int)
@@ -129,15 +130,15 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	screen.DrawImage(ebiten.NewImageFromImage(res.LoadSpriteImage("resources/assets/misc/bg-grass.png")), op)
 
 	for _, p := range g.Players {
-		p.DrawInteractiveSprite(screen)
+		p.DrawSprite(screen)
 	}
 
 	for _, npc := range g.NPCs {
-		npc.DrawInteractiveSprite(screen)
+		npc.DrawSprite(screen)
 	}
 
 	for _, i := range g.Items {
-		i.DrawStaticSprite(screen)
+		i.DrawSprite(screen)
 	}
 
 	ebitenutil.DebugPrintAt(screen, "W A S D to move", res.ScreenWidth/1.5, res.ScreenHeight-65)

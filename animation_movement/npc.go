@@ -53,7 +53,7 @@ func (npc *NPC) SetDelta(axis string, val float64) {
 	}
 }
 
-func (npc *NPC) DrawInteractiveSprite(screen *ebiten.Image) {
+func (npc *NPC) DrawSprite(screen *ebiten.Image) {
 	opNPC := &ebiten.DrawImageOptions{}
 	opNPC.GeoM.Scale(NPCScX, NPCScY)
 	opNPC.GeoM.Translate(float64(npc.X), float64(npc.Y))

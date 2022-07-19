@@ -105,16 +105,16 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		}
 	}
 
-	ebitenutil.DebugPrintAt(screen, "Press R to deal New Game", res.ScreenWidth/1.5, res.ScreenHeight-65)
-	ebitenutil.DebugPrintAt(screen, "Press Q or W to change Themes", res.ScreenWidth/1.5, res.ScreenHeight-35)
+	ebitenutil.DebugPrintAt(screen, "Press R to deal New Game", 10, res.ScreenHeight-65)
+	ebitenutil.DebugPrintAt(screen, "Press 1 or 2 to change Themes", 10, res.ScreenHeight-35)
 }
 
 func (g *Game) Update() error {
 	switch {
-	case inpututil.IsKeyJustReleased(ebiten.KeyQ):
+	case inpututil.IsKeyJustReleased(ebiten.Key1):
 		g.Active = res.ClassicTheme
 		g.BuildDeck(g.Theme)
-	case inpututil.IsKeyJustReleased(ebiten.KeyW):
+	case inpututil.IsKeyJustReleased(ebiten.Key2):
 		g.Active = res.PixelatedTheme
 		g.BuildDeck(g.Theme)
 	case inpututil.IsKeyJustReleased(ebiten.KeyR):
