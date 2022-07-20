@@ -41,7 +41,7 @@ type (
 func (e *Environment) UpdateEnv() {
 	e.W = e.Deck[0].W
 	e.H = e.Deck[0].H
-	e.Quadrants = res.GetFlexboxQuadrants(8)
+	e.Quadrants = res.FlexRowQuadrants(8)
 
 	e.FoundationPiles = []FoundationPile{
 		{Cards: make([]*Card, 0, 13)},
@@ -68,18 +68,18 @@ func (e *Environment) UpdateEnv() {
 
 	// start from the first quadrant
 	for i := range e.FreeCells {
-		fx := res.CenterItem(e.W, e.Quadrants[0+i])
+		fx := res.CenterOnX(e.W, e.Quadrants[0+i])
 		e.FreeCells[i].X = fx
-		e.FreeCells[i].Y = e.SpacerV
+		e.FreeCells[i].Y = e.SpacerV + res.MainMenuH
 		e.FreeCells[i].W = e.W
 		e.FreeCells[i].H = e.H
 	}
 
 	// starts from the fourth quadrant
 	for i := range e.FoundationPiles {
-		fx := res.CenterItem(e.W, e.Quadrants[4+i])
+		fx := res.CenterOnX(e.W, e.Quadrants[4+i])
 		e.FoundationPiles[i].X = fx
-		e.FoundationPiles[i].Y = e.SpacerV
+		e.FoundationPiles[i].Y = e.SpacerV + res.MainMenuH
 		e.FoundationPiles[i].W = e.W
 		e.FoundationPiles[i].H = e.H
 	}
@@ -90,7 +90,7 @@ func (e *Environment) UpdateEnv() {
 		for i := range e.Columns {
 			if cardIndex < len(e.Deck) {
 				// initiate the location of the Card Column placeholders
-				colx := res.CenterItem(e.W, e.Quadrants[0+i])
+				colx := res.CenterOnX(e.W, e.Quadrants[0+i])
 				coly := e.Quadrants[0+i].Max.Y / 3
 				e.Columns[i].X = colx
 				e.Columns[i].Y = coly
@@ -136,9 +136,9 @@ func (e *Environment) DrawPlayground(screen *ebiten.Image, th *data.Theme) {
 		opFreeCell.GeoM.Scale(envTh[res.X], envTh[res.Y])
 
 		if th.Active == res.PixelatedTheme {
-			opFreeCell.GeoM.Translate(float64(res.CenterItem(e.W, e.Quadrants[0+i]))+3.5, float64(e.SpacerV)+3.5)
+			opFreeCell.GeoM.Translate(float64(res.CenterOnX(e.W, e.Quadrants[0+i]))+3.5, float64(e.SpacerV+res.MainMenuH)+3.5)
 		} else {
-			opFreeCell.GeoM.Translate(float64(res.CenterItem(e.W, e.Quadrants[0+i])), float64(e.SpacerV))
+			opFreeCell.GeoM.Translate(float64(res.CenterOnX(e.W, e.Quadrants[0+i])), float64(e.SpacerV+res.MainMenuH))
 		}
 		screen.DrawImage(e.EmptySlotImg, opFreeCell)
 	}
@@ -149,9 +149,9 @@ func (e *Environment) DrawPlayground(screen *ebiten.Image, th *data.Theme) {
 		opFoundationSlot.GeoM.Scale(envTh[res.X], envTh[res.Y])
 
 		if th.Active == res.PixelatedTheme {
-			opFoundationSlot.GeoM.Translate(float64(res.CenterItem(e.W, e.Quadrants[4+i]))+3.5, float64(e.SpacerV)+3.5)
+			opFoundationSlot.GeoM.Translate(float64(res.CenterOnX(e.W, e.Quadrants[4+i]))+3.5, float64(e.SpacerV+res.MainMenuH)+3.5)
 		} else {
-			opFoundationSlot.GeoM.Translate(float64(res.CenterItem(e.W, e.Quadrants[4+i])), float64(e.SpacerV))
+			opFoundationSlot.GeoM.Translate(float64(res.CenterOnX(e.W, e.Quadrants[4+i])), float64(e.SpacerV+res.MainMenuH))
 		}
 		screen.DrawImage(e.EmptySlotImg, opFoundationSlot)
 	}

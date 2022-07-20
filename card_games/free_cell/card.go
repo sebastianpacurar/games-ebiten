@@ -133,7 +133,7 @@ func (c *Card) SetDraggableState(state bool) {
 	c.DraggableState = state
 }
 
-// IsHovered - Returns true if the card is hovered
+// Hovered - Returns true if the card is hovered
 func (c *Card) Hovered(cx, cy int) bool {
 	return image.Pt(cx, cy).In(c.HitBox())
 }

@@ -18,18 +18,18 @@ type Game struct {
 func NewGame() *Game {
 	ebiten.SetMaxTPS(40)
 	playerLocX := res.ScreenWidth/2 - PlayerFrameWidth/2
-	playerLocY := res.ScreenHeight/2 - PlayerFrameHeight/2
+	playerLocY := (res.ScreenHeight/2 + res.MainMenuH) - PlayerFrameHeight/2
 	npcLocations := make(map[string][]int)
 
 	// generate the random location (x, y) for every NP
 	for i := 1; i <= 5; i++ {
 		npcTag := fmt.Sprintf("npc%d", i)
 		if _, ok := npcLocations[npcTag]; !ok {
-			x, y := res.GenerateRandomPosition(0, 0, res.ScreenWidth-NPCFrameWidth, res.ScreenHeight-NPCFrameHeight)
+			x, y := res.GenerateRandomPosition(0, res.MainMenuH, res.ScreenWidth-NPCFrameWidth, res.ScreenHeight-NPCFrameHeight)
 			npcLocations[npcTag] = []int{x, y}
 		}
 	}
-	ItemLocX, ItemLocY := res.GenerateRandomPosition(0, 0, res.ScreenWidth-ItemFrameWidth, res.ScreenHeight-ItemFrameHeight)
+	ItemLocX, ItemLocY := res.GenerateRandomPosition(0, res.MainMenuH, res.ScreenWidth-ItemFrameWidth, res.ScreenHeight-ItemFrameHeight)
 
 	return &Game{
 		Players: []*Player{
@@ -97,7 +97,7 @@ func (g *Game) Update() error {
 	}
 
 	for _, npc := range g.NPCs {
-		npc.Move(0, 0, res.ScreenWidth, res.ScreenHeight)
+		npc.Move(0, res.MainMenuH, res.ScreenWidth, res.ScreenHeight)
 	}
 
 	// player1 speed up
@@ -141,8 +141,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		i.DrawSprite(screen)
 	}
 
-	ebitenutil.DebugPrintAt(screen, "W A S D to move", res.ScreenWidth/1.5, res.ScreenHeight-65)
-	ebitenutil.DebugPrintAt(screen, "LEFT SHIFT to speed up", res.ScreenWidth/1.5, res.ScreenHeight-35)
+	ebitenutil.DebugPrintAt(screen, "W A S D to move", 10, res.ScreenHeight-65)
+	ebitenutil.DebugPrintAt(screen, "LEFT SHIFT to speed up", 10, res.ScreenHeight-35)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {

@@ -45,7 +45,7 @@ func (i *Item) DrawSprite(screen *ebiten.Image) {
 
 // UpdateItemState - mainly used to update location and sub image after every collision with the player or NPCs
 func (i *Item) UpdateItemState() {
-	i.X, i.Y = res.GenerateRandomPosition(0, 0, res.ScreenWidth-ItemFrameWidth, res.ScreenHeight-ItemFrameHeight)
+	i.X, i.Y = res.GenerateRandomPosition(0, res.MainMenuH, res.ScreenWidth-ItemFrameWidth, res.ScreenHeight-ItemFrameHeight)
 	i.ImgCount++
 
 	if i.RowCount == 2 && i.ImgCount == 6 {

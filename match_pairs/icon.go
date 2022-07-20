@@ -10,8 +10,8 @@ type Icon struct {
 	Img           *ebiten.Image
 	X, Y, W, H    int
 	ID            string
-	RevealedState bool
-	RemovedState  bool
+	revealedState bool
+	removedState  bool
 }
 
 func (ic *Icon) DrawIcon(screen *ebiten.Image) {
@@ -41,19 +41,19 @@ func (ic *Icon) DrawIcon(screen *ebiten.Image) {
 }
 
 func (ic *Icon) Revealed() bool {
-	return ic.RevealedState
+	return ic.revealedState
 }
 
 func (ic *Icon) Removed() bool {
-	return ic.RemovedState
+	return ic.removedState
 }
 
 func (ic *Icon) SetRevealed(val bool) {
-	ic.RevealedState = val
+	ic.revealedState = val
 }
 
 func (ic *Icon) SetRemoved(val bool) {
-	ic.RemovedState = val
+	ic.removedState = val
 }
 
 // HitBox - returns the shape in image.Rectangle format

@@ -15,7 +15,7 @@ import (
 
 const (
 	ScreenWidth  = 960
-	ScreenHeight = 840
+	ScreenHeight = 960
 
 	// X Y - used as aliases for Main Axis and Cross Axis
 	X = "x"
@@ -47,13 +47,14 @@ const (
 )
 
 var (
-	ActiveGame  interface{}
-	DraggedCard interface{}
-	FontFace    font.Face
-	MainMenuH   int
-	Black       = color.NRGBA{R: 0, G: 0, B: 0, A: 255}
-	White       = color.NRGBA{R: 255, G: 255, B: 255, A: 255}
-	Green       = color.NRGBA{R: 0, G: 255, B: 0, A: 255}
+	ActiveGame     interface{}
+	DraggedCard    interface{}
+	FontFace       font.Face
+	MainMenuH      int
+	AnimInProgress bool
+	Black          = color.NRGBA{R: 0, G: 0, B: 0, A: 255}
+	White          = color.NRGBA{R: 255, G: 255, B: 255, A: 255}
+	Green          = color.NRGBA{R: 0, G: 255, B: 0, A: 255}
 )
 
 func InitFonts() {
@@ -130,10 +131,10 @@ func IsAreaHovered(i interface{}) bool {
 	return isHovered
 }
 
-// GetFlexboxQuadrants - splits the screen in x quadrants and returns a rect for each of them (works only on X-Axis)
-func GetFlexboxQuadrants(cols int) map[int]image.Rectangle {
-	quads := make(map[int]image.Rectangle, 0)
-	unit := (ScreenWidth) / cols
+// FlexRowQuadrants - splits the screen in x quadrants and returns a rect for each of them (works only on X-Axis)
+func FlexRowQuadrants(cols int) map[int]image.Rectangle {
+	quads := make(map[int]image.Rectangle)
+	unit := ScreenWidth / cols
 
 	for i := 0; i < cols; i++ {
 		minX := unit * i
@@ -143,7 +144,33 @@ func GetFlexboxQuadrants(cols int) map[int]image.Rectangle {
 	return quads
 }
 
-// CenterItem - centers the item within the given quadrant
-func CenterItem(width int, quad image.Rectangle) int {
+// GridQuadrants - splits the screen into a grid view
+func GridQuadrants(rows, cols int) map[int]map[int]image.Rectangle {
+	quads := make(map[int]map[int]image.Rectangle)
+	xUnit := ScreenWidth / rows
+	yUnit := ScreenHeight / cols
+
+	for i := 0; i < rows; i++ {
+		minX := xUnit * i
+		maxX := xUnit * (i + 1)
+		rowQuads := make(map[int]image.Rectangle)
+		for j := 0; j < cols; j++ {
+			minY := yUnit*j + MainMenuH
+			maxY := yUnit * (j + 1)
+			rowQuads[j] = image.Rect(minX, minY, maxX, maxY)
+		}
+		quads[i] = rowQuads
+	}
+
+	return quads
+}
+
+// CenterOnX - centers the item on the X-axis within the given quadrant
+func CenterOnX(width int, quad image.Rectangle) int {
 	return (quad.Min.X + quad.Dx()/2) - width/2
+}
+
+// CenterOnY - centers the item on the Y-axis within the given quadrant
+func CenterOnY(height int, quad image.Rectangle) int {
+	return quad.Min.Y + quad.Dy()/2 - height/2
 }

@@ -85,9 +85,9 @@ func (e *Environment) DrawPlayground(screen *ebiten.Image, th *data.Theme) {
 	opStockSlot.GeoM.Scale(envTh[res.X], envTh[res.Y])
 
 	if th.Active == res.PixelatedTheme {
-		opStockSlot.GeoM.Translate(float64(res.CenterItem(e.W, e.Quadrants[0]))+3.5, float64(e.SpacerV)+3.5)
+		opStockSlot.GeoM.Translate(float64(res.CenterOnX(e.W, e.Quadrants[0]))+3.5, float64(e.SpacerV+res.MainMenuH)+3.5)
 	} else {
-		opStockSlot.GeoM.Translate(float64(res.CenterItem(e.W, e.Quadrants[0])), float64(e.SpacerV))
+		opStockSlot.GeoM.Translate(float64(res.CenterOnX(e.W, e.Quadrants[0])), float64(e.SpacerV+res.MainMenuH))
 	}
 
 	if e.IsVegas {
@@ -107,9 +107,9 @@ func (e *Environment) DrawPlayground(screen *ebiten.Image, th *data.Theme) {
 		opFoundationSlot.GeoM.Scale(envTh[res.X], envTh[res.Y])
 
 		if th.Active == res.PixelatedTheme {
-			opFoundationSlot.GeoM.Translate(float64(res.CenterItem(e.W, e.Quadrants[3+i]))+3.5, float64(e.SpacerV)+3.5)
+			opFoundationSlot.GeoM.Translate(float64(res.CenterOnX(e.W, e.Quadrants[3+i]))+3.5, float64(e.SpacerV+res.MainMenuH)+3.5)
 		} else {
-			opFoundationSlot.GeoM.Translate(float64(res.CenterItem(e.W, e.Quadrants[3+i])), float64(e.SpacerV))
+			opFoundationSlot.GeoM.Translate(float64(res.CenterOnX(e.W, e.Quadrants[3+i])), float64(e.SpacerV+res.MainMenuH))
 		}
 		screen.DrawImage(e.EmptySlotImg, opFoundationSlot)
 	}
@@ -124,7 +124,7 @@ func (e *Environment) DrawEnding(screen *ebiten.Image) {
 func (e *Environment) UpdateEnv() {
 	e.W = e.Deck[0].W
 	e.H = e.Deck[0].H
-	e.Quadrants = res.GetFlexboxQuadrants(7)
+	e.Quadrants = res.FlexRowQuadrants(7)
 
 	e.StockPile.Cards = make([]*Card, 0, 24)
 	e.WastePile.Cards = make([]*Card, 0, 24)
@@ -143,18 +143,18 @@ func (e *Environment) UpdateEnv() {
 		{Cards: make([]*Card, 0)},
 		{Cards: make([]*Card, 0)},
 	}
-	e.WastePile.X = res.CenterItem(e.W, e.Quadrants[1])
+	e.WastePile.X = res.CenterOnX(e.W, e.Quadrants[1])
 
-	e.StockPile.X = res.CenterItem(e.W, e.Quadrants[0])
-	e.StockPile.Y = e.SpacerV
+	e.StockPile.X = res.CenterOnX(e.W, e.Quadrants[0])
+	e.StockPile.Y = e.SpacerV + res.MainMenuH
 	e.StockPile.W = e.W
 	e.StockPile.H = e.H
 
 	// starts from the fourth quadrant
 	for i := range e.FoundationPiles {
-		fx := res.CenterItem(e.W, e.Quadrants[3+i])
+		fx := res.CenterOnX(e.W, e.Quadrants[3+i])
 		e.FoundationPiles[i].X = fx
-		e.FoundationPiles[i].Y = e.SpacerV
+		e.FoundationPiles[i].Y = e.SpacerV + res.MainMenuH
 		e.FoundationPiles[i].W = e.W
 		e.FoundationPiles[i].H = e.H
 	}
@@ -163,7 +163,7 @@ func (e *Environment) UpdateEnv() {
 	cardIndex := 0
 	for i := range e.Columns {
 		// initiate the location of the Card Column placeholders
-		colx := res.CenterItem(e.W, e.Quadrants[0+i])
+		colx := res.CenterOnX(e.W, e.Quadrants[0+i])
 		coly := e.Quadrants[0+i].Max.Y / 3
 		e.Columns[i].X = colx
 		e.Columns[i].Y = coly
@@ -561,4 +561,9 @@ func (e *Environment) RightClickToFoundations(cx, cy int) {
 			}
 		}
 	}
+}
+
+func AnimateCardMovement(ticks int, card Card, dest image.Rectangle) {
+
+	ticks++
 }

@@ -135,5 +135,5 @@ func (p *Player) HandleMovement(minX, minY, maxX, maxY int) {
 	p.X += int(p.VX)
 	p.Y += int(p.VY)
 
-	res.BoundaryValidation(p, minX, maxX, minY, maxY)
+	res.BoundaryValidation(p, minX, maxX, res.MainMenuH, maxY)
 }

@@ -63,7 +63,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		// Draw the Waste Pile
 		for i, c := range g.WastePile.Cards {
 			c.X = g.WastePile.X
-			c.Y = g.SpacerV
+			c.Y = g.SpacerV + res.MainMenuH
 			c.H = g.H
 			c.SetRevealedState(true)
 
@@ -79,7 +79,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		for i := range g.FoundationPiles {
 			for j := range g.FoundationPiles[i].Cards {
 				g.FoundationPiles[i].Cards[j].X = g.FoundationPiles[i].X
-				g.FoundationPiles[i].Cards[j].Y = g.SpacerV
+				g.FoundationPiles[i].Cards[j].Y = g.SpacerV + res.MainMenuH
 				g.FoundationPiles[i].Cards[j].H = g.H
 
 				// draw the prior card as revealed when the current card is dragged
@@ -96,7 +96,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		for i := range g.Columns {
 			for j, card := range g.Columns[i].Cards {
 				card.X = g.Columns[i].X
-				card.Y = g.Columns[i].Y + (j * CardsVSpacer)
+				card.Y = g.Columns[i].Y + (j * CardsVSpacer) + res.MainMenuH
 
 				// draw the overlapped with the height of the space in which the card is visible
 				if j != len(g.Columns[i].Cards)-1 {

@@ -87,7 +87,7 @@ func (npc *NPC) ValidateBoundaries(minX, minY, maxX, maxY int) {
 	}
 }
 
-func (npc *NPC) Move(minX, maxX, minY, maxY int) {
+func (npc *NPC) Move(minX, minY, maxX, maxY int) {
 	if npc.FrTiming == npc.FrTimingLimit-1 {
 		npc.FrTiming = 0
 		npc.IsMoving = !npc.IsMoving
@@ -150,7 +150,7 @@ func (npc *NPC) Move(minX, maxX, minY, maxY int) {
 
 		npc.X += int(npc.VX)
 		npc.Y += int(npc.VY)
-		npc.ValidateBoundaries(minX, maxX, minY, maxY)
+		npc.ValidateBoundaries(minX, minY, maxX, maxY)
 	} else {
 		npc.FrameNum = 0
 		npc.VX = 0

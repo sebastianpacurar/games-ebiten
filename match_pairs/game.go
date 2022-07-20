@@ -13,14 +13,12 @@ import (
 
 var (
 	iconsSprite = ebiten.NewImageFromImage(res.LoadSpriteImage("resources/assets/misc/icons.jpeg"))
-	SpacingV    = 25
-	SpacingH    = 50
 	FrOX        = 19
 	FrOY        = 41
 	FrW         = 34
 	FrH         = 34
-	ScX         = float64(2)
-	ScY         = float64(2)
+	ScX         = 3.0
+	ScY         = 3.0
 )
 
 // Game
@@ -31,17 +29,19 @@ var (
 type Game struct {
 	Icons       []*Icon
 	IconPairs   []*Icon
-	RevealedIDs []string
+	RevealedIDs map[string]int
 	PairNum     int
 	Rows, Cols  int
 }
 
 func NewGame() *Game {
 	g := &Game{
-		RevealedIDs: make([]string, 0),
-		PairNum:     2,
+		Rows:    4,
+		Cols:    4,
+		PairNum: 2,
+		Icons:   GenerateAvailableIcons(),
 	}
-	g.Icons = GenerateAvailableIcons()
+	g.RevealedIDs = make(map[string]int, (g.Rows*g.Cols)/2)
 	g.GeneratePairs(g.PairNum)
 	return g
 }
@@ -54,15 +54,17 @@ func (g *Game) Update() error {
 			if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 				if !v.Revealed() {
 					v.SetRevealed(true)
-					g.RevealedIDs = append(g.RevealedIDs, v.ID)
+					g.RevealedIDs[v.ID]++
+					if g.RevealedIDs[v.ID] == g.PairNum {
+						g.RemovePairs(v.ID)
+					}
 				} else {
 					v.SetRevealed(false)
-					g.RevealedIDs = g.RemoveRevealedID(v.ID)
+					g.RevealedIDs[v.ID]--
 				}
 			}
 		}
 	}
-
 	return nil
 }
 
@@ -78,24 +80,12 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 
 // GeneratePairs - generates the given pairs. if smaller than 2 or bigger than 3, then default to 2
 func (g *Game) GeneratePairs(p int) {
-	if p < 2 || p > 3 {
-		p = 2
-	}
-
-	// 16 icons for 2 pairs and 36 icons for 3 pairs
-	if p%2 == 0 {
-		g.Rows = 4
-		g.Cols = 4
-	} else if p%3 == 0 {
-		g.Rows = 6
-		g.Cols = 6
-	}
-	maxNum := g.Rows * g.Cols
 	count := 0
 
 	// append only the first half of all the icons with the correct ID
-	for i := 0; i < maxNum/p; i++ {
+	for i := 0; i < (g.Rows*g.Cols)/p; i++ {
 		id := strings.Split(uuid.New().String(), "-")[1]
+		g.RevealedIDs[id] = 0
 		for dup := 0; dup < p; dup++ {
 
 			// create a unique icon, add it to the pairs array, then assign the id
@@ -138,59 +128,51 @@ func GenerateAvailableIcons() []*Icon {
 // GeneratePositions - add the x, y coords for every icon
 func (g *Game) GeneratePositions() {
 	count := 0
+	quads := res.GridQuadrants(g.Rows, g.Cols)
 	for i := 0; i < g.Rows; i++ {
 		for j := 0; j < g.Cols; j++ {
 			icon := g.IconPairs[count]
 
-			icon.X = (icon.W+50)*j + SpacingV
-			icon.Y = (icon.H+50)*i + SpacingH
+			icon.X = res.CenterOnX(icon.W, quads[i][j])
+			icon.Y = res.CenterOnY(icon.W, quads[i][j])
 			count++
 		}
 	}
 }
 
+// HandleRevealLogic - handles basic reveal, hide and match (paired icons removal) functionality
 func (g *Game) HandleRevealLogic() {
-	if len(g.RevealedIDs) > 1 {
-		allTrue := true
-
-		firstId := g.RevealedIDs[0]
-		for _, id := range g.RevealedIDs[1:] {
-			if firstId != id {
-				allTrue = false
-				break
-			}
-		}
-
-		if allTrue {
-			// if the pair is a match, set all icons to removed and clear array
+	if count, ids := g.CountOfUnmatched(); count == 2 {
+		for _, id := range ids {
 			for _, ic := range g.IconPairs {
-				if firstId == ic.ID {
-					ic.SetRemoved(true)
+				if id == ic.ID {
+					ic.SetRevealed(false)
 				}
 			}
-			g.RevealedIDs = nil
-		} else {
-			// if the pair isn't a match, set all icons to hidden and clear array
-			for _, ic := range g.IconPairs {
-				ic.SetRevealed(false)
-			}
-			g.RevealedIDs = nil
+			g.RevealedIDs[id] = 0
 		}
 	}
 }
 
-// RemoveRevealedID - remove the uid from RevealedIDs, based on the uid string
-func (g *Game) RemoveRevealedID(val string) []string {
-	res := make([]string, 0)
-	i := 0
-	if len(g.RevealedIDs) > 1 {
-		for _, v := range g.IconPairs {
-			if v.ID == val {
-				break
-			}
-			i++
+// CountOfUnmatched - returns the count to be used as condition, and the list of matching ids
+func (g *Game) CountOfUnmatched() (int, []string) {
+	count := 0
+	ids := make([]string, 0)
+	for k, v := range g.RevealedIDs {
+		if v == 1 {
+			count++
+			ids = append(ids, k)
 		}
-		res = append(g.RevealedIDs[:i], g.RevealedIDs[i+1:]...)
 	}
-	return res
+	return count, ids
+}
+
+// RemovePairs - set the pair icon's removedState to true
+func (g *Game) RemovePairs(byId string) {
+	for _, i := range g.IconPairs {
+		if i.ID == byId {
+			i.SetRemoved(true)
+		}
+	}
+	delete(g.RevealedIDs, byId)
 }
