@@ -29,13 +29,13 @@ func NewGame() *Game {
 			EmptySlotImg: classicImg.SubImage(image.Rect(852, 384, 852+71, 384+96)).(*ebiten.Image),
 		},
 	}
-	g.BuildDeck(th)
+	g.BuildDeck()
 	return g
 }
 
 // BuildDeck - initiates the Piles and populates them with cards
-func (g *Game) BuildDeck(th *data.Theme) {
-	g.Deck = GenerateDeck(th)
+func (g *Game) BuildDeck() {
+	g.Deck = GenerateDeck(g.Theme)
 	g.UpdateEnv()
 }
 
@@ -112,13 +112,13 @@ func (g *Game) Draw(screen *ebiten.Image) {
 func (g *Game) Update() error {
 	switch {
 	case inpututil.IsKeyJustReleased(ebiten.Key1):
-		g.Active = res.ClassicTheme
-		g.BuildDeck(g.Theme)
+		res.ActiveCardsTheme = res.ClassicTheme
+		g.BuildDeck()
 	case inpututil.IsKeyJustReleased(ebiten.Key2):
-		g.Active = res.PixelatedTheme
-		g.BuildDeck(g.Theme)
+		res.ActiveCardsTheme = res.PixelatedTheme
+		g.BuildDeck()
 	case inpututil.IsKeyJustReleased(ebiten.KeyR):
-		g.BuildDeck(g.Theme)
+		g.BuildDeck()
 	}
 
 	g.HandleGameLogic()

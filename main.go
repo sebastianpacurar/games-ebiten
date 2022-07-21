@@ -9,6 +9,7 @@ import (
 	res "games-ebiten/resources"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"image"
 	"log"
 	"math/rand"
 	"time"
@@ -83,39 +84,53 @@ func (r *Router) Update() error {
 		err = g.Update()
 	}
 
-	for _, mi := range r.MenuItems {
+	for _, mi := range r.Sections {
 
-		// handle click on menu item
-		if res.IsAreaHovered(mi) {
-			mi.TxtColor.A = 125
+		// handle click on menu top item.
+		if res.IsAreaHovered(mi.Header) {
+			mi.Header.TxtColor.A = 125
 			if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
-				mi.IsDropped = !mi.IsDropped
+				if mi.Header.IsDroppable {
+					// handle trigger dropdown functionality
+					mi.Header.IsDropped = !mi.Header.IsDropped
+				} else {
+					// handle New Game functionality
+					if mi.Header.Name == "New Game" {
+						HandleNewGameClick(res.ActiveGame)
+					}
+				}
 			}
 		} else {
-			mi.TxtColor.A = 255
+			mi.Header.TxtColor.A = 255
 		}
 
 		// handle change game
-		if mi.IsDropped {
-			for _, opt := range mi.Options {
-				if opt.IsSelected {
-					opt.Color = res.Green
-					opt.TxtColor = res.Black
-					opt.TxtColor.A = 255
-				} else {
-					opt.TxtColor = res.Black
-					opt.Color = res.White
-					if res.IsAreaHovered(opt) {
-						opt.Color.A = 200
-						opt.TxtColor.A = 200
-						if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) && !opt.IsSelected {
-							mi.SwitchToGame(opt.Id)
-							mi.IsDropped = false
-						}
+		if mi.Header.IsDropped {
+			firstRect := image.Rect(mi.Header.X, mi.Header.Y, mi.Header.X+mi.Header.W, mi.DropArea.Max.Y)
+			secondRect := mi.DropArea
+			if image.Pt(ebiten.CursorPosition()).In(firstRect) || image.Pt(ebiten.CursorPosition()).In(secondRect) {
+				for _, opt := range mi.Items {
+					if opt.IsSelected {
+						opt.Color = res.Green
+						opt.TxtColor = res.Black
+						opt.TxtColor.A = 255
 					} else {
-						opt.Color.A = 255
+						opt.TxtColor = res.Black
+						opt.Color = res.White
+						if res.IsAreaHovered(opt) {
+							opt.Color.A = 200
+							opt.TxtColor.A = 200
+							if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) && !opt.IsSelected {
+								mi.SwitchToGame(opt.Id)
+								mi.Header.IsDropped = false
+							}
+						} else {
+							opt.Color.A = 255
+						}
 					}
 				}
+			} else {
+				mi.Header.IsDropped = false
 			}
 		}
 	}
@@ -125,4 +140,15 @@ func (r *Router) Update() error {
 
 func (r *Router) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return res.ScreenWidth, res.ScreenHeight
+}
+
+func HandleNewGameClick(i interface{}) {
+	switch i.(type) {
+	case free_cell.Game:
+		game := i.(free_cell.Game)
+		game.BuildDeck()
+	case klondike.Game:
+		game := i.(klondike.Game)
+		game.BuildDeck()
+	}
 }

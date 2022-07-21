@@ -128,14 +128,14 @@ func (e *Environment) DrawPlayground(screen *ebiten.Image, th *data.Theme) {
 	opBg := &ebiten.DrawImageOptions{}
 	opBg.GeoM.Scale(50, 50)
 	screen.DrawImage(e.BgImg, opBg)
-	envTh := th.EnvScaleValue[th.Active]
+	envTh := th.EnvScaleValue[res.ActiveCardsTheme]
 
 	// Draw the FreeCell Slots
 	for i := 0; i < 4; i++ {
 		opFreeCell := &ebiten.DrawImageOptions{}
 		opFreeCell.GeoM.Scale(envTh[res.X], envTh[res.Y])
 
-		if th.Active == res.PixelatedTheme {
+		if res.ActiveCardsTheme == res.PixelatedTheme {
 			opFreeCell.GeoM.Translate(float64(res.CenterOnX(e.W, e.Quadrants[0+i]))+3.5, float64(e.SpacerV+res.MainMenuH)+3.5)
 		} else {
 			opFreeCell.GeoM.Translate(float64(res.CenterOnX(e.W, e.Quadrants[0+i])), float64(e.SpacerV+res.MainMenuH))
@@ -148,7 +148,7 @@ func (e *Environment) DrawPlayground(screen *ebiten.Image, th *data.Theme) {
 		opFoundationSlot := &ebiten.DrawImageOptions{}
 		opFoundationSlot.GeoM.Scale(envTh[res.X], envTh[res.Y])
 
-		if th.Active == res.PixelatedTheme {
+		if res.ActiveCardsTheme == res.PixelatedTheme {
 			opFoundationSlot.GeoM.Translate(float64(res.CenterOnX(e.W, e.Quadrants[4+i]))+3.5, float64(e.SpacerV+res.MainMenuH)+3.5)
 		} else {
 			opFoundationSlot.GeoM.Translate(float64(res.CenterOnX(e.W, e.Quadrants[4+i])), float64(e.SpacerV+res.MainMenuH))

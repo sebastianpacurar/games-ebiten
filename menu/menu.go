@@ -14,60 +14,54 @@ const (
 )
 
 // Menu - global menu which overlaps all game screens.
-// IsActive - refers to the current displayed game
 type Menu struct {
 	X, Y, W, H     int
 	ContainerImage *ebiten.Image
-	MenuItems      []*Item
-	IsActive       bool
+	Sections       []*Section
 }
 
 func NewMenu() *Menu {
-	mis := NewMenuItems()
-	res.MainMenuH = mis[0].TxtBounds.Dy() + Padding*2
+	sects := NewSections()
+	res.MainMenuH = sects[0].Header.TxtBounds.Dy() + Padding*2
 	m := &Menu{
-		X:         0,
-		Y:         0,
-		W:         res.ScreenWidth,
-		H:         res.MainMenuH,
-		MenuItems: mis,
+		X:        0,
+		Y:        0,
+		W:        res.ScreenWidth,
+		H:        res.MainMenuH,
+		Sections: sects,
 	}
 	m.ContainerImage = ebiten.NewImage(m.W, m.H)
 	m.ContainerImage.Fill(res.White)
 
-	// set menu item Hitbox
-	for i, mi := range m.MenuItems {
+	// set menu top item Hitbox
+	for i, s := range m.Sections {
 		if i == 0 {
-			mi.X = Padding * 2
+			s.Header.X = Padding * 2
 		} else {
-			mi.X = mi.TxtBounds.Dx() * (i + 1)
+			s.Header.X = m.StartXFrom(i)
 		}
-		mi.Y = 0
-		mi.W = mi.TxtBounds.Dx()
-		mi.H = m.H
+		s.Header.Y = 0
+		s.Header.W = s.Header.TxtBounds.Dx()
+		s.Header.H = m.H
 
-		mi.TxtColor = res.Black
-		mi.Img = ebiten.NewImage(mi.W, mi.H)
+		s.Header.TxtColor = res.Black
+		s.Header.Img = ebiten.NewImage(s.Header.W, s.Header.H)
 
-		// set option HitBox
-		for j, op := range mi.Options {
-			op.X = mi.X
-			op.Y = mi.H*(j+1) + Border
-			op.W = mi.W * 3
-			op.H = mi.H
+		if len(s.Items) > 0 {
+			// set option HitBox
+			for j, item := range s.Items {
+				item.X = s.Header.X
+				item.Y = s.Header.H*(j+1) + Border
+				item.H = s.Header.H
+			}
+			s.FormatOptsWidth()
 
-			op.Img = ebiten.NewImage(op.W, op.H)
-			op.Color = res.White
-			op.TxtColor = res.Black
+			firstOpt := s.Items[0]
+			lastOpt := s.Items[len(s.Items)-1]
+
+			// set the dropdown box (usually it's black)
+			s.DropArea = image.Rect(firstOpt.X, firstOpt.Y, lastOpt.X+lastOpt.W, lastOpt.Y+lastOpt.H).Inset(-Border)
 		}
-		firstOpt := mi.Options[0]
-		lastOpt := mi.Options[len(mi.Options)-1]
-
-		// set the dropdown box (usually it's black)
-		mi.dropArea.Min.X = firstOpt.X - Border
-		mi.dropArea.Min.Y = firstOpt.Y - Border
-		mi.dropArea.Max.X = lastOpt.X + lastOpt.W + Border
-		mi.dropArea.Max.Y = lastOpt.Y + lastOpt.H + Border
 	}
 
 	// set default game to Free Cell
@@ -76,14 +70,14 @@ func NewMenu() *Menu {
 	return m
 }
 
-// Draw - draws the menu bar along with the Item elements
+// Draw - draws the menu bar along with the Section elements
 func (m *Menu) Draw(screen *ebiten.Image) {
 	opm := &ebiten.DrawImageOptions{}
 	opm.GeoM.Translate(float64(m.X), float64(m.Y))
 	screen.DrawImage(m.ContainerImage, opm)
 
-	for _, mi := range m.MenuItems {
-		mi.Draw(screen)
+	for _, s := range m.Sections {
+		s.Draw(screen)
 	}
 }
 

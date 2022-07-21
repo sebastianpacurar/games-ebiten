@@ -13,17 +13,17 @@ func GenerateDeck(th *data.Theme) []*Card {
 	var colStart, colEnd int
 	deck := make([]*Card, 0, 52)
 
-	cardSc := th.CardScaleValue[th.Active]
+	cardSc := th.CardScaleValue[res.ActiveCardsTheme]
 
 	// set which BackFace the cards have (FrOX, FRoY, FrW, FrH)
-	bf := th.GetBackFrameGeomData(th.Active, res.StaticBack1)
+	bf := th.GetBackFrameGeomData(res.ActiveCardsTheme, res.StaticBack1)
 
 	// set which FrontFace the cards have
-	frame := th.GetFrontFrameGeomData(th.Active)
+	frame := th.GetFrontFrameGeomData(res.ActiveCardsTheme)
 
 	// this logic is needed due to the discrepancy between sprite sheets:
 	// one Image starts with card Ace as the first Column value, while others start with card number or other value
-	switch th.Active {
+	switch res.ActiveCardsTheme {
 	case res.PixelatedTheme:
 		colStart = 1
 		colEnd = 14
@@ -33,7 +33,7 @@ func GenerateDeck(th *data.Theme) []*Card {
 	}
 
 	// there are 4 suits on the image, and 1 suit consists of 13 cards
-	for si, suit := range th.SuitsOrder[th.Active] {
+	for si, suit := range th.SuitsOrder[res.ActiveCardsTheme] {
 		color := ""
 		switch suit {
 		case res.Hearts, res.Diamonds:
@@ -48,10 +48,10 @@ func GenerateDeck(th *data.Theme) []*Card {
 
 			// crete card Dynamically, based on the Active Theme.
 			card := &Card{
-				Img:     th.Sources[th.Active].SubImage(image.Rect(x, y, x+w, y+h)).(*ebiten.Image),
-				BackImg: th.Sources[th.Active].SubImage(image.Rect(bf[0], bf[1], bf[2]+bf[0], bf[3]+bf[1])).(*ebiten.Image),
+				Img:     th.Sources[res.ActiveCardsTheme].SubImage(image.Rect(x, y, x+w, y+h)).(*ebiten.Image),
+				BackImg: th.Sources[res.ActiveCardsTheme].SubImage(image.Rect(bf[0], bf[1], bf[2]+bf[0], bf[3]+bf[1])).(*ebiten.Image),
 				Suit:    suit,
-				Value:   data.CardRanks[data.Translation[th.Active][i]],
+				Value:   data.CardRanks[data.Translation[res.ActiveCardsTheme][i]],
 				Color:   color,
 				ScX:     cardSc[res.X],
 				ScY:     cardSc[res.Y],

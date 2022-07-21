@@ -47,14 +47,15 @@ const (
 )
 
 var (
-	ActiveGame     interface{}
-	DraggedCard    interface{}
-	FontFace       font.Face
-	MainMenuH      int
-	AnimInProgress bool
-	Black          = color.NRGBA{R: 0, G: 0, B: 0, A: 255}
-	White          = color.NRGBA{R: 255, G: 255, B: 255, A: 255}
-	Green          = color.NRGBA{R: 0, G: 255, B: 0, A: 255}
+	ActiveGame       interface{}
+	DraggedCard      interface{}
+	ActiveCardsTheme string
+	FontFace         font.Face
+	MainMenuH        int
+	AnimInProgress   bool
+	Black            = color.NRGBA{R: 0, G: 0, B: 0, A: 255}
+	White            = color.NRGBA{R: 255, G: 255, B: 255, A: 255}
+	Green            = color.NRGBA{R: 0, G: 255, B: 0, A: 255}
 )
 
 func InitFonts() {

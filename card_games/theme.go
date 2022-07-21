@@ -37,12 +37,11 @@ type Theme struct {
 	EnvScaleValue      map[string]map[string]float64
 
 	// Active represents the current theme
-	Active string
 }
 
 // NewTheme - returns data about the current frame dimensions, related to what Theme is being used
 func NewTheme() *Theme {
-	return &Theme{
+	th := &Theme{
 
 		// The images used for the themes
 		Sources: map[string]*ebiten.Image{
@@ -99,8 +98,9 @@ func NewTheme() *Theme {
 		},
 
 		// defaults to Classic Theme
-		Active: res.ClassicTheme,
 	}
+	res.ActiveCardsTheme = res.ClassicTheme
+	return th
 }
 
 // GetFrontFrameGeomData - returns 4 integer values which are: FrOX, FrOY, FrameWidth, FrameHeight

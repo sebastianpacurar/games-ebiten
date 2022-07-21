@@ -76,7 +76,7 @@ func (e *Environment) DrawPlayground(screen *ebiten.Image, th *data.Theme) {
 	opBg := &ebiten.DrawImageOptions{}
 	opBg.GeoM.Scale(50, 50)
 	screen.DrawImage(e.BgImg, opBg)
-	envTh := th.EnvScaleValue[th.Active]
+	envTh := th.EnvScaleValue[res.ActiveCardsTheme]
 
 	var img *ebiten.Image
 
@@ -84,7 +84,7 @@ func (e *Environment) DrawPlayground(screen *ebiten.Image, th *data.Theme) {
 	opStockSlot := &ebiten.DrawImageOptions{}
 	opStockSlot.GeoM.Scale(envTh[res.X], envTh[res.Y])
 
-	if th.Active == res.PixelatedTheme {
+	if res.ActiveCardsTheme == res.PixelatedTheme {
 		opStockSlot.GeoM.Translate(float64(res.CenterOnX(e.W, e.Quadrants[0]))+3.5, float64(e.SpacerV+res.MainMenuH)+3.5)
 	} else {
 		opStockSlot.GeoM.Translate(float64(res.CenterOnX(e.W, e.Quadrants[0])), float64(e.SpacerV+res.MainMenuH))
@@ -106,7 +106,7 @@ func (e *Environment) DrawPlayground(screen *ebiten.Image, th *data.Theme) {
 		opFoundationSlot := &ebiten.DrawImageOptions{}
 		opFoundationSlot.GeoM.Scale(envTh[res.X], envTh[res.Y])
 
-		if th.Active == res.PixelatedTheme {
+		if res.ActiveCardsTheme == res.PixelatedTheme {
 			opFoundationSlot.GeoM.Translate(float64(res.CenterOnX(e.W, e.Quadrants[3+i]))+3.5, float64(e.SpacerV+res.MainMenuH)+3.5)
 		} else {
 			opFoundationSlot.GeoM.Translate(float64(res.CenterOnX(e.W, e.Quadrants[3+i])), float64(e.SpacerV+res.MainMenuH))
