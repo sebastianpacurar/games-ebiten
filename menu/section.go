@@ -26,6 +26,7 @@ type Section struct {
 // IsDropped - applies only to droppable headers.
 type Header struct {
 	X, Y, W, H  int
+	Id          int
 	Name        string
 	IsDropped   bool
 	IsDroppable bool
@@ -49,16 +50,6 @@ func NewSections() []*Section {
 			Items: NewMainMenuItems(),
 		},
 
-		// KLONDIKE
-		{
-			IsCurrent: true,
-			Header: &Header{
-				Name:        "Themes",
-				TxtBounds:   text.BoundString(res.FontFace, "Themes"),
-				IsDroppable: true,
-			},
-			Items: NewCardsThemeItems(),
-		},
 		{
 			IsCurrent: true,
 			Header: &Header{
@@ -67,6 +58,17 @@ func NewSections() []*Section {
 				IsDroppable: false,
 			},
 			Items: nil,
+		},
+
+		// KLONDIKE and FREE CELL
+		{
+			IsCurrent: true,
+			Header: &Header{
+				Name:        "Themes",
+				TxtBounds:   text.BoundString(res.FontFace, "Themes"),
+				IsDroppable: true,
+			},
+			Items: NewCardsThemeItems(),
 		},
 	}
 
@@ -130,17 +132,34 @@ func (s *Section) SwitchToGame(gameId int) {
 	}
 }
 
-func (s *Section) SwitchToCardTheme(id int) {
-	switch id {
+func (s *Section) SwitchToCardTheme(themeId int) {
+	for _, v := range s.Items {
+		if v.Id != themeId {
+			v.IsSelected = false
+		} else {
+			v.IsSelected = true
+		}
+	}
+
+	switch themeId {
 	case 1:
 		res.ActiveCardsTheme = res.ClassicTheme
 	case 2:
 		res.ActiveCardsTheme = res.PixelatedTheme
 	}
+
+	switch res.ActiveGame.(type) {
+	case free_cell.Game:
+		g := res.ActiveGame.(free_cell.Game)
+		g.BuildDeck()
+	case klondike.Game:
+		g := res.ActiveGame.(klondike.Game)
+		g.BuildDeck()
+	}
 }
 
-// FormatOptsWidth - sets the width of the opts to the highest one from the list
-func (s *Section) FormatOptsWidth() {
+// FormatWidthsBasedOnTxtSize - sets the width of the opts to the highest one from the list
+func (s *Section) FormatWidthsBasedOnTxtSize() {
 	largest := 0
 	for _, item := range s.Items {
 		if largest < item.TxtBounds.Dx() {
@@ -157,8 +176,8 @@ func (s *Section) FormatOptsWidth() {
 	}
 }
 
-// StartXFrom - returns the total size of the prior sum of txtBounds
-func (m *Menu) StartXFrom(i int) int {
+// StartXFromLeft - returns the starting position based on the trailing items' text widths, from Left to Right
+func (m *Menu) StartXFromLeft(i int) int {
 	size := Padding * 2 // first item starts from Padding*2
 	for _, s := range m.Sections[:i] {
 		size += s.Header.TxtBounds.Dx() + Padding*2

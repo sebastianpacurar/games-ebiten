@@ -1,24 +1,22 @@
 package free_cell
 
 import (
-	data "games-ebiten/card_games"
 	res "games-ebiten/resources"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"image"
 )
 
 type (
 	Game struct {
-		*data.Theme
+		*res.Theme
 		*Environment
 	}
 )
 
 func NewGame() *Game {
 	classicImg := ebiten.NewImageFromImage(res.LoadSpriteImage("resources/assets/cards/classic-solitaire.png"))
-	th := data.NewTheme()
+	th := res.NewTheme()
 	g := &Game{
 		Theme: th,
 		Environment: &Environment{
@@ -110,17 +108,6 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) Update() error {
-	switch {
-	case inpututil.IsKeyJustReleased(ebiten.Key1):
-		res.ActiveCardsTheme = res.ClassicTheme
-		g.BuildDeck()
-	case inpututil.IsKeyJustReleased(ebiten.Key2):
-		res.ActiveCardsTheme = res.PixelatedTheme
-		g.BuildDeck()
-	case inpututil.IsKeyJustReleased(ebiten.KeyR):
-		g.BuildDeck()
-	}
-
 	g.HandleGameLogic()
 	return nil
 }

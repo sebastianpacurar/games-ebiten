@@ -46,6 +46,11 @@ func NewGame() *Game {
 	return g
 }
 
+// Reset - start a new game with different icons
+func (g *Game) Reset() {
+	res.ActiveGame = *NewGame()
+}
+
 func (g *Game) Update() error {
 	g.HandleRevealLogic()
 
@@ -95,14 +100,10 @@ func (g *Game) GeneratePairs(p int) {
 				H:   g.Icons[i].H,
 			})
 			g.IconPairs[count].ID = id
+			g.IconPairs[count].SetRemoved(false)
 			count++
 		}
 	}
-
-	//shuffle g.IconPairs array
-	rand.Shuffle(len(g.IconPairs), func(i, j int) {
-		g.IconPairs[i], g.IconPairs[j] = g.IconPairs[j], g.IconPairs[i]
-	})
 
 	g.GeneratePositions()
 }
@@ -122,12 +123,23 @@ func GenerateAvailableIcons() []*Icon {
 			icons = append(icons, icon)
 		}
 	}
+
+	//shuffle the icons array
+	rand.Shuffle(len(icons), func(i, j int) {
+		icons[i], icons[j] = icons[j], icons[i]
+	})
 	return icons
 }
 
 // GeneratePositions - add the x, y coords for every icon
 func (g *Game) GeneratePositions() {
 	count := 0
+
+	//shuffle g.IconPairs array
+	rand.Shuffle(len(g.IconPairs), func(i, j int) {
+		g.IconPairs[i], g.IconPairs[j] = g.IconPairs[j], g.IconPairs[i]
+	})
+
 	quads := res.GridQuadrants(g.Rows, g.Cols)
 	for i := 0; i < g.Rows; i++ {
 		for j := 0; j < g.Cols; j++ {

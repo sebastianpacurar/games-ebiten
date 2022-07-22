@@ -15,14 +15,11 @@ import (
 	"time"
 )
 
-// apply MPlus1pRegular font
+// apply initial setup
 func init() {
 	res.InitFonts()
-}
-
-// generate random seed
-func init() {
 	rand.Seed(time.Now().UnixNano())
+	res.ActiveCardsTheme = res.ClassicTheme
 }
 
 func main() {
@@ -35,8 +32,7 @@ func main() {
 	}
 }
 
-// Router - responsible with the game states. used to navigate between games
-// IsSelected - refers to the current game
+// Router - manages the game states - used to navigate between games.
 type Router struct {
 	*menu.Menu
 }
@@ -84,53 +80,57 @@ func (r *Router) Update() error {
 		err = g.Update()
 	}
 
-	for _, mi := range r.Sections {
+	for _, s := range r.Menu.Sections {
 
 		// handle click on menu top item.
-		if res.IsAreaHovered(mi.Header) {
-			mi.Header.TxtColor.A = 125
+		if res.IsAreaHovered(s.Header) {
+			s.Header.TxtColor.A = 125
 			if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
-				if mi.Header.IsDroppable {
+				if s.Header.IsDroppable {
 					// handle trigger dropdown functionality
-					mi.Header.IsDropped = !mi.Header.IsDropped
+					s.Header.IsDropped = !s.Header.IsDropped
 				} else {
 					// handle New Game functionality
-					if mi.Header.Name == "New Game" {
+					if s.Header.Name == "New Game" {
 						HandleNewGameClick(res.ActiveGame)
 					}
 				}
 			}
 		} else {
-			mi.Header.TxtColor.A = 255
+			s.Header.TxtColor.A = 255
 		}
 
 		// handle change game
-		if mi.Header.IsDropped {
-			firstRect := image.Rect(mi.Header.X, mi.Header.Y, mi.Header.X+mi.Header.W, mi.DropArea.Max.Y)
-			secondRect := mi.DropArea
+		if s.Header.IsDropped {
+			firstRect := image.Rect(s.Header.X, s.Header.Y, s.Header.X+s.Header.W, s.DropArea.Max.Y)
+			secondRect := s.DropArea
 			if image.Pt(ebiten.CursorPosition()).In(firstRect) || image.Pt(ebiten.CursorPosition()).In(secondRect) {
-				for _, opt := range mi.Items {
-					if opt.IsSelected {
-						opt.Color = res.Green
-						opt.TxtColor = res.Black
-						opt.TxtColor.A = 255
+				for _, item := range s.Items {
+					if item.IsSelected {
+						item.Color = res.Green
+						item.TxtColor = res.Black
+						item.TxtColor.A = 255
 					} else {
-						opt.TxtColor = res.Black
-						opt.Color = res.White
-						if res.IsAreaHovered(opt) {
-							opt.Color.A = 200
-							opt.TxtColor.A = 200
-							if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) && !opt.IsSelected {
-								mi.SwitchToGame(opt.Id)
-								mi.Header.IsDropped = false
+						item.TxtColor = res.Black
+						item.Color = res.White
+						if res.IsAreaHovered(item) {
+							item.Color.A = 200
+							item.TxtColor.A = 200
+							if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) && !item.IsSelected {
+								if s.Header.Name == "Games" {
+									s.SwitchToGame(item.Id)
+								} else if s.Header.Name == "Themes" {
+									s.SwitchToCardTheme(item.Id)
+								}
+								s.Header.IsDropped = false
 							}
 						} else {
-							opt.Color.A = 255
+							item.Color.A = 255
 						}
 					}
 				}
 			} else {
-				mi.Header.IsDropped = false
+				s.Header.IsDropped = false
 			}
 		}
 	}
@@ -150,5 +150,8 @@ func HandleNewGameClick(i interface{}) {
 	case klondike.Game:
 		game := i.(klondike.Game)
 		game.BuildDeck()
+	case match_pairs.Game:
+		game := i.(match_pairs.Game)
+		game.Reset()
 	}
 }

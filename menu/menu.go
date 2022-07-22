@@ -33,12 +33,12 @@ func NewMenu() *Menu {
 	m.ContainerImage = ebiten.NewImage(m.W, m.H)
 	m.ContainerImage.Fill(res.White)
 
-	// set menu top item Hitbox
+	// set menu header HitBox
 	for i, s := range m.Sections {
 		if i == 0 {
 			s.Header.X = Padding * 2
 		} else {
-			s.Header.X = m.StartXFrom(i)
+			s.Header.X = m.StartXFromLeft(i)
 		}
 		s.Header.Y = 0
 		s.Header.W = s.Header.TxtBounds.Dx()
@@ -48,13 +48,13 @@ func NewMenu() *Menu {
 		s.Header.Img = ebiten.NewImage(s.Header.W, s.Header.H)
 
 		if len(s.Items) > 0 {
-			// set option HitBox
+			// set header item HitBox
 			for j, item := range s.Items {
 				item.X = s.Header.X
 				item.Y = s.Header.H*(j+1) + Border
 				item.H = s.Header.H
 			}
-			s.FormatOptsWidth()
+			s.FormatWidthsBasedOnTxtSize()
 
 			firstOpt := s.Items[0]
 			lastOpt := s.Items[len(s.Items)-1]

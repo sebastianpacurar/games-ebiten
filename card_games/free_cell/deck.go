@@ -1,7 +1,6 @@
 package free_cell
 
 import (
-	data "games-ebiten/card_games"
 	res "games-ebiten/resources"
 	"github.com/hajimehoshi/ebiten/v2"
 	"image"
@@ -9,7 +8,7 @@ import (
 )
 
 // GenerateDeck - returns a []*Card{} in which all elements have the corresponding details and images
-func GenerateDeck(th *data.Theme) []*Card {
+func GenerateDeck(th *res.Theme) []*Card {
 	var colStart, colEnd int
 	deck := make([]*Card, 0, 52)
 
@@ -51,7 +50,7 @@ func GenerateDeck(th *data.Theme) []*Card {
 				Img:     th.Sources[res.ActiveCardsTheme].SubImage(image.Rect(x, y, x+w, y+h)).(*ebiten.Image),
 				BackImg: th.Sources[res.ActiveCardsTheme].SubImage(image.Rect(bf[0], bf[1], bf[2]+bf[0], bf[3]+bf[1])).(*ebiten.Image),
 				Suit:    suit,
-				Value:   data.CardRanks[data.Translation[res.ActiveCardsTheme][i]],
+				Value:   res.CardRanks[res.Translation[res.ActiveCardsTheme][i]],
 				Color:   color,
 				ScX:     cardSc[res.X],
 				ScY:     cardSc[res.Y],

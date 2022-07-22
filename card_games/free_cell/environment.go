@@ -1,7 +1,6 @@
 package free_cell
 
 import (
-	data "games-ebiten/card_games"
 	res "games-ebiten/resources"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -123,7 +122,7 @@ func (e *Environment) HitBox(i interface{}) image.Rectangle {
 	return rect
 }
 
-func (e *Environment) DrawPlayground(screen *ebiten.Image, th *data.Theme) {
+func (e *Environment) DrawPlayground(screen *ebiten.Image, th *res.Theme) {
 	// Draw the BG Image
 	opBg := &ebiten.DrawImageOptions{}
 	opBg.GeoM.Scale(50, 50)
@@ -188,7 +187,7 @@ func (e *Environment) HandleGameLogic() {
 						if len(e.Columns[j].Cards) == 0 {
 							for _, c := range e.Columns[i].Cards {
 
-								if c.Dragged() && c.Value == data.CardRanks[res.King] {
+								if c.Dragged() && c.Value == res.CardRanks[res.King] {
 									target := e.HitBox(e.Columns[j])
 									if res.IsCollision(source, target) &&
 										inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
@@ -229,7 +228,7 @@ func (e *Environment) HandleGameLogic() {
 					if len(e.FoundationPiles[j].Cards) == 0 {
 						if res.IsCollision(source, target) &&
 							inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) &&
-							e.Columns[i].Cards[li].Value == data.CardRanks[res.Ace] {
+							e.Columns[i].Cards[li].Value == res.CardRanks[res.Ace] {
 							e.MoveFromSrcToTarget(e.Columns, e.FoundationPiles, i, j, ebiten.MouseButtonLeft)
 							res.DraggedCard = nil
 							return
@@ -238,7 +237,7 @@ func (e *Environment) HandleGameLogic() {
 						lj := len(e.FoundationPiles[j].Cards) - 1
 						if res.IsCollision(source, target) &&
 							inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) &&
-							e.Columns[i].Cards[li].Value > data.CardRanks[res.Ace] &&
+							e.Columns[i].Cards[li].Value > res.CardRanks[res.Ace] &&
 							e.Columns[i].Cards[li].Value == e.FoundationPiles[j].Cards[lj].Value+1 &&
 							e.Columns[i].Cards[li].Suit == e.FoundationPiles[j].Cards[lj].Suit {
 							e.MoveFromSrcToTarget(e.Columns, e.FoundationPiles, i, j, ebiten.MouseButtonLeft)
@@ -261,7 +260,7 @@ func (e *Environment) HandleGameLogic() {
 
 					// K card
 					if len(e.Columns[j].Cards) == 0 {
-						if e.FreeCells[i].Cards[0].Value == data.CardRanks[res.King] {
+						if e.FreeCells[i].Cards[0].Value == res.CardRanks[res.King] {
 							target := e.HitBox(e.Columns[j])
 							if res.IsCollision(source, target) &&
 								inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) {
@@ -309,7 +308,7 @@ func (e *Environment) HandleGameLogic() {
 					if len(e.FoundationPiles[j].Cards) == 0 {
 						if res.IsCollision(source, target) &&
 							inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) &&
-							e.FreeCells[i].Cards[0].Value == data.CardRanks[res.Ace] {
+							e.FreeCells[i].Cards[0].Value == res.CardRanks[res.Ace] {
 							e.MoveFromSrcToTarget(e.FreeCells, e.FoundationPiles, i, j, ebiten.MouseButtonLeft)
 							res.DraggedCard = nil
 							return
@@ -318,7 +317,7 @@ func (e *Environment) HandleGameLogic() {
 						lj := len(e.FoundationPiles[j].Cards) - 1
 						if res.IsCollision(source, target) &&
 							inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) &&
-							e.FreeCells[i].Cards[0].Value > data.CardRanks[res.Ace] &&
+							e.FreeCells[i].Cards[0].Value > res.CardRanks[res.Ace] &&
 							e.FreeCells[i].Cards[0].Value == e.FoundationPiles[j].Cards[lj].Value+1 &&
 							e.FreeCells[i].Cards[0].Suit == e.FoundationPiles[j].Cards[lj].Suit {
 							e.MoveFromSrcToTarget(e.Columns, e.FoundationPiles, i, j, ebiten.MouseButtonLeft)
@@ -363,7 +362,7 @@ func (e *Environment) HandleGameLogic() {
 
 							if len(e.FoundationPiles[j].Cards) == 0 && res.IsCollision(source, target) &&
 								inpututil.IsMouseButtonJustReleased(ebiten.MouseButtonLeft) &&
-								e.FoundationPiles[i].Cards[li].Value == data.CardRanks[res.Ace] {
+								e.FoundationPiles[i].Cards[li].Value == res.CardRanks[res.Ace] {
 								e.MoveFromSrcToTarget(e.FoundationPiles, e.FoundationPiles, i, j, ebiten.MouseButtonLeft)
 								res.DraggedCard = nil
 								return

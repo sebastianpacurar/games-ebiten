@@ -7,55 +7,9 @@ import (
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/opentype"
 	"image"
-	"image/color"
 	"io/ioutil"
 	"log"
 	"math/rand"
-)
-
-const (
-	ScreenWidth  = 960
-	ScreenHeight = 960
-
-	// X Y - used as aliases for Main Axis and Cross Axis
-	X = "x"
-	Y = "y"
-
-	// FrOX FrOY FrW FrH = minX, minY, maxX, maxY, for the area of an Image
-	FrOX = "FrameOX"
-	FrOY = "FrameOY"
-	FrW  = "FrameW"
-	FrH  = "FrameH"
-
-	Hearts   = "Hearts"
-	Clubs    = "Clubs"
-	Diamonds = "Diamonds"
-	Spades   = "Spades"
-
-	Ace   = "A"
-	Jack  = "J"
-	Queen = "Q"
-	King  = "K"
-
-	RED   = "Black"
-	BLACK = "Red"
-
-	ClassicTheme   = "classic"
-	PixelatedTheme = "8bit"
-
-	StaticBack1 = "StaticBack1"
-)
-
-var (
-	ActiveGame       interface{}
-	DraggedCard      interface{}
-	ActiveCardsTheme string
-	FontFace         font.Face
-	MainMenuH        int
-	AnimInProgress   bool
-	Black            = color.NRGBA{R: 0, G: 0, B: 0, A: 255}
-	White            = color.NRGBA{R: 255, G: 255, B: 255, A: 255}
-	Green            = color.NRGBA{R: 0, G: 255, B: 0, A: 255}
 )
 
 func InitFonts() {
