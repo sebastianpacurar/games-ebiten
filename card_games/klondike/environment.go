@@ -1,6 +1,7 @@
 package klondike
 
 import (
+	"games-ebiten/card_games"
 	res "games-ebiten/resources"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -70,7 +71,7 @@ func (e *Environment) HitBox(i interface{}) image.Rectangle {
 	return rect
 }
 
-func (e *Environment) DrawPlayground(screen *ebiten.Image, th *res.Theme) {
+func (e *Environment) DrawPlayground(screen *ebiten.Image, th *card_games.Theme) {
 	// Draw the BG Image
 	opBg := &ebiten.DrawImageOptions{}
 	opBg.GeoM.Scale(50, 50)

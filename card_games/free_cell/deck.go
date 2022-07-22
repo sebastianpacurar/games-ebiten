@@ -1,6 +1,7 @@
 package free_cell
 
 import (
+	"games-ebiten/card_games"
 	res "games-ebiten/resources"
 	"github.com/hajimehoshi/ebiten/v2"
 	"image"
@@ -8,7 +9,7 @@ import (
 )
 
 // GenerateDeck - returns a []*Card{} in which all elements have the corresponding details and images
-func GenerateDeck(th *res.Theme) []*Card {
+func GenerateDeck(th *card_games.Theme) []*Card {
 	var colStart, colEnd int
 	deck := make([]*Card, 0, 52)
 

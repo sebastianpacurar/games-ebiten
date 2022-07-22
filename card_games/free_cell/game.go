@@ -1,6 +1,7 @@
 package free_cell
 
 import (
+	"games-ebiten/card_games"
 	res "games-ebiten/resources"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -9,14 +10,14 @@ import (
 
 type (
 	Game struct {
-		*res.Theme
+		*card_games.Theme
 		*Environment
 	}
 )
 
 func NewGame() *Game {
 	classicImg := ebiten.NewImageFromImage(res.LoadSpriteImage("resources/assets/cards/classic-solitaire.png"))
-	th := res.NewTheme()
+	th := card_games.NewTheme()
 	g := &Game{
 		Theme: th,
 		Environment: &Environment{
